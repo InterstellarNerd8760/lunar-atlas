@@ -1,0 +1,51 @@
+{
+  "source": "https://pgda.gsfc.nasa.gov/data/LOLA_5mpp/Site20/Site20_final_adj_5mpp_surf.tif",
+  "sourcePage": "https://pgda.gsfc.nasa.gov/products/78",
+  "sourceProduct": "Site20_final_adj_5mpp_surf",
+  "credit": "NASA GSFC PGDA / Barker et al. (2021), Planetary and Space Science 203, 105119",
+  "siteId": "site20",
+  "pgdaId": "Site20",
+  "siteName": "Mons Mouton (Leibnitz beta plateau)",
+  "artemisRegion": "artemis3-mons-mouton",
+  "width": 3200,
+  "height": 3200,
+  "encoding": "float32-le",
+  "units": "m",
+  "order": "row-major",
+  "rowOrder": "north to south",
+  "nodataEncoding": "NaN",
+  "referenceRadiusM": 1737400.0,
+  "projection": "south polar stereographic (source grid); x/y in meters from the pole",
+  "crsWkt": "PROJCS[\"unnamed\",GEOGCS[\"unnamed ellipse\",DATUM[\"unknown\",SPHEROID[\"unnamed\",1737400,0]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]]],PROJECTION[\"Polar_Stereographic\"],PARAMETER[\"latitude_of_origin\",-90],PARAMETER[\"central_meridian\",0],PARAMETER[\"false_easting\",0],PARAMETER[\"false_northing\",0],UNIT[\"metre\",1],AXIS[\"Easting\",NORTH],AXIS[\"Northing\",NORTH]]",
+  "affine": [
+    5.0,
+    0.0,
+    65000.0,
+    0.0,
+    -5.0,
+    126000.0
+  ],
+  "extentM": [
+    65000.0,
+    110000.0,
+    81000.0,
+    126000.0
+  ],
+  "centerLatLon": [
+    -85.4266,
+    31.7428
+  ],
+  "resolutionM": 5.0,
+  "sourceResolutionM": 5.0,
+  "fullSiteExtentM": [
+    16000.0,
+    16000.0
+  ],
+  "croppedToFit50MB": false,
+  "siteHeightM": 6398.8330078125,
+  "noDataShare": 0.0,
+  "note": "Native 5 m LOLA site DEM, full PGDA extent.",
+  "minElevationM": 2796.344970703125,
+  "maxElevationM": 6463.86376953125,
+  "processedUtc": "2026-11-14T23:51:02.764557+00:00"
+}

@@ -1,0 +1,51 @@
+{
+  "source": "https://pgda.gsfc.nasa.gov/data/LOLA_5mpp/Haworth/Haworth_final_adj_5mpp_surf.tif",
+  "sourcePage": "https://pgda.gsfc.nasa.gov/products/78",
+  "sourceProduct": "Haworth_final_adj_5mpp_surf",
+  "credit": "NASA GSFC PGDA / Barker et al. (2021), Planetary and Space Science 203, 105119",
+  "siteId": "haworth",
+  "pgdaId": "Haworth",
+  "siteName": "Haworth",
+  "artemisRegion": "artemis3-haworth",
+  "width": 3200,
+  "height": 3200,
+  "encoding": "float32-le",
+  "units": "m",
+  "order": "row-major",
+  "rowOrder": "north to south",
+  "nodataEncoding": "NaN",
+  "referenceRadiusM": 1737400.0,
+  "projection": "south polar stereographic (source grid); x/y in meters from the pole",
+  "crsWkt": "PROJCS[\"unknown\",GEOGCS[\"unknown\",DATUM[\"unknown\",SPHEROID[\"unknown\",1737400,0]],PRIMEM[\"Reference meridian\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]]],PROJECTION[\"Polar_Stereographic\"],PARAMETER[\"latitude_of_origin\",-90],PARAMETER[\"central_meridian\",0],PARAMETER[\"false_easting\",0],PARAMETER[\"false_northing\",0],UNIT[\"metre\",1],AXIS[\"Easting\",NORTH],AXIS[\"Northing\",NORTH]]",
+  "affine": [
+    5.0,
+    0.0,
+    -46000.0,
+    0.0,
+    -5.0,
+    98505.0
+  ],
+  "extentM": [
+    -46000.0,
+    82505.0,
+    -30000.0,
+    98505.0
+  ],
+  "centerLatLon": [
+    -86.7639,
+    -22.777
+  ],
+  "resolutionM": 5.0,
+  "sourceResolutionM": 5.0,
+  "fullSiteExtentM": [
+    29800.0,
+    29800.0
+  ],
+  "croppedToFit50MB": true,
+  "siteHeightM": 1628.2415771484375,
+  "noDataShare": 0.0,
+  "note": "Native 5 m LOLA site DEM. Grids larger than 50 MB were cropped to a 16 km box around the site center.",
+  "minElevationM": 292.0645751953125,
+  "maxElevationM": 2365.155029296875,
+  "processedUtc": "2026-11-14T23:50:48.845384+00:00"
+}
