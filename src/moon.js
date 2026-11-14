@@ -371,6 +371,32 @@ async function loadMoon(container, status) {
     }
   }
 
+  const notesResponse = await fetch(new URL('site-notes.json', dataDirectory));
+  const siteNotes = notesResponse.ok ? await notesResponse.json() : [];
+  const siteInfo = document.createElement('details');
+  siteInfo.className = 'site-info';
+  siteInfo.innerHTML = '<summary>About this site</summary><div></div>';
+  siteInfo.hidden = true;
+  container.append(siteInfo);
+  function showSiteNotes(site, name) {
+    const normalize = value => value.toLowerCase().replace(/[^a-z0-9]/g, '');
+    const key = normalize(name);
+    const note = siteNotes.find(entry => key.includes(normalize(entry.name)));
+    const body = siteInfo.lastElementChild;
+    body.replaceChildren();
+    const description = document.createElement('p');
+    description.textContent = note?.notes ?? `${name}. Terrain coordinates and layers come from the selected archive. Consult the dataset sources for mission context.`;
+    body.append(description);
+    if (site.id?.startsWith('artemis3-')) {
+      const proxy = document.createElement('p');
+      proxy.textContent = 'Terrain proxy for a candidate region. This is not an official landing coordinate or a selected base.';
+      body.append(proxy);
+    }
+    const link = document.createElement('a');
+    link.href = note?.source ?? 'https://data.lroc.im-ldi.com/';
+    link.textContent = 'Source'; link.target = '_blank'; link.rel = 'noopener'; body.append(link);
+    siteInfo.hidden = false;
+  }
   const siteGroups = [
     ['landing-sites', 'Historical landing sites', (site) => !site.id.startsWith('artemis3-')],
     ['landing-sites', 'Artemis III terrain proxies', (site) => site.id.startsWith('artemis3-')],
@@ -440,6 +466,7 @@ async function loadMoon(container, status) {
         controls.update();
         for (const button of viewButtons) button.setAttribute('aria-pressed', 'false');
         sky?.analyze(terrain.center, name);
+        showSiteNotes(site, name);
         const coordinates = site.layers ? [site.lat, site.lon] : site.centerLatLon;
         const [latitude, longitude] = coordinates;
         const coordinateText = `${Math.abs(latitude).toFixed(4)}° ${latitude < 0 ? 'S' : 'N'} · ${Math.abs(longitude).toFixed(4)}° ${longitude < 0 ? 'W' : 'E'}`;

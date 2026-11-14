@@ -188,3 +188,7 @@ h1 {
 
 #moon-view .visibility-panel canvas { height:auto; }
 .moon-status { top:4.3rem; }
+
+.site-info { position:absolute; bottom:9rem; left:1rem; max-width:320px; max-height:25%; overflow:auto; padding:10px; background:#101723ed; font-size:13px; z-index:2; }
+.site-info a { color:#9ec9ff; }
+.site-info[hidden] { display:none; }
