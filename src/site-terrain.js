@@ -146,7 +146,7 @@ export async function loadSiteTerrain(site, radius, relief, material, sampleGlob
       const y = ys[row];
       const index = row * xs.length + column;
       projection.project(x, y, direction);
-      const longitude = Math.atan2(x, y);
+      const longitude = Math.atan2(-direction.z, direction.x);
       const latitude = Math.asin(THREE.MathUtils.clamp(direction.y, -1, 1));
       uv[index * 2] = 0.5 + longitude / (2 * Math.PI);
       uv[index * 2 + 1] = 0.5 + latitude / Math.PI;
