@@ -134,8 +134,8 @@ async function loadMoon(container, status) {
   cameraToolbar.innerHTML =
     '<span class="camera-toolbar__label">Camera</span>' +
     '<button type="button" data-view="globe" aria-pressed="true">Globe</button>' +
-    '<button type="button" data-view="north">North pole</button>' +
-    '<button type="button" data-view="south">South pole</button>' +
+    '<button type="button" data-view="north" aria-pressed="false">North pole</button>' +
+    '<button type="button" data-view="south" aria-pressed="false">South pole</button>' +
     '<button type="button" data-action="flight" aria-pressed="false">Free flight</button>';
   container.append(cameraToolbar);
 
@@ -204,6 +204,7 @@ async function loadMoon(container, status) {
     freeFlight = true;
     keys.clear();
     controls.enabled = false;
+    camera.up.set(0, 1, 0);
     camera.getWorldDirection(viewDirection);
     yaw = Math.atan2(-viewDirection.x, -viewDirection.z);
     pitch = Math.asin(THREE.MathUtils.clamp(viewDirection.y, -1, 1));
@@ -212,6 +213,7 @@ async function loadMoon(container, status) {
     flightButton.textContent = 'Exit flight';
     flightButton.setAttribute('aria-pressed', 'true');
     flightHint.hidden = false;
+    for (const button of viewButtons) button.setAttribute('aria-pressed', 'false');
     canvas.focus({ preventScroll: true });
     if (canvas.requestPointerLock) canvas.requestPointerLock();
   }
@@ -221,6 +223,7 @@ async function loadMoon(container, status) {
     controls.enabled = true;
     controls.target.set(0, 0, 0);
     controls.minDistance = 1.06;
+    camera.up.set(view === 'north' || view === 'south' ? 0 : 0, view === 'north' || view === 'south' ? 0 : 1, view === 'north' || view === 'south' ? 1 : 0);
 
     if (view === 'north') camera.position.set(0, 3.25, 0.001);
     else if (view === 'south') camera.position.set(0, -3.25, 0.001);
