@@ -4,6 +4,13 @@ const AU_KM = 149597870.7;
 const MOON_RADIUS_KM = 1737.4;
 const degrees = Math.PI / 180;
 const sunDisplayDistance = 72;
+const textureDirectory = new URL('../public/data/textures/', import.meta.url);
+
+async function loadColorTexture(loader, filename) {
+  const texture = await loader.loadAsync(new URL(filename, textureDirectory).href);
+  texture.colorSpace = THREE.SRGBColorSpace;
+  return texture;
+}
 
 // At the reference site (0° longitude, 0° latitude), up is +X,
 // north is +Y and east is −Z in the existing globe's UV convention.
@@ -66,9 +73,27 @@ export async function addSky(scene, camera, sunlight, container) {
   const date = timeline.querySelector('output');
   slider.max = positions.length - 1;
   slider.value = 3;
-  timeline.querySelector('input[type=checkbox]').addEventListener('change', (event) => {
-    stars.visible = event.target.checked;
-  });
+  const starsToggle = timeline.querySelector('input[type=checkbox]');
+  const backgroundColor = scene.background;
+  let starMap = null;
+  function updateStars() {
+    stars.visible = starsToggle.checked && !starMap;
+    scene.background = starsToggle.checked && starMap ? starMap : backgroundColor;
+  }
+  starsToggle.addEventListener('change', updateStars);
+
+  const loader = new THREE.TextureLoader();
+  loadColorTexture(loader, 'earth-2048.jpg').then((texture) => {
+    earth.material.map = texture;
+    earth.material.color.set(0xffffff);
+    earth.material.needsUpdate = true;
+  }).catch((error) => console.warn('Earth texture unavailable.', error));
+
+  loadColorTexture(loader, 'stars-4096.jpg').then((texture) => {
+    texture.mapping = THREE.EquirectangularReflectionMapping;
+    starMap = texture;
+    updateStars();
+  }).catch((error) => console.warn('Star map unavailable.', error));
   container.append(timeline);
 
   const formatTime = new Intl.DateTimeFormat('en', {

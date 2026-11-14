@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { OrbitControls } from 'https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/controls/OrbitControls.js';
 
 import { addSky } from './sky.js';
+import { loadSiteIndex, loadSiteTerrain } from './site-terrain.js';
 
 const MOON_RADIUS_METERS = 1_737_400;
 const DISPLAY_RELIEF = 6;
@@ -26,15 +27,19 @@ export function mountMoonView(container) {
 }
 
 async function loadMoon(container, status) {
-  const metadataUrl = new URL('../public/data/global-height.json', import.meta.url);
-  const heightUrl = new URL('../public/data/global-height.f32', import.meta.url);
-
-  const [metadataResponse, heightResponse] = await Promise.all([
-    fetch(metadataUrl),
-    fetch(heightUrl),
-  ]);
+  const dataDirectory = new URL('../public/data/', import.meta.url);
+  function fetchGlobalHeight(prefix) {
+    return Promise.all([
+      fetch(new URL(prefix + 'global-height.json', dataDirectory)),
+      fetch(new URL(prefix + 'global-height.f32', dataDirectory)),
+    ]);
+  }
+  let [metadataResponse, heightResponse] = await fetchGlobalHeight('global-height/');
   if (!metadataResponse.ok || !heightResponse.ok) {
-    throw new Error('Put global-height.json and global-height.f32 in public/data/.');
+    [metadataResponse, heightResponse] = await fetchGlobalHeight('');
+  }
+  if (!metadataResponse.ok || !heightResponse.ok) {
+    throw new Error('Global LOLA elevation files are missing from public/data/global-height/.');
   }
 
   const metadata = await metadataResponse.json();
@@ -48,7 +53,7 @@ async function loadMoon(container, status) {
   const scene = new THREE.Scene();
   scene.background = new THREE.Color('#030509');
 
-  const camera = new THREE.PerspectiveCamera(42, 1, 0.002, 600);
+  const camera = new THREE.PerspectiveCamera(42, 1, 0.0002, 600);
   camera.position.set(0, 0.1, 3.25);
 
   const renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -96,6 +101,7 @@ async function loadMoon(container, status) {
   try {
     texture = await new THREE.TextureLoader().loadAsync(textureUrl.href);
     texture.colorSpace = THREE.SRGBColorSpace;
+    texture.wrapS = THREE.RepeatWrapping;
   } catch {
     // The terrain still renders in gray while the WAC texture is being prepared.
   }
@@ -109,6 +115,50 @@ async function loadMoon(container, status) {
       metalness: 0,
     }),
   );
+  const cutout = { value: new THREE.Vector4() };
+  const cutoutCenter = { value: new THREE.Vector3() };
+  const cutoutEast = { value: new THREE.Vector3() };
+  const cutoutNorth = { value: new THREE.Vector3() };
+  const cutoutPolar = { value: false };
+  const cutoutActive = { value: false };
+  // Replace the globe inside the high-resolution terrain's projected footprint.
+  moon.material.onBeforeCompile = (shader) => {
+    Object.assign(shader.uniforms, { siteCutout: cutout, cutoutCenter, cutoutEast, cutoutNorth, cutoutPolar, cutoutActive });
+    shader.vertexShader = shader.vertexShader
+      .replace('#include <common>', '#include <common>\nvarying vec3 lunarPosition;')
+      .replace('#include <begin_vertex>', '#include <begin_vertex>\nlunarPosition = position;');
+    shader.fragmentShader = shader.fragmentShader
+      .replace('#include <common>', `
+        #include <common>
+        varying vec3 lunarPosition;
+        uniform vec4 siteCutout;
+        uniform vec3 cutoutCenter, cutoutEast, cutoutNorth;
+        uniform bool cutoutPolar, cutoutActive;
+      `)
+      .replace('#include <clipping_planes_fragment>', `
+        #include <clipping_planes_fragment>
+        if (cutoutActive) {
+          vec3 lunarDirection = normalize(lunarPosition);
+          float cosine = dot(lunarDirection, cutoutCenter);
+          if (cosine > 0.0) {
+            vec2 coordinates = vec2(dot(lunarDirection, cutoutEast), dot(lunarDirection, cutoutNorth));
+            float sine = length(coordinates);
+            float scale = cutoutPolar ? 2.0 / (1.0 + cosine) : (sine > 0.000001 ? atan(sine, cosine) / sine : 1.0);
+            coordinates *= scale * ${MOON_RADIUS_METERS.toFixed(1)};
+            if (all(greaterThan(coordinates, siteCutout.xy)) && all(lessThan(coordinates, siteCutout.zw))) discard;
+          }
+        }
+      `);
+  };
+
+  function sampleGlobe(direction) {
+    const u = 0.5 + Math.atan2(-direction.z, direction.x) / (2 * Math.PI);
+    const v = 0.5 - Math.asin(THREE.MathUtils.clamp(direction.y, -1, 1)) / Math.PI;
+    const column = Math.min(metadata.width - 1, Math.floor(u * metadata.width));
+    const row = Math.min(metadata.height - 1, Math.floor(v * metadata.height));
+    return heights[row * metadata.width + column];
+  }
+  const siteMaterial = moon.material.clone();
   scene.add(moon);
 
   let skyStatus = 'JPL Horizons';
@@ -120,12 +170,18 @@ async function loadMoon(container, status) {
   }
 
   const canvas = renderer.domElement;
-  const controls = new OrbitControls(camera, canvas);
-  controls.enablePan = false;
-  controls.enableDamping = true;
-  controls.dampingFactor = 0.06;
-  controls.minDistance = 1.06;
-  controls.maxDistance = 8;
+  let controls;
+  function createOrbitControls(up) {
+    controls?.dispose();
+    camera.up.copy(up);
+    controls = new OrbitControls(camera, canvas);
+    controls.enablePan = false;
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.06;
+    controls.minDistance = 1.06;
+    controls.maxDistance = 8;
+  }
+  createOrbitControls(new THREE.Vector3(0, 1, 0));
 
   const initialCameraPosition = camera.position.clone();
   const cameraToolbar = document.createElement('nav');
@@ -137,7 +193,18 @@ async function loadMoon(container, status) {
     '<button type="button" data-view="north" aria-pressed="false">North pole</button>' +
     '<button type="button" data-view="south" aria-pressed="false">South pole</button>' +
     '<button type="button" data-action="flight" aria-pressed="false">Free flight</button>';
+  const siteSelect = document.createElement('select');
+  siteSelect.setAttribute('aria-label', 'Terrain site');
+  siteSelect.add(new Option('Explore a site', ''));
+  siteSelect.hidden = true;
+  cameraToolbar.insertBefore(siteSelect, cameraToolbar.lastElementChild);
   container.append(cameraToolbar);
+
+  const siteStatus = document.createElement('p');
+  siteStatus.className = 'site-status';
+  siteStatus.setAttribute('role', 'status');
+  siteStatus.hidden = true;
+  container.append(siteStatus);
 
   const flightHint = document.createElement('p');
   flightHint.className = 'flight-hint';
@@ -154,6 +221,8 @@ async function loadMoon(container, status) {
   let dragPointerId = null;
   let previousFrame = performance.now();
   let lastCollisionCheck = previousFrame;
+  let activeSite = null;
+  let siteRequest = null;
 
   const origin = new THREE.Vector3(0, 0, 0);
   const flightRaycaster = new THREE.Raycaster();
@@ -163,6 +232,41 @@ async function loadMoon(container, status) {
   const radialDirection = new THREE.Vector3();
   const rayOrigin = new THREE.Vector3();
   const rayDirection = new THREE.Vector3();
+
+  function surfaceHit(raycaster) {
+    if (activeSite) {
+      const hit = raycaster.intersectObject(activeSite.mesh, false)[0];
+      if (hit) return hit;
+    }
+    return raycaster.intersectObject(moon, false).find(({ point }) => {
+      if (!activeSite) return true;
+      const { projection } = activeSite;
+      const length = point.length();
+      const cosine = point.dot(projection.center) / length;
+      if (cosine <= 0) return true;
+      const east = point.dot(projection.east) / length;
+      const north = point.dot(projection.north) / length;
+      const sine = Math.hypot(east, north);
+      const scale = projection.polar ? 2 / (1 + cosine) : sine > 0 ? Math.atan2(sine, cosine) / sine : 1;
+      const x = east * scale * MOON_RADIUS_METERS;
+      const y = north * scale * MOON_RADIUS_METERS;
+      const extent = cutout.value;
+      return x <= extent.x || x >= extent.z || y <= extent.y || y >= extent.w;
+    });
+  }
+
+  function resetSite() {
+    siteRequest?.abort();
+    siteRequest = null;
+    if (activeSite) {
+      scene.remove(activeSite.mesh);
+      activeSite.mesh.geometry.dispose();
+      activeSite = null;
+    }
+    cutoutActive.value = false;
+    siteSelect.value = '';
+    siteStatus.hidden = true;
+  }
 
   function updateFlightLook(deltaX, deltaY) {
     const sensitivity = 0.002;
@@ -176,7 +280,7 @@ async function loadMoon(container, status) {
     camera.updateMatrixWorld();
     camera.getWorldDirection(viewDirection);
     flightRaycaster.set(camera.position, viewDirection);
-    const hit = flightRaycaster.intersectObject(moon, false)[0];
+    const hit = surfaceHit(flightRaycaster);
     return hit ? hit.point : origin;
   }
 
@@ -185,9 +289,12 @@ async function loadMoon(container, status) {
     freeFlight = false;
     keys.clear();
     dragPointerId = null;
-    controls.enabled = true;
-    controls.target.copy(focusInFrontOfCamera());
-    controls.minDistance = controls.target.lengthSq() > 0.1 ? 0.035 : 1.06;
+    const focus = focusInFrontOfCamera().clone();
+    const up = activeSite ? activeSite.center.clone().normalize() : new THREE.Vector3(0, 1, 0);
+    createOrbitControls(up);
+    controls.target.copy(focus);
+    controls.minDistance = activeSite ? 0.00035 : focus.lengthSq() > 0.1 ? 0.035 : 1.06;
+    if (activeSite) controls.maxPolarAngle = Math.PI / 2;
     controls.update();
     flightButton.textContent = 'Free flight';
     flightButton.setAttribute('aria-pressed', 'false');
@@ -221,11 +328,9 @@ async function loadMoon(container, status) {
 
   function setView(view) {
     if (freeFlight) leaveFlight();
-    controls.enabled = true;
-    controls.target.set(0, 0, 0);
-    controls.minDistance = 1.06;
+    resetSite();
     const isPolarView = view === 'north' || view === 'south';
-    camera.up.set(0, isPolarView ? 0 : 1, isPolarView ? 1 : 0);
+    createOrbitControls(new THREE.Vector3(0, isPolarView ? 0 : 1, isPolarView ? 1 : 0));
 
     if (view === 'north') camera.position.set(0, 3.25, 0.001);
     else if (view === 'south') camera.position.set(0, -3.25, 0.001);
@@ -237,6 +342,80 @@ async function loadMoon(container, status) {
       button.setAttribute('aria-pressed', String(button.dataset.view === view));
     }
   }
+
+  const siteGroups = [
+    ['landing-sites', 'Historical landing sites', (site) => !site.id.startsWith('artemis3-')],
+    ['landing-sites', 'Artemis III terrain proxies', (site) => site.id.startsWith('artemis3-')],
+    ['lola-sites', 'South pole LOLA surveys', () => true],
+  ];
+  Promise.allSettled(['landing-sites', 'lola-sites'].map(async (directory) => [directory, await loadSiteIndex(directory)])).then((results) => {
+    const indexes = new Map(results.filter(({ status }) => status === 'fulfilled').map(({ value }) => value));
+    const sites = new Map();
+    for (const [directory, label, include] of siteGroups) {
+      const group = document.createElement('optgroup');
+      group.label = label;
+      for (const site of (indexes.get(directory) ?? []).filter(include)) {
+        const id = site.id ?? site.siteId;
+        sites.set(id, site);
+        group.append(new Option(site.name ?? site.siteName, id));
+      }
+      if (group.childElementCount) siteSelect.append(group);
+    }
+    if (!sites.size) return;
+    siteSelect.hidden = false;
+    siteSelect.addEventListener('change', async () => {
+      const id = siteSelect.value;
+      const site = sites.get(id);
+      if (freeFlight) leaveFlight();
+      if (!site) {
+        setView('south');
+        return;
+      }
+      resetSite();
+      siteSelect.value = id;
+      const name = site.name ?? site.siteName;
+      const request = new AbortController();
+      siteRequest = request;
+      siteStatus.hidden = false;
+      siteStatus.textContent = `Loading ${name}…`;
+      try {
+        const terrain = await loadSiteTerrain(site, MOON_RADIUS_METERS, DISPLAY_RELIEF, siteMaterial, sampleGlobe, request.signal);
+        if (request.signal.aborted) {
+          terrain.mesh.geometry.dispose();
+          return;
+        }
+        activeSite = terrain;
+        cutout.value.set(...terrain.extent);
+        cutoutCenter.value.copy(terrain.projection.center);
+        cutoutEast.value.copy(terrain.projection.east);
+        cutoutNorth.value.copy(terrain.projection.north);
+        cutoutPolar.value = terrain.projection.polar;
+        cutoutActive.value = true;
+        scene.add(terrain.mesh);
+        const up = terrain.center.clone().normalize();
+        const north = new THREE.Vector3(0, 1, 0).addScaledVector(up, -up.y).normalize();
+        createOrbitControls(up);
+        const distance = site.layers ? 0.009 : 0.014;
+        camera.position.copy(terrain.center).addScaledVector(up, distance).addScaledVector(north, -distance * 0.55);
+        controls.target.copy(terrain.center);
+        controls.minDistance = 0.00035;
+        controls.maxPolarAngle = Math.PI / 2;
+        camera.lookAt(controls.target);
+        controls.update();
+        for (const button of viewButtons) button.setAttribute('aria-pressed', 'false');
+        const coordinates = site.layers ? [site.lat, site.lon] : site.centerLatLon;
+        const coordinateText = coordinates.map((value, i) => `${Math.abs(value).toFixed(4)}° ${(i ? ['W', 'E'] : ['S', 'N'])[Number(value >= 0)]}`).join(' · ');
+        const details = [name, site.id?.startsWith('artemis3-') ? 'Terrain proxy' : site.year, site.country_or_company, coordinateText].filter(Boolean);
+        siteStatus.textContent = details.join(' · ');
+      } catch (error) {
+        if (request.signal.aborted) return;
+        console.warn(error);
+        setView('south');
+        siteStatus.textContent = `Could not load ${name}.`;
+        siteStatus.hidden = false;
+      }
+    });
+  });
 
   for (const button of viewButtons) {
     button.addEventListener('click', () => setView(button.dataset.view));
@@ -255,10 +434,10 @@ async function loadMoon(container, status) {
     );
     const picker = new THREE.Raycaster();
     picker.setFromCamera(pointer, camera);
-    const hit = picker.intersectObject(moon, false)[0];
+    const hit = surfaceHit(picker);
     if (!hit) return;
     controls.target.copy(hit.point);
-    controls.minDistance = 0.035;
+    controls.minDistance = activeSite ? 0.00035 : 0.035;
     controls.update();
     for (const button of viewButtons) button.setAttribute('aria-pressed', 'false');
   });
@@ -333,12 +512,14 @@ async function loadMoon(container, status) {
       if (keys.has('KeyS')) movement.sub(viewDirection);
       if (keys.has('KeyD')) movement.add(rightDirection);
       if (keys.has('KeyA')) movement.sub(rightDirection);
-      if (keys.has('Space')) movement.y += 1;
-      if (keys.has('KeyC')) movement.y -= 1;
+      radialDirection.copy(camera.position).normalize();
+      if (keys.has('Space')) movement.add(radialDirection);
+      if (keys.has('KeyC')) movement.sub(radialDirection);
 
       if (movement.lengthSq() > 0) {
         movement.normalize();
-        let speed = THREE.MathUtils.clamp((camera.position.length() - 1) * 0.16, 0.008, 0.45);
+        const altitude = camera.position.length() - (activeSite?.center.length() ?? 1);
+        let speed = THREE.MathUtils.clamp(altitude * 0.16, activeSite ? 0.0005 : 0.008, 0.45);
         if (keys.has('ShiftLeft') || keys.has('ShiftRight')) speed *= 3;
         camera.position.addScaledVector(movement, speed * deltaSeconds);
         if (camera.position.length() > MAX_FLIGHT_RADIUS) {
@@ -352,9 +533,9 @@ async function loadMoon(container, status) {
         rayOrigin.copy(radialDirection).multiplyScalar(2);
         rayDirection.copy(radialDirection).negate();
         flightRaycaster.set(rayOrigin, rayDirection);
-        const surfaceHit = flightRaycaster.intersectObject(moon, false)[0];
-        if (surfaceHit) {
-          const minimumRadius = surfaceHit.point.length() + FLIGHT_CLEARANCE;
+        const hit = surfaceHit(flightRaycaster);
+        if (hit) {
+          const minimumRadius = hit.point.length() + (activeSite ? 0.0002 : FLIGHT_CLEARANCE);
           if (camera.position.length() < minimumRadius) {
             camera.position.copy(radialDirection).multiplyScalar(minimumRadius);
           }

@@ -15,6 +15,23 @@ Run `python3 -m http.server 8000` from the repository root and open `http://loca
 
 ## Show the global LOLA terrain
 
-Unzip `global-height.zip` into `public/data/`. The folder should contain `global-height.f32` and `global-height.json`. Then start the local server from the repository root. The viewer builds a reduced mesh from the elevation grid and applies a labeled ×6 visual relief exaggeration.
+The checkout includes `public/data/global-height/global-height.f32` and its JSON metadata. Start the local server from the repository root. The viewer builds a reduced mesh from the elevation grid and applies a labeled ×6 visual relief exaggeration.
 
 The WAC texture notebook is [`notebooks/prepare-wac-texture.ipynb`](notebooks/prepare-wac-texture.ipynb). Run it in Colab, download `wac-texture.jpg`, and place it beside the LOLA files in `public/data/`. The Three.js viewer uses the texture when that file is present and otherwise keeps the grayscale terrain view.
+
+
+## Add the site terrain and sky assets
+
+From the repository root, extract the supplied archives into `public/data/`. Replace the paths in this example with the paths to your downloads.
+
+```sh
+unzip "/path/to/lola-sites(1).zip" -d public/data
+unzip "/path/to/landing-sites.zip" -d public/data
+unzip "/path/to/textures(1).zip" -d public/data
+```
+
+Select a site in **Explore a site**. The viewer downloads that site's terrain when selected. Historical sites can include an LROC NAC close-up. Artemis III entries in the archive use the coordinates of terrain proxies. The five included proxies and four skipped regions are recorded in `public/data/landing-sites/index.json`.
+
+The viewer uses the 2048 px Blue Marble Earth texture and 4096 px NASA SVS star map. Credits are in `public/data/textures/CREDITS.txt`. The star panorama uses a fixed decorative orientation. The time slider continues to drive the Sun and Earth's positions using the included Horizons ephemeris.
+
+For a static deployment with these optional layers, include the extracted directories in the published files.
