@@ -452,6 +452,7 @@ async function loadMoon(container, status) {
         cutoutPolar.value = terrain.projection.polar;
         cutoutActive.value = true;
         scene.add(terrain.mesh);
+        terrain.mesh.updateMatrixWorld(true);
         const up = terrain.center.clone().normalize();
         const north = new THREE.Vector3(0, 1, 0).addScaledVector(up, -up.y).normalize();
         createOrbitControls(up);
@@ -595,6 +596,7 @@ async function loadMoon(container, status) {
   status.textContent += ' · ' + skyStatus;
   status.classList.add('moon-status--loaded');
 
+  setView('south');
   renderer.setAnimationLoop((now) => {
     const deltaSeconds = Math.min((now - previousFrame) / 1000, 0.05);
     previousFrame = now;

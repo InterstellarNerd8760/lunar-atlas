@@ -140,13 +140,17 @@ export async function loadSiteTerrain(site, radius, relief, material, sampleGlob
     return 1 + (elevation ?? sampleGlobe(direction)) * relief / radius;
   }
 
+  const textureCenter = projection.project((west + east) / 2, (south + north) / 2, new THREE.Vector3());
+  const referenceLongitude = Math.atan2(-textureCenter.z, textureCenter.x);
   for (let row = 0; row < ys.length; row++) {
     for (let column = 0; column < xs.length; column++) {
       const x = xs[column];
       const y = ys[row];
       const index = row * xs.length + column;
       projection.project(x, y, direction);
-      const longitude = Math.atan2(-direction.z, direction.x);
+      let longitude = Math.atan2(-direction.z, direction.x);
+      // Keep nearby vertices together across the global texture's date-line seam.
+      longitude += Math.round((referenceLongitude - longitude) / (2 * Math.PI)) * 2 * Math.PI;
       const latitude = Math.asin(THREE.MathUtils.clamp(direction.y, -1, 1));
       uv[index * 2] = 0.5 + longitude / (2 * Math.PI);
       uv[index * 2 + 1] = 0.5 + latitude / Math.PI;
