@@ -153,6 +153,7 @@ async function loadMoon(container, status) {
   let pitch = 0;
   let dragPointerId = null;
   let previousFrame = performance.now();
+  let lastCollisionCheck = previousFrame;
 
   const origin = new THREE.Vector3(0, 0, 0);
   const flightRaycaster = new THREE.Raycaster();
@@ -223,7 +224,8 @@ async function loadMoon(container, status) {
     controls.enabled = true;
     controls.target.set(0, 0, 0);
     controls.minDistance = 1.06;
-    camera.up.set(view === 'north' || view === 'south' ? 0 : 0, view === 'north' || view === 'south' ? 0 : 1, view === 'north' || view === 'south' ? 1 : 0);
+    const isPolarView = view === 'north' || view === 'south';
+    camera.up.set(0, isPolarView ? 0 : 1, isPolarView ? 1 : 0);
 
     if (view === 'north') camera.position.set(0, 3.25, 0.001);
     else if (view === 'south') camera.position.set(0, -3.25, 0.001);
@@ -344,15 +346,18 @@ async function loadMoon(container, status) {
         }
       }
 
-      radialDirection.copy(camera.position).normalize();
-      rayOrigin.copy(radialDirection).multiplyScalar(2);
-      rayDirection.copy(radialDirection).negate();
-      flightRaycaster.set(rayOrigin, rayDirection);
-      const surfaceHit = flightRaycaster.intersectObject(moon, false)[0];
-      if (surfaceHit) {
-        const minimumRadius = surfaceHit.point.length() + FLIGHT_CLEARANCE;
-        if (camera.position.length() < minimumRadius) {
-          camera.position.copy(radialDirection).multiplyScalar(minimumRadius);
+      if (camera.position.length() < 1.15 && now - lastCollisionCheck >= 100) {
+        lastCollisionCheck = now;
+        radialDirection.copy(camera.position).normalize();
+        rayOrigin.copy(radialDirection).multiplyScalar(2);
+        rayDirection.copy(radialDirection).negate();
+        flightRaycaster.set(rayOrigin, rayDirection);
+        const surfaceHit = flightRaycaster.intersectObject(moon, false)[0];
+        if (surfaceHit) {
+          const minimumRadius = surfaceHit.point.length() + FLIGHT_CLEARANCE;
+          if (camera.position.length() < minimumRadius) {
+            camera.position.copy(radialDirection).multiplyScalar(minimumRadius);
+          }
         }
       }
     } else {
