@@ -84,10 +84,20 @@ async function loadMoon(container, status) {
   positions.needsUpdate = true;
   geometry.computeVertexNormals();
 
+  const textureUrl = new URL('../public/data/wac-texture.jpg', import.meta.url);
+  let texture = null;
+  try {
+    texture = await new THREE.TextureLoader().loadAsync(textureUrl.href);
+    texture.colorSpace = THREE.SRGBColorSpace;
+  } catch {
+    // The terrain still renders in gray while the WAC texture is being prepared.
+  }
+
   const moon = new THREE.Mesh(
     geometry,
     new THREE.MeshStandardMaterial({
-      color: '#aaa9a5',
+      color: texture ? '#ffffff' : '#aaa9a5',
+      map: texture,
       roughness: 1,
       metalness: 0,
     }),
@@ -112,7 +122,9 @@ async function loadMoon(container, status) {
   resizeObserver.observe(container);
   resize();
 
-  status.textContent = `LOLA global terrain loaded · relief ×${DISPLAY_RELIEF}`;
+  status.textContent = texture
+    ? `LOLA terrain + WAC texture · relief ×${DISPLAY_RELIEF}`
+    : `LOLA terrain loaded · add WAC texture · relief ×${DISPLAY_RELIEF}`;
   status.classList.add('moon-status--loaded');
 
   renderer.setAnimationLoop(() => {
