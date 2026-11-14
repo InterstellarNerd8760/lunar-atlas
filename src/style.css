@@ -47,3 +47,20 @@ h1 {
 .moon-status--loaded {
   color: #e5e8ef;
 }
+
+.sky-timeline {
+  position: absolute;
+  inset: auto 0.85rem 0.85rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.7rem 0.85rem;
+  border: 1px solid #333948;
+  border-radius: 8px;
+  background: #10141de8;
+  font-size: 0.85rem;
+}
+.sky-timeline label:first-child { flex: 1; }
+.sky-timeline output { margin-left: 0.4rem; color: #c4cada; }
+.sky-timeline input[type=range] { display: block; width: 100%; margin: 0.45rem 0 0; }
+.sky-timeline label:last-child { white-space: nowrap; }

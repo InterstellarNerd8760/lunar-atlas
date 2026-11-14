@@ -1,6 +1,8 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/controls/OrbitControls.js';
 
+import { addSky } from './sky.js';
+
 const MOON_RADIUS_METERS = 1_737_400;
 const DISPLAY_RELIEF = 6;
 const MESH_WIDTH_SEGMENTS = 512;
@@ -42,18 +44,19 @@ async function loadMoon(container, status) {
   const heights = new Float32Array(heightBuffer);
 
   const scene = new THREE.Scene();
-  scene.background = new THREE.Color('#080b12');
+  scene.background = new THREE.Color('#030509');
 
-  const camera = new THREE.PerspectiveCamera(42, 1, 0.01, 100);
+  const camera = new THREE.PerspectiveCamera(42, 1, 0.01, 600);
   camera.position.set(0, 0.1, 3.25);
 
   const renderer = new THREE.WebGLRenderer({ antialias: true });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   container.append(renderer.domElement);
 
-  scene.add(new THREE.AmbientLight(0x77809a, 1.3));
-  const sunlight = new THREE.DirectionalLight(0xfff1d0, 3.2);
+  scene.add(new THREE.AmbientLight(0xc2ccdf, 0.17));
+  const sunlight = new THREE.DirectionalLight(0xfff4df, 2.8);
   sunlight.position.set(-3, 1.5, 4);
   scene.add(sunlight);
 
@@ -104,7 +107,16 @@ async function loadMoon(container, status) {
   );
   scene.add(moon);
 
+  let skyStatus = 'JPL Horizons';
+  try {
+    await addSky(scene, camera, sunlight, container);
+  } catch (error) {
+    console.warn(error);
+    skyStatus = 'Preview lighting';
+  }
+
   const controls = new OrbitControls(camera, renderer.domElement);
+  controls.enablePan = false;
   controls.enableDamping = true;
   controls.dampingFactor = 0.06;
   controls.minDistance = 1.15;
@@ -125,6 +137,7 @@ async function loadMoon(container, status) {
   status.textContent = texture
     ? `LOLA terrain + WAC texture · relief ×${DISPLAY_RELIEF}`
     : `LOLA terrain loaded · add WAC texture · relief ×${DISPLAY_RELIEF}`;
+  status.textContent += ' · ' + skyStatus;
   status.classList.add('moon-status--loaded');
 
   renderer.setAnimationLoop(() => {
