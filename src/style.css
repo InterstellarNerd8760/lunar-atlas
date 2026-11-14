@@ -1,66 +1,86 @@
-body {
-  margin: 0;
-  background: #111319;
-  color: #f5f6fa;
-  font-family: system-ui, sans-serif;
-}
 
-main {
-  width: min(1100px, calc(100% - 2rem));
-  margin: 0 auto;
-  padding: 1rem 0;
-}
-
-h1 {
-  margin: 0 0 0.75rem;
-  font-size: 1.35rem;
-  font-weight: 550;
-}
-
-#moon-view {
-  position: relative;
-  height: min(78vh, 760px);
-  min-height: 380px;
-  overflow: hidden;
-  border: 1px solid #303440;
-  border-radius: 12px;
-  background: #080b12;
-}
-
-#moon-view canvas {
-  display: block;
-  width: 100%;
-  height: 100%;
-}
-
-.moon-status {
+.camera-toolbar {
   position: absolute;
-  z-index: 1;
-  top: 0.75rem;
-  left: 0.9rem;
+  z-index: 2;
+  top: 0.65rem;
+  right: 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  max-width: calc(100% - 1.5rem);
+  padding: 0.45rem;
+  overflow-x: auto;
+  border: 1px solid #333948;
+  border-radius: 9px;
+  background: #10141de8;
+  color: #e5e8ef;
+  font-size: 0.8rem;
+  backdrop-filter: blur(8px);
+}
+
+.camera-toolbar__label {
+  padding: 0 0.35rem;
+  color: #aeb8ca;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.camera-toolbar button {
+  padding: 0.4rem 0.55rem;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.camera-toolbar button:hover {
+  background: #202838;
+}
+
+.camera-toolbar button[aria-pressed="true"] {
+  border-color: #607494;
+  background: #29374a;
+  color: #fff;
+}
+
+.flight-hint {
+  position: absolute;
+  z-index: 2;
+  left: 50%;
+  bottom: 5.2rem;
+  width: max-content;
+  max-width: calc(100% - 2rem);
   margin: 0;
-  color: #c5cad5;
-  font-size: 0.85rem;
+  padding: 0.6rem 0.8rem;
+  transform: translateX(-50%);
+  border: 1px solid #45516a;
+  border-radius: 7px;
+  background: #10141de8;
+  color: #f2f5fa;
+  font-size: 0.8rem;
+  text-align: center;
   pointer-events: none;
 }
 
-.moon-status--loaded {
-  color: #e5e8ef;
+.flight-hint[hidden] {
+  display: none;
 }
 
-.sky-timeline {
-  position: absolute;
-  inset: auto 0.85rem 0.85rem;
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  padding: 0.7rem 0.85rem;
-  border: 1px solid #333948;
-  border-radius: 8px;
-  background: #10141de8;
-  font-size: 0.85rem;
+@media (max-width: 600px) {
+  .camera-toolbar {
+    left: 0.55rem;
+    right: 0.55rem;
+    top: 2.9rem;
+  }
+
+  .camera-toolbar__label {
+    display: none;
+  }
+
+  .moon-status {
+    max-width: 85%;
+  }
 }
-.sky-timeline label:first-child { flex: 1; }
-.sky-timeline output { margin-left: 0.4rem; color: #c4cada; }
-.sky-timeline input[type=range] { display: block; width: 100%; margin: 0.45rem 0 0; }
-.sky-timeline label:last-child { white-space: nowrap; }
