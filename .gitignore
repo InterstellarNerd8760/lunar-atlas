@@ -147,3 +147,9 @@ vite.config.ts.timestamp-*
 
 # Turbo Repo
 .turbo
+
+# Local lunar raster inputs and intermediate outputs
+/data/raw/
+/data/work/
+.ipynb_checkpoints/
+__pycache__/
