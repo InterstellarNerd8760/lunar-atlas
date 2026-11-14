@@ -234,11 +234,8 @@ async function loadMoon(container, status) {
   const rayDirection = new THREE.Vector3();
 
   function surfaceHit(raycaster) {
-    if (activeSite) {
-      const hit = raycaster.intersectObject(activeSite.mesh, false)[0];
-      if (hit) return hit;
-    }
-    return raycaster.intersectObject(moon, false).find(({ point }) => {
+    const siteHit = activeSite ? raycaster.intersectObject(activeSite.mesh, false)[0] : null;
+    const globeHit = raycaster.intersectObject(moon, false).find(({ point }) => {
       if (!activeSite) return true;
       const { projection } = activeSite;
       const length = point.length();
@@ -253,6 +250,7 @@ async function loadMoon(container, status) {
       const extent = cutout.value;
       return x <= extent.x || x >= extent.z || y <= extent.y || y >= extent.w;
     });
+    return siteHit && (!globeHit || siteHit.distance < globeHit.distance) ? siteHit : globeHit;
   }
 
   function resetSite() {
@@ -384,6 +382,7 @@ async function loadMoon(container, status) {
           terrain.mesh.geometry.dispose();
           return;
         }
+        if (freeFlight) leaveFlight();
         activeSite = terrain;
         cutout.value.set(...terrain.extent);
         cutoutCenter.value.copy(terrain.projection.center);
@@ -404,7 +403,8 @@ async function loadMoon(container, status) {
         controls.update();
         for (const button of viewButtons) button.setAttribute('aria-pressed', 'false');
         const coordinates = site.layers ? [site.lat, site.lon] : site.centerLatLon;
-        const coordinateText = coordinates.map((value, i) => `${Math.abs(value).toFixed(4)}° ${(i ? ['W', 'E'] : ['S', 'N'])[Number(value >= 0)]}`).join(' · ');
+        const [latitude, longitude] = coordinates;
+        const coordinateText = `${Math.abs(latitude).toFixed(4)}° ${latitude < 0 ? 'S' : 'N'} · ${Math.abs(longitude).toFixed(4)}° ${longitude < 0 ? 'W' : 'E'}`;
         const details = [name, site.id?.startsWith('artemis3-') ? 'Terrain proxy' : site.year, site.country_or_company, coordinateText].filter(Boolean);
         siteStatus.textContent = details.join(' · ');
       } catch (error) {
