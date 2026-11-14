@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { createVisibilityPanel } from './visibility.js';
 
 const AU_KM = 149597870.7;
 const MOON_RADIUS_KM = 1737.4;
@@ -41,7 +42,7 @@ export async function addSky(scene, camera, sunlight, container) {
   );
   const earth = new THREE.Mesh(
     new THREE.SphereGeometry(6371 / MOON_RADIUS_KM, 32, 24),
-    new THREE.MeshStandardMaterial({ color: 0x6089c5, roughness: 0.9 }),
+    new THREE.MeshStandardMaterial({ color: 0x6089c5, roughness: 0.9, toneMapped: false }),
   );
   scene.add(sunlightDisk, earth);
 
@@ -101,6 +102,8 @@ export async function addSky(scene, camera, sunlight, container) {
     hour: '2-digit', minute: '2-digit', hourCycle: 'h23',
   });
   const sunPosition = new THREE.Vector3();
+  const earthshine = new THREE.DirectionalLight(0xaacbff, 0.01);
+  scene.add(earthshine);
   function update() {
     const index = Number(slider.value);
     const first = positions[Math.floor(index)];
@@ -112,11 +115,15 @@ export async function addSky(scene, camera, sunlight, container) {
     const sunDisplayRadius = sunDisplayDistance * 695700 / (sunPosition.length() * MOON_RADIUS_KM);
     sunlightDisk.scale.setScalar(sunDisplayRadius);
     earth.position.copy(first.earth).lerp(next.earth, fraction);
+    earthshine.position.copy(earth.position).normalize().multiplyScalar(4);
+    const phase = (1 + earth.position.clone().negate().normalize().dot(sunPosition.clone().sub(earth.position).normalize())) / 2;
+    earthshine.intensity = 0.014 * phase;
     date.value = formatTime.format(first.utc + fraction * (next.utc - first.utc)) + ' UTC';
   }
   slider.addEventListener('input', update);
   update();
 
   // Start with sunlight crossing the visible face so craters show their relief.
-  camera.position.copy(sunlight.position).normalize().add(new THREE.Vector3(1.15, 0.25, 0)).setLength(3.55);
+  camera.position.copy(sunlight.position).normalize().add(new THREE.Vector3(1.15, 0.25, 0)).setLength(3.1);
+  return { earth, analyze: createVisibilityPanel(container, positions) };
 }
