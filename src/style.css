@@ -6,7 +6,7 @@ body {
 }
 
 main {
-  width: min(1100px, calc(100% - 2rem));
+  width: calc(100% - 2rem);
   margin: 0 auto;
   padding: 1rem 0;
 }
@@ -19,7 +19,7 @@ h1 {
 
 #moon-view {
   position: relative;
-  height: min(78vh, 760px);
+  height: calc(100dvh - 5rem);
   min-height: 380px;
   overflow: hidden;
   border: 1px solid #303440;
@@ -185,3 +185,6 @@ h1 {
 .visibility-strip span { flex-basis:0; }
 .camera-toolbar { flex-wrap:wrap; }
 @media(max-width:600px) { .visibility-panel { top:8rem; max-height:35%; } }
+
+#moon-view .visibility-panel canvas { height:auto; }
+.moon-status { top:4.3rem; }

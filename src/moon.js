@@ -160,6 +160,31 @@ async function loadMoon(container, status) {
     return heights[row * metadata.width + column];
   }
   const siteMaterial = moon.material.clone();
+  const truePositions = positions.array.slice();
+  let currentRelief = 1;
+  let reliefMode = 'auto';
+  const reliefControl = document.createElement('select');
+  reliefControl.setAttribute('aria-label', 'Terrain relief');
+  reliefControl.add(new Option('Auto relief', 'auto'));
+  reliefControl.add(new Option('True scale ×1', 'true'));
+  reliefControl.addEventListener('change', () => { reliefMode = reliefControl.value; });
+  function updateRelief() {
+    const altitude = Math.max(0, camera.position.length() - 1);
+    const desired = activeSite || siteRequest || reliefMode === 'true' ? 1 :
+      Math.round((1 + 7 * THREE.MathUtils.smoothstep(altitude, 0.08, 2)) * 10) / 10;
+    if (desired === currentRelief) return;
+    currentRelief = desired;
+    for (let i = 0; i < positions.count; i++) {
+      direction.fromArray(truePositions, i * 3);
+      const radius = direction.length();
+      direction.multiplyScalar((1 + (radius - 1) * desired) / radius);
+      positions.setXYZ(i, direction.x, direction.y, direction.z);
+    }
+    positions.needsUpdate = true;
+    geometry.computeVertexNormals();
+    geometry.computeBoundingSphere();
+    status.textContent = `LOLA terrain · Relief ×${desired.toFixed(1)}${desired > 1 ? ' (exaggerated)' : ' (true scale)'} · ${skyStatus}`;
+  }
   scene.add(moon);
 
   let sky;
@@ -200,6 +225,7 @@ async function loadMoon(container, status) {
   siteSelect.add(new Option('Explore a site', ''));
   siteSelect.hidden = true;
   cameraToolbar.insertBefore(siteSelect, cameraToolbar.lastElementChild);
+  cameraToolbar.append(reliefControl);
   container.append(cameraToolbar);
 
   const siteStatus = document.createElement('p');
@@ -382,6 +408,7 @@ async function loadMoon(container, status) {
       const name = site.name ?? site.siteName;
       const request = new AbortController();
       siteRequest = request;
+      updateRelief();
       siteStatus.hidden = false;
       siteStatus.textContent = `Loading ${name}…`;
       try {
@@ -436,7 +463,7 @@ async function loadMoon(container, status) {
   earthButton.addEventListener('click', () => {
     if (!sky) return;
     if (freeFlight) leaveFlight();
-    controls.target.copy(sky.earth.position);
+    controls.target.copy(camera.position).add(sky.earth.position.clone().sub(camera.position).normalize().multiplyScalar(0.001));
     camera.lookAt(controls.target);
     controls.update();
   });
@@ -587,6 +614,7 @@ async function loadMoon(container, status) {
       controls.update();
     }
 
+    updateRelief();
     renderer.render(scene, camera);
   });
 }

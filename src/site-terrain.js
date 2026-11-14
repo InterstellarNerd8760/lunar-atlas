@@ -169,5 +169,10 @@ export async function loadSiteTerrain(site, radius, relief, material, sampleGlob
   const y = (south + north) / 2;
   const center = projection.project(x, y, new THREE.Vector3());
   center.multiplyScalar(surfaceRadius(x, y, center));
-  return { mesh: new THREE.Mesh(geometry, material), center, extent, projection };
+  // Keep vertex coordinates relative to the patch center for close-range precision.
+  geometry.translate(-center.x, -center.y, -center.z);
+  geometry.computeBoundingSphere();
+  const mesh = new THREE.Mesh(geometry, material);
+  mesh.position.copy(center);
+  return { mesh, center, extent, projection };
 }
