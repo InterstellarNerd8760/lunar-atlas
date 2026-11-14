@@ -5,7 +5,7 @@ import { addSky } from './sky.js';
 import { loadSiteIndex, loadSiteTerrain } from './site-terrain.js';
 
 const MOON_RADIUS_METERS = 1_737_400;
-const DISPLAY_RELIEF = 6;
+const DISPLAY_RELIEF = 1;
 const MESH_WIDTH_SEGMENTS = 512;
 const MESH_HEIGHT_SEGMENTS = 256;
 const FLIGHT_CLEARANCE = 0.008;
@@ -53,10 +53,10 @@ async function loadMoon(container, status) {
   const scene = new THREE.Scene();
   scene.background = new THREE.Color('#030509');
 
-  const camera = new THREE.PerspectiveCamera(42, 1, 0.0002, 600);
+  const camera = new THREE.PerspectiveCamera(42, 1, 2 / MOON_RADIUS_METERS, 600);
   camera.position.set(0, 0.1, 3.25);
 
-  const renderer = new THREE.WebGLRenderer({ antialias: true });
+  const renderer = new THREE.WebGLRenderer({ antialias: true, logarithmicDepthBuffer: true });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.outputColorSpace = THREE.SRGBColorSpace;
@@ -102,6 +102,7 @@ async function loadMoon(container, status) {
     texture = await new THREE.TextureLoader().loadAsync(textureUrl.href);
     texture.colorSpace = THREE.SRGBColorSpace;
     texture.wrapS = THREE.RepeatWrapping;
+    texture.anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy());
   } catch {
     // The terrain still renders in gray while the WAC texture is being prepared.
   }
@@ -161,9 +162,10 @@ async function loadMoon(container, status) {
   const siteMaterial = moon.material.clone();
   scene.add(moon);
 
+  let sky;
   let skyStatus = 'JPL Horizons';
   try {
-    await addSky(scene, camera, sunlight, container);
+    sky = await addSky(scene, camera, sunlight, container);
   } catch (error) {
     console.warn(error);
     skyStatus = 'Preview lighting';
@@ -291,7 +293,7 @@ async function loadMoon(container, status) {
     const up = activeSite ? activeSite.center.clone().normalize() : new THREE.Vector3(0, 1, 0);
     createOrbitControls(up);
     controls.target.copy(focus);
-    controls.minDistance = activeSite ? 0.00035 : focus.lengthSq() > 0.1 ? 0.035 : 1.06;
+    controls.minDistance = activeSite ? 5 / MOON_RADIUS_METERS : focus.lengthSq() > 0.1 ? 0.035 : 1.06;
     if (activeSite) controls.maxPolarAngle = Math.PI / 2;
     controls.update();
     flightButton.textContent = 'Free flight';
@@ -327,6 +329,8 @@ async function loadMoon(container, status) {
   function setView(view) {
     if (freeFlight) leaveFlight();
     resetSite();
+    camera.fov = 42;
+    camera.updateProjectionMatrix();
     const isPolarView = view === 'north' || view === 'south';
     createOrbitControls(new THREE.Vector3(0, isPolarView ? 0 : 1, isPolarView ? 1 : 0));
 
@@ -359,7 +363,11 @@ async function loadMoon(container, status) {
       }
       if (group.childElementCount) siteSelect.append(group);
     }
-    if (!sites.size) return;
+    if (!sites.size) {
+      siteStatus.hidden = false;
+      siteStatus.textContent = 'Extract landing-sites.zip and lola-sites.zip into public/data to explore detailed sites.';
+      return;
+    }
     siteSelect.hidden = false;
     siteSelect.addEventListener('change', async () => {
       const id = siteSelect.value;
@@ -394,14 +402,17 @@ async function loadMoon(container, status) {
         const up = terrain.center.clone().normalize();
         const north = new THREE.Vector3(0, 1, 0).addScaledVector(up, -up.y).normalize();
         createOrbitControls(up);
-        const distance = site.layers ? 0.009 : 0.014;
+        const distance = 120 / MOON_RADIUS_METERS;
+        camera.fov = 65;
+        camera.updateProjectionMatrix();
         camera.position.copy(terrain.center).addScaledVector(up, distance).addScaledVector(north, -distance * 0.55);
-        controls.target.copy(terrain.center);
-        controls.minDistance = 0.00035;
+        controls.target.copy(terrain.center).addScaledVector(north, 1500 / MOON_RADIUS_METERS);
+        controls.minDistance = 5 / MOON_RADIUS_METERS;
         controls.maxPolarAngle = Math.PI / 2;
         camera.lookAt(controls.target);
         controls.update();
         for (const button of viewButtons) button.setAttribute('aria-pressed', 'false');
+        sky?.analyze(terrain.center, name);
         const coordinates = site.layers ? [site.lat, site.lon] : site.centerLatLon;
         const [latitude, longitude] = coordinates;
         const coordinateText = `${Math.abs(latitude).toFixed(4)}° ${latitude < 0 ? 'S' : 'N'} · ${Math.abs(longitude).toFixed(4)}° ${longitude < 0 ? 'W' : 'E'}`;
@@ -420,6 +431,36 @@ async function loadMoon(container, status) {
   for (const button of viewButtons) {
     button.addEventListener('click', () => setView(button.dataset.view));
   }
+  const earthButton = document.createElement('button');
+  earthButton.textContent = 'Look at Earth';
+  earthButton.addEventListener('click', () => {
+    if (!sky) return;
+    if (freeFlight) leaveFlight();
+    controls.target.copy(sky.earth.position);
+    camera.lookAt(controls.target);
+    controls.update();
+  });
+  cameraToolbar.append(earthButton);
+  const groundButton = document.createElement('button');
+  groundButton.textContent = 'Stand on surface';
+  groundButton.addEventListener('click', () => {
+    if (!activeSite) return;
+    if (freeFlight) leaveFlight();
+    const up = activeSite.center.clone().normalize();
+    const north = new THREE.Vector3(0, 1, 0).addScaledVector(up, -up.y).normalize();
+    const ray = new THREE.Raycaster(up.clone().multiplyScalar(2), up.clone().negate());
+    activeSite.mesh.updateMatrixWorld(true);
+    const point = surfaceHit(ray)?.point ?? activeSite.center;
+    camera.position.copy(point).addScaledVector(up, 8 / MOON_RADIUS_METERS);
+    createOrbitControls(up);
+    controls.minDistance = 5 / MOON_RADIUS_METERS;
+    controls.target.copy(camera.position).addScaledVector(north, 500 / MOON_RADIUS_METERS);
+    camera.fov = 65;
+    camera.updateProjectionMatrix();
+    camera.lookAt(controls.target);
+    controls.update();
+  });
+  cameraToolbar.append(groundButton);
   flightButton.addEventListener('click', () => {
     if (freeFlight) leaveFlight();
     else enterFlight();
@@ -436,8 +477,9 @@ async function loadMoon(container, status) {
     picker.setFromCamera(pointer, camera);
     const hit = surfaceHit(picker);
     if (!hit) return;
+    sky?.analyze(hit.point, "Selected terrain point");
     controls.target.copy(hit.point);
-    controls.minDistance = activeSite ? 0.00035 : 0.035;
+    controls.minDistance = activeSite ? 5 / MOON_RADIUS_METERS : 0.035;
     controls.update();
     for (const button of viewButtons) button.setAttribute('aria-pressed', 'false');
   });
@@ -519,7 +561,7 @@ async function loadMoon(container, status) {
       if (movement.lengthSq() > 0) {
         movement.normalize();
         const altitude = camera.position.length() - (activeSite?.center.length() ?? 1);
-        let speed = THREE.MathUtils.clamp(altitude * 0.16, activeSite ? 0.0005 : 0.008, 0.45);
+        let speed = THREE.MathUtils.clamp(altitude * 0.16, activeSite ? 1 / MOON_RADIUS_METERS : 0.008, 0.45);
         if (keys.has('ShiftLeft') || keys.has('ShiftRight')) speed *= 3;
         camera.position.addScaledVector(movement, speed * deltaSeconds);
         if (camera.position.length() > MAX_FLIGHT_RADIUS) {
@@ -535,7 +577,7 @@ async function loadMoon(container, status) {
         flightRaycaster.set(rayOrigin, rayDirection);
         const hit = surfaceHit(flightRaycaster);
         if (hit) {
-          const minimumRadius = hit.point.length() + (activeSite ? 0.0002 : FLIGHT_CLEARANCE);
+          const minimumRadius = hit.point.length() + (activeSite ? 5 / MOON_RADIUS_METERS : FLIGHT_CLEARANCE);
           if (camera.position.length() < minimumRadius) {
             camera.position.copy(radialDirection).multiplyScalar(minimumRadius);
           }
