@@ -402,11 +402,16 @@ async function loadMoon(container, loadingStatus) {
   const flightButton = el('button', { type: 'button', class: 'btn', 'aria-pressed': 'false', text: 'Free flight' });
   const walkButton = el('button', { type: 'button', class: 'btn', text: 'Walk', hidden: true, 'aria-pressed': 'false' });
   let walking = false;
+  let jumpHeight = 0;
+  let jumpVelocity = 0;
+  const walkUp = new THREE.Vector3();
+  const walkRotation = new THREE.Quaternion();
   walkButton.addEventListener('click', () => {
     if (walking) leaveFlight();
     else {
       enterFlight(false);
       walking = true;
+      jumpHeight = jumpVelocity = 0;
       walkButton.textContent = 'Exit walk';
       walkButton.setAttribute('aria-pressed', 'true');
       showFlightControls();
@@ -659,6 +664,7 @@ async function loadMoon(container, loadingStatus) {
   const noSpin = new THREE.Quaternion();
   function flyTo({ pos, target, up, fov, minDistance = 1.012, maxPolarAngle = Math.PI }, instant = false) {
     if (freeFlight) leaveFlight();
+    walkButton.hidden = true;
     flight = {
       fromPos: camera.position.clone(), fromTarget: controls.target.clone(), fromUp: camera.up.clone(), fromFov: camera.fov,
       toPos: pos.clone(), toTarget: target.clone(), toUp: up.clone(), toFov: fov, minDistance, maxPolarAngle,
@@ -707,6 +713,7 @@ async function loadMoon(container, loadingStatus) {
 
   function setView(view) {
     if (freeFlight) leaveFlight();
+    walkButton.hidden = true;
     clearSelection();
     const isPolarView = view === 'north' || view === 'south';
     const pos = view === 'north' ? new THREE.Vector3(0, 3.25, 0.001)
@@ -779,6 +786,7 @@ async function loadMoon(container, loadingStatus) {
   function focusFeature(feature, { instant = false } = {}) {
     if (!feature || !Number.isFinite(feature.lat) || !Number.isFinite(feature.lon)) return;
     if (freeFlight) leaveFlight();
+    walkButton.hidden = true;
     clearSelection();
     showFeatureNote(feature);
     featureLabels?.setSelected(feature);
@@ -809,6 +817,7 @@ async function loadMoon(container, loadingStatus) {
       return;
     }
     if (freeFlight) leaveFlight();
+    walkButton.hidden = true;
     const changed = currentPlace?.id !== place.id || currentPlace?.lat !== place.lat || currentPlace?.lon !== place.lon;
     currentPlace = place;
     hideFeatureNote();
@@ -827,14 +836,15 @@ async function loadMoon(container, loadingStatus) {
       relief = 1;
       terrain.setRelief(relief);
     }
-    walkButton.hidden = !surface;
     flyTo(surface ? surfaceEye(place.lat, place.lon, place) : overviewEye(place.lat, place.lon), instant);
+    walkButton.hidden = !surface;
     if (!place.id) return;
     terrain.preloadSite(place.id).then((loaded) => {
       if (currentPlace !== place || !loaded || !surface || freeFlight || navigationRevision !== revision) return;
       const eye = surfaceEye(place.lat, place.lon, place);
       if (flight) Object.assign(flight, { toPos: eye.pos, toTarget: eye.target });
       else flyTo(eye, true);
+      walkButton.hidden = false;
     });
   }
 
@@ -862,7 +872,7 @@ async function loadMoon(container, loadingStatus) {
     touchControls.hidden = !showTouch;
     container.classList.toggle('touch-flight-active', showTouch);
     flightHint.hidden = !freeFlight;
-    flightHint.textContent = walking ? 'Walk: drag to look · Esc exits (movement coming next)' : showTouch
+    flightHint.textContent = walking ? 'Walk: W A S D / arrows move · Drag to look · Shift run · Space jump · Esc exits' : showTouch
       ? 'Thumbstick to move · Drag to look · Rise / Descend'
       : 'Free flight: mouse / drag to look · W A S D move · Q / E turn · Space / C rise / descend · Shift boost · Esc exits';
   }
@@ -918,6 +928,7 @@ async function loadMoon(container, loadingStatus) {
   flightButton.addEventListener('click', () => {
     if (freeFlight) leaveFlight();
     else enterFlight();
+    walkButton.hidden = true;
   });
 
   canvas.addEventListener('dblclick', (event) => {
@@ -973,12 +984,13 @@ async function loadMoon(container, loadingStatus) {
     if (freeFlight && document.pointerLockElement !== canvas) leaveFlight(false);
   });
 
-  const movementKeys = new Set(['KeyW', 'KeyA', 'KeyS', 'KeyD', 'KeyQ', 'KeyE', 'Space', 'KeyC', 'ShiftLeft', 'ShiftRight']);
+  const movementKeys = new Set(['KeyW', 'KeyA', 'KeyS', 'KeyD', 'KeyQ', 'KeyE', 'Space', 'KeyC', 'ShiftLeft', 'ShiftRight', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight']);
   document.addEventListener('keydown', (event) => {
     if (freeFlight) {
       if (event.code === 'Escape') leaveFlight();
       else if (!isTextField(event.target) && !event.metaKey && !event.ctrlKey && !event.altKey && movementKeys.has(event.code)) {
         event.preventDefault();
+        if (walking && event.code === 'Space' && !event.repeat && jumpHeight === 0) jumpVelocity = 1.8;
         keys.add(event.code);
       }
       return;
@@ -1075,7 +1087,28 @@ async function loadMoon(container, loadingStatus) {
     if (flight) {
       stepFlight(realDelta);
     } else if (walking) {
-      camera.position.setLength(terrain.surfaceRadius(camera.position) + 1.7 / MOON_RADIUS_METERS);
+      // Reuse scratch vectors; walking never requests DEM loads.
+      radialDirection.copy(camera.position).normalize();
+      camera.getWorldDirection(viewDirection).projectOnPlane(radialDirection).normalize();
+      rightDirection.crossVectors(viewDirection, radialDirection).normalize();
+      movement.set(0, 0, 0);
+      if (keys.has('KeyW') || keys.has('ArrowUp')) movement.add(viewDirection);
+      if (keys.has('KeyS') || keys.has('ArrowDown')) movement.sub(viewDirection);
+      if (keys.has('KeyD') || keys.has('ArrowRight')) movement.add(rightDirection);
+      if (keys.has('KeyA') || keys.has('ArrowLeft')) movement.sub(rightDirection);
+      if (movement.lengthSq() > 0) {
+        const speed = keys.has('ShiftLeft') || keys.has('ShiftRight') ? 4 : 1.5;
+        camera.position.addScaledVector(movement.normalize(), speed * deltaSeconds / MOON_RADIUS_METERS);
+        walkUp.copy(camera.position).normalize();
+        walkRotation.setFromUnitVectors(radialDirection, walkUp);
+        camera.quaternion.premultiply(walkRotation);
+        camera.up.copy(walkUp);
+      }
+      if (jumpHeight > 0 || jumpVelocity > 0) {
+        jumpHeight += jumpVelocity * deltaSeconds - 0.5 * 1.62 * deltaSeconds * deltaSeconds;
+        jumpVelocity -= 1.62 * deltaSeconds;
+        if (jumpHeight <= 0) jumpHeight = jumpVelocity = 0;
+      }
     } else if (freeFlight) {
       const activeKeys = heldPointers.size ? new Set([...keys, ...heldPointers.values()]) : keys;
       const yawInput = Number(activeKeys.has('KeyQ')) - Number(activeKeys.has('KeyE'));
@@ -1110,6 +1143,7 @@ async function loadMoon(container, loadingStatus) {
     }
 
     applyRelief();
+    if (walking) camera.position.setLength(terrain.surfaceRadius(camera.position) + (1.7 + jumpHeight) / MOON_RADIUS_METERS);
     radialDirection.copy(camera.position);
     const radiusNow = radialDirection.length();
     if (radiusNow > 1e-4) {
