@@ -59,7 +59,7 @@ export function createSiteList(container, places, { onSelect }) {
         el('span', { class: 'row__name', text: place.name }),
         el('span', { class: 'row__meta', text: metaLine(place) }),
       ]);
-      row.addEventListener('click', () => { if (!place.disabled) onSelect(place); });
+      row.addEventListener('click', () => onSelect(place));
       const item = el('li', {}, [row]);
       rows.set(place.id, { place, row, item });
       list.append(item);
@@ -195,11 +195,18 @@ export function createDrawer(container, { onClose, onFlyTo, onStand, onEarth }) 
       const isPoint = place.group === 'point';
       title.textContent = place.name;
       statusChip.textContent = chipText(place);
-      coordsText.textContent = formatCoords(place.lat, place.lon);
+      const hasCoords = Number.isFinite(place.lat) && Number.isFinite(place.lon);
+      coordsText.textContent = hasCoords ? formatCoords(place.lat, place.lon) : 'No published coordinates';
+      copyButton.hidden = !hasCoords;
       imageSlot.hidden = isPoint;
       imageFrame.replaceChildren();
       if (note?.image) {
-        imageFrame.append(el('img', { src: note.image, alt: note.imageAlt || place.name }));
+        imageFrame.append(el('img', {
+          src: note.image,
+          alt: note.imageAlt || place.name,
+          loading: 'lazy',
+          decoding: 'async',
+        }));
         imageCaption.textContent = [note.imageCaption, note.imageCredit && `Credit: ${note.imageCredit}`].filter(Boolean).join(' · ');
       } else {
         imageFrame.textContent = 'No image yet';

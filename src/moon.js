@@ -122,6 +122,31 @@ function noteFinder(notes) {
   };
 }
 
+function photoKey(value) {
+  return normId(String(value || '').replace(/^artemis region:\s*/i, '').replace(/^(note|artemis3)-/, ''));
+}
+
+function findPhoto(place, photosById) {
+  if (photosById.has(place.id)) return photosById.get(place.id);
+  const keys = new Set([photoKey(place.id), photoKey(place.name)].filter(Boolean));
+  for (const photo of photosById.values()) {
+    if (keys.has(photoKey(photo.id)) || keys.has(photoKey(photo.title))) return photo;
+  }
+  return null;
+}
+
+function attachPhoto(note, place, photosById, dataDirectory) {
+  const photo = findPhoto(place, photosById);
+  if (!photo) return note;
+  return {
+    ...(note || {}),
+    image: new URL(photo.file.includes('/') ? photo.file : `site-photos/${photo.file}`, dataDirectory).href,
+    imageAlt: photo.title || place.name,
+    imageCaption: photo.caption,
+    imageCredit: photo.credit,
+  };
+}
+
 export function mountMoonView(container) {
   container.replaceChildren();
 
@@ -141,14 +166,17 @@ export function mountMoonView(container) {
 async function loadMoon(container, loadingStatus) {
   const dataDirectory = new URL('../public/data/', import.meta.url);
   const params = new URLSearchParams(window.location.search);
-  const [demResponse, previewResponse, notesResponse] = await Promise.all([
+  const [demResponse, previewResponse, notesResponse, photosResponse] = await Promise.all([
     fetch(new URL('site-dems/index.json', dataDirectory)),
     fetch(new URL('site-previews/index.json', dataDirectory)),
     fetch(new URL('site-notes.json', dataDirectory)),
+    fetch(new URL('site-photos/index.json', dataDirectory)),
   ]);
   const demIndex = demResponse.ok ? await demResponse.json() : { sites: [] };
   const previewIndex = previewResponse.ok ? await previewResponse.json() : { sites: [] };
   const siteNotes = notesResponse.ok ? await notesResponse.json() : [];
+  const photoIndex = photosResponse.ok ? await photosResponse.json() : { photos: [] };
+  const photosById = new Map((photoIndex.photos || []).map((photo) => [photo.id, photo]));
 
   const scene = new THREE.Scene();
   scene.background = new THREE.Color('#030509');
@@ -517,11 +545,13 @@ async function loadMoon(container, loadingStatus) {
     pins.setSelected(place.id);
     if (changed) {
       railDismissed = false;
-      drawer.show(place, place.group === 'point' ? null : findNote(place));
-      analyzePlace(place);
+      const note = place.group === 'point' ? null : attachPhoto(findNote(place), place, photosById, dataDirectory);
+      drawer.show(place, note);
+      if (Number.isFinite(place.lat) && Number.isFinite(place.lon)) analyzePlace(place);
     }
     updateRail();
     setViewPressed(null);
+    if (!Number.isFinite(place.lat) || !Number.isFinite(place.lon)) return;
     if (reliefMode === 'auto' && relief !== 1) {
       relief = 1;
       terrain.setRelief(relief);
