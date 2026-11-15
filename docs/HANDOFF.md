@@ -5,8 +5,8 @@ This file is for whoever picks the project up next (Codex, Devin, or a person). 
 ## Current state
 
 - `main` has the cube-sphere quadtree LOD terrain (PR #4): 6 faces, screen-space-error splitting, skirts, float64 tile origins, log depth, a Lommel-Seeliger shader with earthshine, procedural micro-relief, and stereographic polar caps for the WAC texture.
-- PR #5 (`codex/relief-wac-display`) adds the ×1–×4 relief buttons and fixes the WAC imagery display.
-- This branch (`proxima/sldem-regions`) builds on PR #5. It adds:
+- PR #5 (merged) added the ×1–×4 relief buttons and fixes the WAC imagery display.
+- PR #7 (merged into main) built on PR #5. It added:
   1. A native-resolution global LOLA grid that loads in the background.
   2. SLDEM2015 regional terrain, 160 km across, around all six Apollo sites, so the 2–5 m NAC DTMs no longer drop straight into the ~10 km startup grid.
   3. Loader support for int16 height files and a separate cache for regional grids.
