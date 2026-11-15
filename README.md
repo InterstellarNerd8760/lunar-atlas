@@ -7,7 +7,7 @@ A browser-based Moon explorer for comparing sunlight and Earth visibility at lun
 Install Python 3 and Git. If you already have a checkout, open Terminal and run:
 
 ```bash
-cd ~/Documents/lunar-atlas-pr2
+cd ~/Documents/lunar-atlas-pr1
 git pull --ff-only origin main
 python3 -m http.server 8000
 ```
