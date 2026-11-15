@@ -11,11 +11,25 @@ const MESH_HEIGHT_SEGMENTS = 256;
 const FLIGHT_CLEARANCE = 0.008;
 const MAX_FLIGHT_RADIUS = 18;
 
-function surfaceNorth(up) {
+function surfaceNorth(up, fallback) {
   const north = new THREE.Vector3(0, 1, 0).addScaledVector(up, -up.y);
-  // At a pole the spin axis is radial. Use a fixed tangent there.
-  if (north.lengthSq() < 1e-12) north.set(1, 0, 0).addScaledVector(up, -up.x);
+  // Near a pole this tangent vanishes and normalize() would NaN the camera.
+  if (north.length() < 1e-6) {
+    const hint = fallback && fallback.length() > 1e-6 ? fallback : new THREE.Vector3(1, 0, 0);
+    north.copy(hint).addScaledVector(up, -hint.dot(up));
+  }
+  if (north.length() < 1e-6) north.set(0, 0, 1).addScaledVector(up, -up.z);
+  if (north.length() < 1e-6) north.set(1, 0, 0);
   return north.normalize();
+}
+
+function orbitUp(up, north) {
+  const axis = up.clone();
+  // OrbitControls turns camera.up onto +Y. That rotation is unstable when up
+  // is parallel to the spin axis, which rolls polar sites onto their edge.
+  if (1 - Math.abs(axis.y) < 1e-4) axis.addScaledVector(north, 0.04);
+  if (axis.length() < 1e-6) axis.set(0, 0, 1);
+  return axis.normalize();
 }
 
 export function mountMoonView(container) {
@@ -180,7 +194,25 @@ async function loadMoon(container, status) {
     const row = Math.min(metadata.height - 1, Math.floor(v * metadata.height));
     return heights[row * metadata.width + column];
   }
-  const siteMaterial = moon.material.clone();
+  const siteMaterial = new THREE.MeshStandardMaterial({
+    color: texture ? '#ffffff' : '#aaa9a5',
+    map: texture,
+    roughness: 1,
+    metalness: 0,
+    transparent: true,
+    depthWrite: true,
+    polygonOffset: true,
+    polygonOffsetFactor: -1,
+    polygonOffsetUnits: -2,
+  });
+  siteMaterial.onBeforeCompile = (shader) => {
+    shader.vertexShader = shader.vertexShader
+      .replace('#include <common>', '#include <common>\nattribute float fade;\nvarying float vFade;')
+      .replace('#include <begin_vertex>', '#include <begin_vertex>\nvFade = fade;');
+    shader.fragmentShader = shader.fragmentShader
+      .replace('#include <common>', '#include <common>\nvarying float vFade;')
+      .replace('#include <opaque_fragment>', 'diffuseColor.a *= vFade;\n#include <opaque_fragment>');
+  };
   const truePositions = positions.array.slice();
   let currentRelief = 1;
   let reliefMode = 'auto';
@@ -338,7 +370,8 @@ async function loadMoon(container, status) {
     dragPointerId = null;
     const focus = focusInFrontOfCamera().clone();
     const up = activeSite ? activeSite.center.clone().normalize() : new THREE.Vector3(0, 1, 0);
-    createOrbitControls(up);
+    const north = activeSite ? surfaceNorth(up, activeSite.projection.north) : null;
+    createOrbitControls(activeSite ? orbitUp(up, north) : up);
     controls.target.copy(focus);
     controls.minDistance = activeSite ? 5 / MOON_RADIUS_METERS : focus.lengthSq() > 0.1 ? 0.035 : 1.06;
     if (activeSite) controls.maxPolarAngle = Math.PI / 2;
@@ -419,40 +452,61 @@ async function loadMoon(container, status) {
     link.textContent = 'Source'; link.target = '_blank'; link.rel = 'noopener'; body.append(link);
     siteInfo.hidden = false;
   }
-  const siteGroups = [
-    ['site-dems', 'Apollo landing sites', site => site.group === 'lroc-nac-dtm'],
-    ['site-dems', 'South pole terrain', site => site.group === 'pgda-lola-5m'],
-    ['landing-sites', 'Other historical landing sites', site => !site.id.startsWith('artemis3-')],
-    ['landing-sites', 'Artemis III terrain proxies', site => site.id.startsWith('artemis3-')],
-    ['lola-sites', 'Additional south pole LOLA surveys', () => true],
-  ];
-  const siteDirectories = [...new Set(siteGroups.map(([directory]) => directory))];
-  Promise.allSettled([...siteDirectories, 'site-previews'].map(async (directory) => [directory, await loadSiteIndex(directory)])).then((results) => {
-    const indexes = new Map(results.filter(({ status }) => status === 'fulfilled').map(({ value }) => value));
-    const previews = indexes.get('site-previews') ?? [];
-    for (const directory of ['landing-sites', 'lola-sites']) {
-      const archiveSites = indexes.get(directory) ?? [];
-      const archiveIds = new Set(archiveSites.map(site => (site.id ?? site.siteId).toLowerCase()));
-      const missingSites = previews.filter(site =>
-        site.preview.archive === directory && !archiveIds.has((site.id ?? site.siteId).toLowerCase())
-      );
-      indexes.set(directory, [...archiveSites, ...missingSites]);
+  function frameSite(terrain, groundPoint) {
+    const up = terrain.center.clone().normalize();
+    const north = surfaceNorth(up, terrain.projection.north);
+    createOrbitControls(orbitUp(up, north));
+    const span = terrain.span || 4000;
+    if (groundPoint) {
+      camera.fov = 60;
+      camera.updateProjectionMatrix();
+      const eye = groundPoint.clone().addScaledVector(up, 3 / MOON_RADIUS_METERS);
+      const ahead = eye.clone()
+        .addScaledVector(north, 700 / MOON_RADIUS_METERS)
+        .addScaledVector(up, 8000 / MOON_RADIUS_METERS);
+      const drop = new THREE.Raycaster(ahead, up.clone().negate());
+      const groundAhead = surfaceHit(drop)?.point;
+      camera.position.copy(eye);
+      controls.target.copy(groundAhead ?? ahead).addScaledVector(up, 25 / MOON_RADIUS_METERS);
+    } else {
+      // Stay inside the patch so its boundary is not a cliff in the foreground.
+      const back = Math.max(700, span * 0.32);
+      const altitude = Math.max(120, span * 0.07);
+      camera.fov = 50;
+      camera.updateProjectionMatrix();
+      camera.position.copy(terrain.center)
+        .addScaledVector(up, altitude / MOON_RADIUS_METERS)
+        .addScaledVector(north, -back / MOON_RADIUS_METERS);
+      controls.target.copy(terrain.center);
     }
-    const missionDetails = new Map(indexes.get('landing-sites').map(site => [site.id, site]));
+    controls.minDistance = 3 / MOON_RADIUS_METERS;
+    controls.maxDistance = Math.max(8, (span * 4) / MOON_RADIUS_METERS);
+    controls.maxPolarAngle = Math.PI / 2;
+    camera.lookAt(controls.target);
+    controls.update();
+  }
+  loadSiteIndex('site-dems').then(async (catalog) => {
+    let previews = [];
+    try {
+      previews = await loadSiteIndex('site-previews');
+    } catch {
+      previews = [];
+    }
+    const details = new Map(previews.map((site) => [(site.id ?? site.siteId ?? '').toLowerCase(), site]));
     const sites = new Map();
-    const listedIds = new Set();
-    for (const [directory, label, include] of siteGroups) {
+    const groups = new Map([
+      ['lroc-nac-dtm', 'Apollo landing sites'],
+      ['pgda-lola-5m', 'South pole terrain'],
+    ]);
+    for (const [groupId, label] of groups) {
       const group = document.createElement('optgroup');
       group.label = label;
-      for (const site of (indexes.get(directory) ?? []).filter(include)) {
-        const id = site.id ?? site.siteId;
-        const key = id.toLowerCase();
-        if (listedIds.has(key)) continue;
-        listedIds.add(key);
-        const name = site.name ?? site.siteName;
-        const mission = directory === 'site-dems' ? missionDetails.get(key) : null;
-        sites.set(id, mission ? { ...site, year: mission.year, country_or_company: mission.country_or_company } : site);
-        group.append(new Option(name, id));
+      for (const site of catalog.filter((entry) => entry.group === groupId)) {
+        const mission = details.get(site.id.toLowerCase());
+        sites.set(site.id, mission
+          ? { ...site, year: mission.year, country_or_company: mission.country_or_company }
+          : site);
+        group.append(new Option(site.name, site.id));
       }
       if (group.childElementCount) siteSelect.append(group);
     }
@@ -494,18 +548,7 @@ async function loadMoon(container, status) {
         cutoutActive.value = true;
         scene.add(terrain.mesh);
         terrain.mesh.updateMatrixWorld(true);
-        const up = terrain.center.clone().normalize();
-        const north = surfaceNorth(up);
-        createOrbitControls(up);
-        const distance = 120 / MOON_RADIUS_METERS;
-        camera.fov = 65;
-        camera.updateProjectionMatrix();
-        camera.position.copy(terrain.center).addScaledVector(up, distance).addScaledVector(north, -distance * 0.55);
-        controls.target.copy(terrain.center).addScaledVector(north, 1500 / MOON_RADIUS_METERS);
-        controls.minDistance = 5 / MOON_RADIUS_METERS;
-        controls.maxPolarAngle = Math.PI / 2;
-        camera.lookAt(controls.target);
-        controls.update();
+        frameSite(terrain);
         for (const button of viewButtons) button.setAttribute('aria-pressed', 'false');
         sky?.analyze(terrain.center, name);
         showSiteNotes(site, name);
@@ -522,6 +565,10 @@ async function loadMoon(container, status) {
         siteStatus.hidden = false;
       }
     });
+  }).catch((error) => {
+    console.warn(error);
+    siteStatus.hidden = false;
+    siteStatus.textContent = 'Could not load the site catalog. Start the server from the repository root.';
   });
 
   for (const button of viewButtons) {
@@ -543,18 +590,10 @@ async function loadMoon(container, status) {
     if (!activeSite) return;
     if (freeFlight) leaveFlight();
     const up = activeSite.center.clone().normalize();
-    const north = surfaceNorth(up);
     const ray = new THREE.Raycaster(up.clone().multiplyScalar(2), up.clone().negate());
     activeSite.mesh.updateMatrixWorld(true);
     const point = surfaceHit(ray)?.point ?? activeSite.center;
-    camera.position.copy(point).addScaledVector(up, 8 / MOON_RADIUS_METERS);
-    createOrbitControls(up);
-    controls.minDistance = 5 / MOON_RADIUS_METERS;
-    controls.target.copy(camera.position).addScaledVector(north, 500 / MOON_RADIUS_METERS);
-    camera.fov = 65;
-    camera.updateProjectionMatrix();
-    camera.lookAt(controls.target);
-    controls.update();
+    frameSite(activeSite, point);
   });
   cameraToolbar.append(groundButton);
   flightButton.addEventListener('click', () => {

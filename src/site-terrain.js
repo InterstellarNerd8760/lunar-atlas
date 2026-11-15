@@ -88,6 +88,155 @@ function axisCoordinates(axis, layers) {
   return coordinates;
 }
 
+// Average valid samples into a mesh-sized grid, then replace nodata with the
+// nearest valid cell. Heights are never substituted with 0.
+function coarseHeights(heights, width, height, columns, rows) {
+  const grid = new Float32Array(columns * rows);
+  grid.fill(Number.NaN);
+  const origin = new Int32Array(grid.length).fill(-1);
+  const queue = [];
+  for (let row = 0; row < rows; row++) {
+    const y0 = Math.floor(row * height / rows);
+    const y1 = Math.max(y0 + 1, Math.floor((row + 1) * height / rows));
+    const yStep = Math.max(1, Math.floor((y1 - y0) / 4));
+    for (let column = 0; column < columns; column++) {
+      const x0 = Math.floor(column * width / columns);
+      const x1 = Math.max(x0 + 1, Math.floor((column + 1) * width / columns));
+      const xStep = Math.max(1, Math.floor((x1 - x0) / 4));
+      let sum = 0;
+      let count = 0;
+      for (let y = y0; y < y1; y += yStep) {
+        for (let x = x0; x < x1; x += xStep) {
+          const value = heights[y * width + x];
+          if (Number.isFinite(value)) {
+            sum += value;
+            count++;
+          }
+        }
+      }
+      const index = row * columns + column;
+      if (!count) continue;
+      grid[index] = sum / count;
+      origin[index] = index;
+      queue.push(index);
+    }
+  }
+  let head = 0;
+  while (head < queue.length) {
+    const index = queue[head++];
+    const x = index % columns;
+    const y = (index / columns) | 0;
+    const neighbors = [[1, 0], [-1, 0], [0, 1], [0, -1]];
+    for (const [dx, dy] of neighbors) {
+      const nx = x + dx;
+      const ny = y + dy;
+      if (nx < 0 || ny < 0 || nx >= columns || ny >= rows) continue;
+      const next = ny * columns + nx;
+      if (origin[next] !== -1) continue;
+      origin[next] = origin[index];
+      grid[next] = grid[origin[index]];
+      queue.push(next);
+    }
+  }
+  return grid;
+}
+
+const PATCH_SEGMENTS = 320;
+
+async function loadDemPatch(site, radius, relief, material, sampleGlobe, signal) {
+  const heightUrl = new URL(`site-dems/${site.file}`, dataDirectory);
+  const metadataUrl = new URL(heightUrl.href.replace(/\.f32$/, '.json'));
+  const [response, metadataResponse] = await Promise.all([
+    fetchAsset(heightUrl, signal),
+    fetchAsset(metadataUrl, signal),
+  ]);
+  const [buffer, metadata] = await Promise.all([response.arrayBuffer(), metadataResponse.json()]);
+  const { width, height, encoding, extentM } = metadata;
+  if (encoding !== 'float32-le' || buffer.byteLength !== width * height * 4) {
+    throw new Error('The site elevation file does not match its metadata.');
+  }
+  const [west, south, east, north] = extentM;
+  const span = Math.max(east - west, north - south);
+  const columns = PATCH_SEGMENTS + 1;
+  const rows = PATCH_SEGMENTS + 1;
+  const grid = coarseHeights(new Float32Array(buffer), width, height, columns, rows);
+  const projection = projectionFor(site, radius);
+  const margin = Math.min(span * 0.16, 2000);
+  const positions = new Float32Array(columns * rows * 3);
+  const uv = new Float32Array(columns * rows * 2);
+  const fade = new Float32Array(columns * rows);
+  const indices = [];
+  const direction = new THREE.Vector3();
+  const smoothstep = THREE.MathUtils.smoothstep;
+  const centerX = (west + east) / 2;
+  const centerY = (south + north) / 2;
+  projection.project(centerX, centerY, direction);
+  const referenceLongitude = Math.atan2(-direction.z, direction.x);
+
+  for (let row = 0; row < rows; row++) {
+    const y = north + (south - north) * (row / (rows - 1));
+    for (let column = 0; column < columns; column++) {
+      const x = west + (east - west) * (column / (columns - 1));
+      const index = row * columns + column;
+      projection.project(x, y, direction);
+      let longitude = Math.atan2(-direction.z, direction.x);
+      longitude += Math.round((referenceLongitude - longitude) / (2 * Math.PI)) * 2 * Math.PI;
+      const latitude = Math.asin(THREE.MathUtils.clamp(direction.y, -1, 1));
+      uv[index * 2] = 0.5 + longitude / (2 * Math.PI);
+      uv[index * 2 + 1] = 0.5 + latitude / Math.PI;
+
+      const edge = Math.min(x - west, east - x, y - south, north - y);
+      const blend = smoothstep(edge, 0, margin);
+      const dem = grid[index];
+      const globe = sampleGlobe(direction);
+      const elevation = Number.isFinite(dem) ? THREE.MathUtils.lerp(globe, dem, blend) : globe;
+      // A few meters of lift only while the edge fades, so the patch sits on
+      // the globe instead of z-fighting it. The interior stays at true scale.
+      const lift = (1 - blend) * 6;
+      direction.multiplyScalar(1 + (elevation * relief + lift) / radius).toArray(positions, index * 3);
+      fade[index] = blend;
+    }
+  }
+
+  for (let row = 1; row < rows; row++) {
+    for (let column = 1; column < columns; column++) {
+      const index = row * columns + column;
+      const previous = index - columns;
+      const corners = [previous - 1, previous, index - 1, index];
+      if (corners.some((corner) => !Number.isFinite(positions[corner * 3]))) continue;
+      // Row 0 is north. Wind east × north so the front face points outward.
+      indices.push(previous - 1, index - 1, previous, index - 1, index, previous);
+    }
+  }
+
+  const geometry = new THREE.BufferGeometry();
+  geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+  geometry.setAttribute('uv', new THREE.BufferAttribute(uv, 2));
+  geometry.setAttribute('fade', new THREE.BufferAttribute(fade, 1));
+  geometry.setIndex(indices);
+  geometry.computeVertexNormals();
+
+  const center = new THREE.Vector3();
+  projection.project(centerX, centerY, center);
+  const centerEdge = Math.min(centerX - west, east - centerX, centerY - south, north - centerY);
+  const centerBlend = smoothstep(centerEdge, 0, margin);
+  const centerDem = grid[(rows >> 1) * columns + (columns >> 1)];
+  const centerGlobe = sampleGlobe(center);
+  const centerElevation = Number.isFinite(centerDem)
+    ? THREE.MathUtils.lerp(centerGlobe, centerDem, centerBlend)
+    : centerGlobe;
+  center.multiplyScalar(1 + centerElevation * relief / radius);
+  geometry.translate(-center.x, -center.y, -center.z);
+  geometry.computeBoundingSphere();
+
+  const mesh = new THREE.Mesh(geometry, material);
+  mesh.position.copy(center);
+  mesh.renderOrder = 2;
+  const inset = Math.min(margin * 0.82, span * 0.28);
+  const cutout = [west + inset, south + inset, east - inset, north - inset];
+  return { mesh, center, extent: cutout, projection, span };
+}
+
 function projectionFor(site, radius) {
   if (!site.layers && site.group !== 'lroc-nac-dtm') {
     // Inverse south polar stereographic projection at true scale at the pole.
@@ -125,6 +274,9 @@ function projectionFor(site, radius) {
 }
 
 export async function loadSiteTerrain(site, radius, relief, material, sampleGlobe, signal) {
+  if (site.file && (site.group === 'lroc-nac-dtm' || site.group === 'pgda-lola-5m')) {
+    return loadDemPatch(site, radius, relief, material, sampleGlobe, signal);
+  }
   const { layers: mission } = site;
   const bundled = site.file && (site.group === 'lroc-nac-dtm' || site.group === 'pgda-lola-5m');
   const directory = bundled ? 'site-dems' : mission ? 'landing-sites' : 'lola-sites';
@@ -198,6 +350,7 @@ export async function loadSiteTerrain(site, radius, relief, material, sampleGlob
   const geometry = new THREE.BufferGeometry();
   geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
   geometry.setAttribute('uv', new THREE.BufferAttribute(uv, 2));
+  geometry.setAttribute('fade', new THREE.BufferAttribute(new Float32Array(xs.length * ys.length).fill(1), 1));
   geometry.setIndex(indices);
   geometry.computeVertexNormals();
   geometry.computeBoundingSphere();
@@ -211,5 +364,6 @@ export async function loadSiteTerrain(site, radius, relief, material, sampleGlob
   geometry.computeBoundingSphere();
   const mesh = new THREE.Mesh(geometry, material);
   mesh.position.copy(center);
-  return { mesh, center, extent, projection };
+  const span = Math.max(east - west, north - south);
+  return { mesh, center, extent, projection, span };
 }
