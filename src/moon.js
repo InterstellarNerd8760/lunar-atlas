@@ -420,8 +420,18 @@ async function loadMoon(container, status) {
     ['site-dems', 'Bundled south pole terrain', site => site.group === 'pgda-lola-5m'],
   ];
   const siteDirectories = [...new Set(siteGroups.map(([directory]) => directory))];
-  Promise.allSettled(siteDirectories.map(async (directory) => [directory, await loadSiteIndex(directory)])).then((results) => {
+  Promise.allSettled([...siteDirectories, 'site-previews'].map(async (directory) => [directory, await loadSiteIndex(directory)])).then((results) => {
     const indexes = new Map(results.filter(({ status }) => status === 'fulfilled').map(({ value }) => value));
+    const previews = indexes.get('site-previews') ?? [];
+    const bundled = new Map((indexes.get('site-dems') ?? []).map(site => [site.id, site]));
+    for (const directory of ['landing-sites', 'lola-sites']) {
+      const archiveSites = indexes.get(directory) ?? [];
+      const archiveIds = new Set(archiveSites.map(site => (site.id ?? site.siteId).toLowerCase()));
+      const missingSites = previews.filter(site =>
+        site.preview.archive === directory && !archiveIds.has((site.id ?? site.siteId).toLowerCase())
+      );
+      indexes.set(directory, [...archiveSites, ...missingSites]);
+    }
     const sites = new Map();
     const listedIds = new Set();
     for (const [directory, label, include] of siteGroups) {
@@ -432,14 +442,16 @@ async function loadMoon(container, status) {
         const key = id.toLowerCase();
         if (listedIds.has(key) || listedIds.has(site.artemisRegion)) continue;
         listedIds.add(key);
-        sites.set(id, site);
-        group.append(new Option(site.name ?? site.siteName, id));
+        const name = site.name ?? site.siteName;
+        const detailed = site.preview ? bundled.get(key) : null;
+        sites.set(id, detailed ? { ...detailed, id, name, year: site.year, country_or_company: site.country_or_company } : site);
+        group.append(new Option(name, id));
       }
       if (group.childElementCount) siteSelect.append(group);
     }
     if (!sites.size) {
       siteStatus.hidden = false;
-      siteStatus.textContent = 'Could not load the landing site catalog. Serve the repository root and check that public/data/site-dems/index.json is present.';
+      siteStatus.textContent = 'Could not load the landing site catalog. Serve the repository root and check that public/data/site-previews/index.json is present.';
       return;
     }
     siteSelect.hidden = false;
@@ -448,7 +460,7 @@ async function loadMoon(container, status) {
       const site = sites.get(id);
       if (freeFlight) leaveFlight();
       if (!site) {
-        setView('south');
+        setView('globe');
         return;
       }
       resetSite();
@@ -498,7 +510,7 @@ async function loadMoon(container, status) {
       } catch (error) {
         if (request.signal.aborted) return;
         console.warn(error);
-        setView('south');
+        setView('globe');
         siteStatus.textContent = `Could not load ${name}.`;
         siteStatus.hidden = false;
       }
@@ -618,7 +630,7 @@ async function loadMoon(container, status) {
   status.textContent += ' · ' + skyStatus;
   status.classList.add('moon-status--loaded');
 
-  setView('south');
+  setView('globe');
   renderer.setAnimationLoop((now) => {
     const deltaSeconds = Math.min((now - previousFrame) / 1000, 0.05);
     previousFrame = now;

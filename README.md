@@ -54,16 +54,16 @@ Open [the legacy texture view](http://localhost:8000/?moonTexture=legacy). The r
 
 ## Explore landing sites
 
-Choose **Explore a site** to open one of the six bundled Apollo landings or eight south-pole terrain sites. The viewer downloads the selected elevation grid when you open it.
+**Explore a site** includes the original 33 landing and candidate-region entries and nine south-pole surveys, plus the Connecting Ridge extension. These include Luna, Surveyor, Apollo, Chang’e, Chandrayaan-3, SLIM, and commercial landers.
 
-To add the earlier Luna, Surveyor, and other site layers, extract the optional archives into `public/data/` from the repository root. Replace the example paths with the paths to your downloads.
+The checkout includes smaller terrain grids derived from the original exports and uses the bundled high-resolution DEMs where available for the same site. For the original full-resolution layers, extract the optional archives into `public/data/` from the repository root. Replace the example paths with the paths to your downloads.
 
 ```sh
 unzip "/path/to/lola-sites(1).zip" -d public/data
 unzip "/path/to/landing-sites.zip" -d public/data
 ```
 
-Select a site in **Explore a site**. The viewer downloads that site's terrain when selected. Historical sites can include an LROC NAC close-up. Artemis III entries in the archive use the coordinates of terrain proxies. The five included proxies and four skipped regions are recorded in `public/data/landing-sites/index.json`.
+Select a site in **Explore a site**. The viewer downloads that site's terrain when selected. Historical sites can include an LROC NAC close-up. Artemis III entries in the archive use the coordinates of terrain proxies. The five included proxies and four skipped regions are recorded in `public/data/site-previews/index.json`.
 
 The checkout includes the 2048 px Blue Marble Earth texture and 4096 px NASA SVS star map. Credits are in [public/data/sky/CREDITS.txt](public/data/sky/CREDITS.txt). The star panorama uses a fixed decorative orientation. The time slider continues to drive the Sun and Earth's positions using the included Horizons ephemeris.
 
@@ -72,7 +72,7 @@ For a static deployment with these optional layers, include the extracted direct
 
 ## Viewer and visibility
 
-The viewer defaults to the south pole,
+The viewer opens on the globe,
 uses Auto relief with a true-scale lock, and adds Look at Earth and Stand on
 surface. Earth keeps its physical radius and ephemeris range. Detail mesh
 vertices use a local center to improve close-range precision.

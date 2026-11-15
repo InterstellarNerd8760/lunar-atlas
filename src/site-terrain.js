@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 
 const dataDirectory = new URL('../public/data/', import.meta.url);
+const previewBuffers = new Map();
 
 async function fetchAsset(url, signal) {
   const response = await fetch(url, { signal });
@@ -13,14 +14,39 @@ export async function loadSiteIndex(directory, signal) {
   return (await response.json()).sites;
 }
 
-async function loadRaster(directory, path, signal) {
+function loadPreviewBuffer(archive) {
+  if (!previewBuffers.has(archive)) {
+    const url = new URL(`site-previews/${archive}.f32.gz`, dataDirectory);
+    const load = fetchAsset(url).then(response =>
+      new Response(response.body.pipeThrough(new DecompressionStream('gzip'))).arrayBuffer()
+    ).catch(error => {
+      previewBuffers.delete(archive);
+      throw error;
+    });
+    previewBuffers.set(archive, load);
+  }
+  return previewBuffers.get(archive);
+}
+
+async function readRaster(directory, path, preview, signal) {
+  if (preview) {
+    const metadata = preview.rasters[path];
+    const packed = await loadPreviewBuffer(preview.archive);
+    signal?.throwIfAborted();
+    const end = metadata.offset + metadata.width * metadata.height * Float32Array.BYTES_PER_ELEMENT;
+    return [packed.slice(metadata.offset, end), metadata];
+  }
   const heightUrl = new URL(`${directory}/${path}`, dataDirectory);
   const metadataUrl = new URL(heightUrl.href.replace(/\.f32$/, '.json'));
   const [response, metadataResponse] = await Promise.all([
     fetchAsset(heightUrl, signal),
     fetchAsset(metadataUrl, signal),
   ]);
-  const [buffer, metadata] = await Promise.all([response.arrayBuffer(), metadataResponse.json()]);
+  return Promise.all([response.arrayBuffer(), metadataResponse.json()]);
+}
+
+async function loadRaster(directory, path, preview, signal) {
+  const [buffer, metadata] = await readRaster(directory, path, preview, signal);
   const { width, height, encoding, affine } = metadata;
   if (encoding !== 'float32-le' || buffer.byteLength !== width * height * 4) {
     throw new Error('The site elevation file does not match its metadata.');
@@ -116,7 +142,7 @@ export async function loadSiteTerrain(site, radius, relief, material, sampleGlob
   ];
   if (mission?.nac) files.push({ path: mission.nac.file, spacing: 16, blend: 100 });
   const layers = await Promise.all(files.map(async ({ path, spacing, blend }) => ({
-    ...await loadRaster(directory, path, signal), spacing, blend,
+    ...await loadRaster(directory, path, site.preview, signal), spacing, blend,
   })));
   const projection = projectionFor(site, radius);
   const extent = layers[0].extent;
