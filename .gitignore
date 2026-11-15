@@ -158,3 +158,6 @@ __pycache__/
 /public/data/landing-sites/
 /public/data/lola-sites/
 /public/data/textures/
+
+# Optional local copy of the original globe texture
+/public/data/wac-texture-legacy.jpg

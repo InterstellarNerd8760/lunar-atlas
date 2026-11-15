@@ -7,12 +7,20 @@ A browser-based Moon explorer for comparing sunlight and Earth visibility at lun
 Install Python 3 and Git. If you already have a checkout, open Terminal and run:
 
 ```bash
-cd ~/Documents/lunar-atlas
-git pull --ff-only origin main
-python3 -m http.server 8000
+cd ~/Documents/lunar-atlas &&
+  git pull --ff-only origin main &&
+  python3 -m http.server 8000
 ```
 
-Use the folder where you cloned the repository. If a pull reports that an untracked `public/data/wac-texture.jpg` would be overwritten, stop the server with Ctrl+C, back up and move that local file out of the repository, then rerun `git pull --ff-only origin main`. For example, run the following from the repository root:\n\n```bash\nmkdir -p ~/Documents/lunar-atlas-local-backup\nmv public/data/wac-texture.jpg ~/Documents/lunar-atlas-local-backup/\ngit pull --ff-only origin main\n```\n\nFor a fresh checkout, run:
+Use the folder where you cloned the repository. If a pull reports that an untracked `public/data/wac-texture.jpg` would be overwritten, stop the server with Ctrl+C, back up and move that local file out of the repository, then rerun `git pull --ff-only origin main`. For example, run the following from the repository root:
+
+```bash
+mkdir -p ~/Documents/lunar-atlas-local-backup
+mv -n public/data/wac-texture.jpg ~/Documents/lunar-atlas-local-backup/
+git pull --ff-only origin main
+```
+
+For a fresh checkout, run:
 
 ```bash
 git clone https://github.com/InterstellarNerd8760/lunar-atlas.git
@@ -36,19 +44,26 @@ The checkout includes `public/data/global-height/global-height.f32` and its JSON
 The viewer also loads the included 4096 × 2048 normalized LROC WAC texture from `public/data/wac-texture.jpg`. Its source and processing details are in `public/data/wac-texture.json`. The globe uses grayscale terrain if the texture is unavailable.
 
 
-## Add the site terrain and sky assets
+This reflectance map uses one wavelength and has missing samples near the poles, which appear black. To view your earlier WAC morphology mosaic, copy the backed-up image into the checkout and open the legacy view.
+
+```bash
+cp ~/Documents/lunar-atlas-local-backup/wac-texture.jpg public/data/wac-texture-legacy.jpg
+```
+
+Open [the legacy texture view](http://localhost:8000/?moonTexture=legacy). The regular URL uses the bundled map.
+
+## Add the site terrain assets
 
 From the repository root, extract the supplied archives into `public/data/`. Replace the paths in this example with the paths to your downloads.
 
 ```sh
 unzip "/path/to/lola-sites(1).zip" -d public/data
 unzip "/path/to/landing-sites.zip" -d public/data
-unzip "/path/to/textures(1).zip" -d public/data
 ```
 
 Select a site in **Explore a site**. The viewer downloads that site's terrain when selected. Historical sites can include an LROC NAC close-up. Artemis III entries in the archive use the coordinates of terrain proxies. The five included proxies and four skipped regions are recorded in `public/data/landing-sites/index.json`.
 
-The viewer uses the 2048 px Blue Marble Earth texture and 4096 px NASA SVS star map. Credits are in `public/data/textures/CREDITS.txt`. The star panorama uses a fixed decorative orientation. The time slider continues to drive the Sun and Earth's positions using the included Horizons ephemeris.
+The checkout includes the 2048 px Blue Marble Earth texture and 4096 px NASA SVS star map. Credits are in [public/data/sky/CREDITS.txt](public/data/sky/CREDITS.txt). The star panorama uses a fixed decorative orientation. The time slider continues to drive the Sun and Earth's positions using the included Horizons ephemeris.
 
 For a static deployment with these optional layers, include the extracted directories in the published files.
 
@@ -66,7 +81,7 @@ body centers above a spherical horizon, sampled every six hours over the bundled
 not resolved. Longest darkness may be truncated by the window boundaries.
 Site notes cite the Notion-curated NASA, LROC and USGS sources.
 
-The site DEMs in `public/data/site-dems/` and the Apollo 11 and south-pole ZIPs in `data/processed/` are available for integration. The viewer currently loads the optional site and sky archives described above.
+The site DEMs in `public/data/site-dems/` and the Apollo 11 and south-pole ZIPs in `data/processed/` are available for integration. The viewer currently loads the optional site terrain archives described above.
 
 Validation: JavaScript syntax and whitespace checks passed. Browser acceptance
 is pending: the available Chromium process fails to launch in this environment

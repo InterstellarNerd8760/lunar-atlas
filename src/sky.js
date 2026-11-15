@@ -5,7 +5,7 @@ const AU_KM = 149597870.7;
 const MOON_RADIUS_KM = 1737.4;
 const degrees = Math.PI / 180;
 const sunDisplayDistance = 72;
-const textureDirectory = new URL('../public/data/textures/', import.meta.url);
+const textureDirectory = new URL('../public/data/sky/', import.meta.url);
 
 async function loadColorTexture(loader, filename) {
   const texture = await loader.loadAsync(new URL(filename, textureDirectory).href);

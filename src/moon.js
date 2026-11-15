@@ -96,15 +96,29 @@ async function loadMoon(container, status) {
   positions.needsUpdate = true;
   geometry.computeVertexNormals();
 
-  const textureUrl = new URL('../public/data/wac-texture.jpg', import.meta.url);
+  const textureLoader = new THREE.TextureLoader();
+  const useLegacyTexture = new URLSearchParams(window.location.search).get('moonTexture') === 'legacy';
   let texture = null;
-  try {
-    texture = await new THREE.TextureLoader().loadAsync(textureUrl.href);
+  let textureLabel = 'WAC reflectance texture';
+  if (useLegacyTexture) {
+    try {
+      texture = await textureLoader.loadAsync(new URL('wac-texture-legacy.jpg', dataDirectory).href);
+      textureLabel = 'WAC morphology texture';
+    } catch (error) {
+      console.warn('Legacy WAC texture unavailable. Using the bundled texture.', error);
+    }
+  }
+  if (!texture) {
+    try {
+      texture = await textureLoader.loadAsync(new URL('wac-texture.jpg', dataDirectory).href);
+    } catch (error) {
+      console.warn('Bundled WAC texture unavailable.', error);
+    }
+  }
+  if (texture) {
     texture.colorSpace = THREE.SRGBColorSpace;
     texture.wrapS = THREE.RepeatWrapping;
     texture.anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy());
-  } catch {
-    // The terrain still renders in gray while the WAC texture is being prepared.
   }
 
   const moon = new THREE.Mesh(
@@ -591,7 +605,7 @@ async function loadMoon(container, status) {
   resize();
 
   status.textContent = texture
-    ? 'LOLA terrain + WAC texture · relief ×' + DISPLAY_RELIEF
+    ? 'LOLA terrain + ' + textureLabel + ' · relief ×' + DISPLAY_RELIEF
     : 'LOLA terrain loaded · add WAC texture · relief ×' + DISPLAY_RELIEF;
   status.textContent += ' · ' + skyStatus;
   status.classList.add('moon-status--loaded');
