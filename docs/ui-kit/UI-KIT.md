@@ -12,7 +12,7 @@ Feel: a dark, full-bleed globe with a few quiet glass panels on top, in the spir
 - `prefers-reduced-motion: reduce` turns off transitions, autoplay, and fly-to easing (cut straight to the target).
 - No gradients on UI chrome, and no pulse animations.
 - AA contrast. Hit targets are 40 px minimum (44 px on touch). The one exception is globe pins, below.
-- Focus ring on every control and list row: `outline: 2px solid hsl(var(--ring)); outline-offset: 2px;` on `:focus-visible`.
+- Focus ring on every control and list row: `outline: 2px solid var(--ring); outline-offset: 2px;` on `:focus-visible`.
 
 ## Tokens (owned by Polaris, pending review)
 
