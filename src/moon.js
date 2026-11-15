@@ -214,8 +214,8 @@ async function loadMoon(container, loadingStatus) {
 
   const drawer = createDrawer(container, {
     onClose: () => clearSelection(),
-    onFlyTo: () => { if (currentPlace) focusPlace(currentPlace); },
-    onStand: () => { if (currentPlace) focusPlace(currentPlace, { surface: true }); },
+    onFlyTo: () => { if (currentPlace) focusPlace(currentPlace, { surface: false }); },
+    onStand: () => { if (currentPlace) focusPlace(currentPlace); },
     onEarth: lookAtEarth,
   });
 
@@ -499,7 +499,7 @@ async function loadMoon(container, loadingStatus) {
     sky?.analyze(scratch.clone().multiplyScalar(1 + (terrain.sampleMeters(scratch) || 0) / MOON_RADIUS_METERS), place.name);
   }
 
-  function focusPlace(place, { surface = false, instant = false } = {}) {
+  function focusPlace(place, { surface = true, instant = false } = {}) {
     if (!place) {
       setView('globe');
       return;

@@ -144,7 +144,7 @@ export function createDrawer(container, { onClose, onFlyTo, onStand, onEarth }) 
   const takeQuote = el('blockquote', { class: 'take' });
   const take = el('section', {}, [el('h3', { text: 'Weston’s take' }), takeQuote]);
   const actions = el('div', { class: 'actions' }, [
-    el('button', { type: 'button', class: 'btn btn--outline', text: 'Fly to', onclick: () => onFlyTo() }),
+    el('button', { type: 'button', class: 'btn btn--outline', text: 'View from above', onclick: () => onFlyTo() }),
     el('button', { type: 'button', class: 'btn btn--outline', text: 'Stand on surface', onclick: () => onStand() }),
     el('button', { type: 'button', class: 'btn btn--outline', text: 'Look at Earth', onclick: () => onEarth() }),
   ]);
