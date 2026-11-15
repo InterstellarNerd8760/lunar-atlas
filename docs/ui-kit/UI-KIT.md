@@ -2,7 +2,7 @@
 
 Docs only. Devin implements this in the app. Nothing here changes app code.
 
-Feel: a dark, full-bleed globe with a few quiet glass panels on top. Plain labels, restrained type, no hype copy.
+Feel: modeled on [Space Atlas](https://www.spaceatlas.tech): a black, full-bleed globe with a few quiet glass panels on top. Panels are translucent white over black (white at 5–15%), with white/10 hairlines, white text at 100/60/45% for hierarchy, one cyan accent, system sans plus mono for numbers, and an 8 px blur. Plain labels, restrained type, no hype copy.
 
 ## Style rules
 
@@ -19,24 +19,25 @@ Keep every token in this one `:root` block so Polaris's final values can replace
 
 ```css
 :root {
-  /* surfaces */
-  --background: 222 30% 4%;          /* page behind the canvas, #07090d */
-  --foreground: 220 20% 94%;         /* primary text */
-  --card: 222 24% 10% / 0.72;        /* glass panel, level 1 */
-  --card-raised: 222 22% 14% / 0.78; /* nested surface or hover, level 2 */
-  --popover: 222 22% 12% / 0.92;     /* menus, date picker, tooltips */
-  --muted: 222 16% 18%;
-  --muted-foreground: 220 12% 68%;   /* secondary text, AA on --card */
-  --accent: 214 30% 24%;             /* hover fill */
-  --accent-foreground: 220 20% 96%;
-  --primary: 212 90% 72%;            /* selected, active, links */
-  --primary-foreground: 222 30% 8%;
-  --border: 220 20% 80% / 0.12;      /* hairline */
-  --border-strong: 220 20% 80% / 0.22;
-  --ring: 212 90% 72%;
+  /* surfaces: black canvas, white-alpha glass (Space Atlas pattern) */
+  --background: 0 0% 0%;               /* #000 behind the globe */
+  --foreground: 0 0% 100%;             /* primary text, white */
+  --card: 0 0% 0% / 0.60;              /* glass panel base, black/60 + blur */
+  --card-raised: 0 0% 100% / 0.05;     /* nested surface, white/5 layered on --card */
+  --popover: 0 0% 4% / 0.85;           /* menus, date picker, tooltips */
+  --muted: 0 0% 100% / 0.10;           /* tracks, placeholders, white/10 */
+  --muted-foreground: 0 0% 100% / 0.60;/* secondary text, white/60 (AA on black/60) */
+  --subtle-foreground: 0 0% 100% / 0.45;/* captions only, large or non-essential text */
+  --accent: 0 0% 100% / 0.15;          /* hover/selected fill, white/15 */
+  --accent-foreground: 0 0% 100%;
+  --primary: 192 85% 62%;              /* cyan, close to Space Atlas accent-400 */
+  --primary-foreground: 0 0% 0%;
+  --border: 0 0% 100% / 0.10;          /* hairline */
+  --border-strong: 0 0% 100% / 0.20;
+  --ring: 192 85% 62%;
   --destructive: 0 75% 66%;
-  --radius: 10px;                    /* panels; controls use calc(var(--radius) - 4px) */
-  --blur: 14px;
+  --radius: 8px;                       /* panels (0.5rem); controls 6px */
+  --blur: 8px;
 
   /* visibility semantics (keep the hues already used in src/visibility.js) */
   --sun: 42 82% 68%;      /* #f0c76b */
@@ -44,9 +45,9 @@ Keep every token in this one `:root` block so Polaris's final values can replace
   --both: 165 36% 61%;    /* #79bfad */
   --neither: 216 23% 26%; /* #344052 */
 
-  /* type */
-  --font-sans: "Inter", system-ui, sans-serif;
-  --font-mono: "JetBrains Mono", ui-monospace, monospace; /* time, coordinates */
+  /* type: system stacks, no web font */
+  --font-sans: ui-sans-serif, system-ui, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, monospace; /* time, coordinates, % */
 }
 ```
 
@@ -56,15 +57,16 @@ Glass panel recipe: `background: hsl(var(--card)); backdrop-filter: blur(var(--b
 
 | Token | Size / line height | Weight | Use |
 |---|---|---|---|
+| `text-micro` | 10 / 14 | 500 | Pin labels, strip legend (sparingly) |
 | `text-xs` | 12 / 16 | 400 | Captions, legend, source line |
-| `text-sm` | 13 / 18 | 400–500 | Body, list rows, controls |
-| `text-base` | 15 / 22 | 500 | Panel titles |
+| `text-sm` | 14 / 20 | 400–500 | Body, list rows, controls |
+| `text-base` | 16 / 24 | 500 | Panel titles |
 | `text-lg` | 18 / 24 | 600 | Drawer title |
 | `text-mono` | 13 / 18, tabular numbers | 500 | UTC readout, coordinates, percentages |
 
 ### Spacing and radius
 
-4 px base: 4, 8, 12, 16, 24. Panels have 12 px padding and sit 12 px from the viewport edges (16 px at 1440 wide and above). The gap inside a panel is 8 px. Radius is 10 px for panels, 6 px for controls, and fully round for pins and chips.
+4 px base: 4, 8, 12, 16, 24. Panels have 12 px padding and sit 12 px from the viewport edges (16 px at 1440 wide and above). The gap inside a panel is 8 px. Radius is 8 px for panels, 6 px for controls, and fully round for pins and chips.
 
 ## Layout
 
