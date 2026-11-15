@@ -89,3 +89,5 @@ This overlay draws 3D models of the hardware at each landing site in `public/dat
 **Toggle:** it's on by default. Use the "Lander models (L)" checkbox at the bottom left, the `L` key, or `?landers=0` in the URL. `createLanderToggle(container, overlay)` is self-contained and only calls `overlay.setVisible()`, so it can move into the layers menu. The wiring in `moon.js` is about 20 lines: one import, the create call after the sky, and `landers?.update(camera)` before render.
 
 Model credits are in `docs/CREDITS.md`.
+
+**HLS splat (opt-in):** `?hlsSplat=1` swaps the procedural Starship HLS for the Budget3D Gaussian splat (`starship-hls-budget3d.spz`, 3.8 MB). It's drawn by Spark, lazy-loaded from the CDN, in a second pass with its own camera range and no depth test. In headless SwiftShader the page froze once the splat came on screen, so it's off by default until someone checks it on a real GPU.

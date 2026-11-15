@@ -198,6 +198,7 @@ async function loadMoon(container, status) {
       terrain,
       sites: await loadLandingSites(dataDirectory),
       canvas: renderer.domElement,
+      renderer,
       modelsDirectory: new URL('../public/models/', import.meta.url),
     });
     createLanderToggle(container, landers);
@@ -670,5 +671,6 @@ async function loadMoon(container, status) {
     }
     landers?.update(camera);
     renderer.render(scene, camera);
+    landers?.renderSplats(camera);
   });
 }

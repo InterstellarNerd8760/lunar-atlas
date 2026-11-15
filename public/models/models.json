@@ -1,8 +1,19 @@
 {
-  "note": "Slot -> GLB file in this folder. Slots without an entry use the procedural fallback in src/landers.js. Optional per-entry overrides: height or length (metres), rotationY (degrees), ascentCut. Credits: docs/CREDITS.md.",
+  "note": "Slot -> GLB file (or \"type\": \"splat\" for a Gaussian splat .spz) in this folder. Slots without an entry use the procedural fallback in src/landers.js. Optional per-entry overrides: height or length (metres), rotationY (degrees), ascentCut. Credits: docs/CREDITS.md.",
   "models": {
-    "apolloLM": { "file": "apollo-lm.glb" },
-    "habitat": { "file": "nasa-hdu-habitat.glb" },
-    "pressurizedRover": { "file": "nasa-sev-rover.glb" }
+    "apolloLM": {
+      "file": "apollo-lm.glb"
+    },
+    "habitat": {
+      "file": "nasa-hdu-habitat.glb"
+    },
+    "pressurizedRover": {
+      "file": "nasa-sev-rover.glb"
+    },
+    "starshipHLSSplat": {
+      "type": "splat",
+      "file": "starship-hls-budget3d.spz",
+      "note": "Opt-in with ?hlsSplat=1"
+    }
   }
 }

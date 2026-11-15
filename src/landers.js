@@ -20,6 +20,10 @@ import * as THREE from 'three';
 import { GLTFLoader } from 'https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/loaders/GLTFLoader.js';
 import { MeshoptDecoder } from 'https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/libs/meshopt_decoder.module.js';
 
+// Spark (three.js Gaussian splat renderer), imported lazily only when a slot
+// of type "splat" is first needed. Needs the "three/addons/" import-map entry.
+const SPARK_URL = 'https://cdn.jsdelivr.net/npm/@sparkjsdev/spark@2.4.0/dist/spark.module.js';
+
 const R = 1_737_400; // Moon radius in metres; the globe radius is 1.
 const LOAD_KM = 60; // build site models within this camera distance
 const PIN_PX = 18; // on-screen pin height
@@ -320,7 +324,7 @@ function classify(row) {
 }
 
 // ------------------------------------------------------------ overlay ----
-export function createLanderOverlay({ scene, terrain, sites, canvas, modelsDirectory }) {
+export function createLanderOverlay({ scene, terrain, sites, canvas, modelsDirectory, renderer = null }) {
   const group = new THREE.Group();
   group.name = 'lander-overlay';
   scene.add(group);
@@ -378,6 +382,58 @@ export function createLanderOverlay({ scene, terrain, sites, canvas, modelsDirec
     return glbCache.get(slot);
   }
 
+  // Gaussian splat slots (manifest "type": "splat"). The splat file must
+  // already be in metres, +Y up, origin on the ground at the vehicle centre.
+  // Spark hangs with the app camera's huge near/far range (0.4 m to 900 Moon
+  // radii), so splats live in their own scene and are drawn in a second pass
+  // with a camera clipped to 0.5 m .. 300 km. That pass skips depth testing,
+  // so a splat can show through terrain in front of it; it is only drawn
+  // when its site is within LOAD_KM.
+  let sparkPromise = null;
+  const splatScene = new THREE.Scene();
+  const splatCamera = new THREE.PerspectiveCamera();
+  const splatProxies = [];
+  function loadSplat(slot, holder) {
+    if (!renderer) return Promise.reject(new Error('splats need the WebGLRenderer'));
+    if (!sparkPromise) {
+      sparkPromise = import(SPARK_URL).then((spark) => {
+        splatScene.add(new spark.SparkRenderer({ renderer, enableLod: false, depthTest: false }));
+        return spark;
+      });
+    }
+    return sparkPromise.then(async (spark) => {
+      const splat = new spark.SplatMesh({ url: new URL(manifest[slot].file, modelsDirectory).href });
+      await splat.initialized;
+      splat.frustumCulled = false;
+      const proxy = new THREE.Group();
+      proxy.matrixAutoUpdate = false;
+      proxy.add(splat);
+      splatScene.add(proxy);
+      splatProxies.push({ proxy, holder });
+      return splat;
+    });
+  }
+
+  function renderSplats(camera) {
+    if (!visible || !splatProxies.length || !renderer) return;
+    let any = false;
+    for (const { proxy, holder } of splatProxies) {
+      let shown = holder.visible;
+      for (let o = holder.parent; o && shown; o = o.parent) shown = o.visible;
+      proxy.visible = shown;
+      if (shown) { proxy.matrix.copy(holder.matrixWorld); proxy.matrixWorldNeedsUpdate = true; any = true; }
+    }
+    if (!any) return;
+    splatCamera.copy(camera);
+    splatCamera.near = 0.5 / R;
+    splatCamera.far = 300_000 / R;
+    splatCamera.updateProjectionMatrix();
+    const autoClear = renderer.autoClear;
+    renderer.autoClear = false;
+    renderer.render(splatScene, splatCamera);
+    renderer.autoClear = autoClear;
+  }
+
   // A slot's model: the manifest GLB if there is one, else the procedural fallback.
   function slotObject(slot, concept) {
     const holder = new THREE.Group();
@@ -391,7 +447,20 @@ export function createLanderOverlay({ scene, terrain, sites, canvas, modelsDirec
       holder.add(m);
     };
     manifestReady.then(() => {
+      // The Budget3D HLS splat is opt-in (?hlsSplat=1): Spark froze headless
+      // Chrome (SwiftShader) once the splat was on screen in the app, so it
+      // stays off until it has been checked on a real GPU.
+      const splatSlot = `${slot}Splat`;
+      if (manifest[splatSlot]?.file && new URLSearchParams(window.location.search).get('hlsSplat') === '1') {
+        manifest[slot] = manifest[splatSlot];
+      }
       if (!manifest[slot]?.file) return useFallback();
+      if (manifest[slot].type === 'splat') {
+        return loadSplat(slot, holder).catch((error) => {
+          console.warn(`Splat model ${slot} unavailable, using the procedural fallback`, error);
+          useFallback();
+        });
+      }
       return loadGlb(slot).then((model) => {
         const copy = model.clone();
         if (concept) copy.traverse((o) => { if (o.isMesh) o.material = tintedConcept(o.material); });
@@ -580,7 +649,7 @@ export function createLanderOverlay({ scene, terrain, sites, canvas, modelsDirec
     group.visible = visible;
   }
 
-  return { group, update, setVisible, get visible() { return visible; }, entries };
+  return { group, update, renderSplats, setVisible, get visible() { return visible; }, entries };
 }
 
 // Small self-contained toggle (checkbox + "L" key). Devin can move this into
