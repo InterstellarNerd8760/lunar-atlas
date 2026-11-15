@@ -651,6 +651,21 @@ a { color: var(--primary); }
 
 .pin:hover .pin__label, .pin:focus-visible .pin__label, .pin--selected .pin__label { opacity: 1; }
 
+/* Exact lander location: stays visible when zoomed in. Dashed gold = approximate coordinates. */
+.pin--near.pin--selected .pin__label,
+.pin--near:hover .pin__label,
+.pin--near:focus-visible .pin__label { opacity: 1; }
+.pin--approx .pin__dot {
+  background: transparent;
+  border: 2px dashed #e2b657;
+  box-shadow: 0 0 0 1px var(--background);
+}
+.pin--approx.pin--selected .pin__dot {
+  background: transparent;
+  border-color: #e2b657;
+  outline-color: #e2b657;
+}
+
 /* Free flight hint */
 
 .flight-hint {

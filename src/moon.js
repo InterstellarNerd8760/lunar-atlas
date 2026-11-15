@@ -46,8 +46,49 @@ function normId(value) {
   return String(value || '').toLowerCase().replace(/[^a-z0-9]/g, '');
 }
 
-function collectPlaces(demSites, previewSites) {
+function isApproximateSource(source) {
+  return /not LROC-confirmed/i.test(source || '');
+}
+
+function parseCsvRow(line) {
+  const cells = [];
+  let cell = '';
+  let quoted = false;
+  for (let i = 0; i < line.length; i++) {
+    const ch = line[i];
+    if (ch === '"') {
+      if (quoted && line[i + 1] === '"') { cell += '"'; i++; }
+      else quoted = !quoted;
+    } else if (ch === ',' && !quoted) {
+      cells.push(cell);
+      cell = '';
+    } else cell += ch;
+  }
+  cells.push(cell);
+  return cells;
+}
+
+function landingCatalog(text) {
+  const lines = text.trim().split(/\r?\n/).filter(Boolean);
+  const header = parseCsvRow(lines.shift());
+  const index = Object.fromEntries(header.map((name, i) => [name, i]));
+  const catalog = new Map();
+  for (const line of lines) {
+    const cells = parseCsvRow(line);
+    const id = cells[index.id];
+    if (!id) continue;
+    catalog.set(id, { approximate: isApproximateSource(cells[index.coord_source] || '') });
+  }
+  return catalog;
+}
+
+function collectPlaces(demSites, previewSites, catalog = new Map()) {
   const places = [];
+  function decorate(place) {
+    const row = catalog.get(place.id);
+    if (row) place.approximate = row.approximate;
+    return place;
+  }
   function duplicateOf(place) {
     const id = normId(place.id);
     return places.find((other) => {
@@ -64,10 +105,11 @@ function collectPlaces(demSites, previewSites) {
     if (!Number.isFinite(place.lat) || !Number.isFinite(place.lon)) return;
     const existing = duplicateOf(place);
     if (existing) {
-      for (const key of ['year', 'country', 'mission']) existing[key] ??= place[key];
+      for (const key of ['year', 'country', 'mission', 'approximate']) existing[key] ??= place[key];
+      decorate(existing);
       return;
     }
-    places.push(place);
+    places.push(decorate(place));
   }
   for (const site of demSites || []) {
     const [lat, lon] = site.centerLatLon || [];
@@ -166,17 +208,19 @@ export function mountMoonView(container) {
 async function loadMoon(container, loadingStatus) {
   const dataDirectory = new URL('../public/data/', import.meta.url);
   const params = new URLSearchParams(window.location.search);
-  const [demResponse, previewResponse, notesResponse, photosResponse] = await Promise.all([
+  const [demResponse, previewResponse, notesResponse, photosResponse, catalogResponse] = await Promise.all([
     fetch(new URL('site-dems/index.json', dataDirectory)),
     fetch(new URL('site-previews/index.json', dataDirectory)),
     fetch(new URL('site-notes.json', dataDirectory)),
     fetch(new URL('site-photos/index.json', dataDirectory)),
+    fetch(new URL('landing-sites.csv', dataDirectory)),
   ]);
   const demIndex = demResponse.ok ? await demResponse.json() : { sites: [] };
   const previewIndex = previewResponse.ok ? await previewResponse.json() : { sites: [] };
   const siteNotes = notesResponse.ok ? await notesResponse.json() : [];
   const photoIndex = photosResponse.ok ? await photosResponse.json() : { photos: [] };
   const photosById = new Map((photoIndex.photos || []).map((photo) => [photo.id, photo]));
+  const catalog = catalogResponse.ok ? landingCatalog(await catalogResponse.text()) : new Map();
 
   const scene = new THREE.Scene();
   scene.background = new THREE.Color('#030509');
@@ -231,7 +275,7 @@ async function loadMoon(container, loadingStatus) {
   if (texture) terrain.setAlbedo(texture);
   if (params.get('wire') === '1') terrain.setWireframe(true);
 
-  const places = collectPlaces(demIndex.sites, previewIndex.sites);
+  const places = collectPlaces(demIndex.sites, previewIndex.sites, catalog);
   const findNote = noteFinder(siteNotes);
   const matchedArtemis = new Set(places.filter((place) => place.group === 'artemis').map(findNote).filter(Boolean));
   const listedPlaces = [...places];
@@ -342,7 +386,7 @@ async function loadMoon(container, loadingStatus) {
     onOpen: () => reliefControl.querySelector('[aria-pressed="true"]').focus(),
   });
 
-  const pins = createPins(container, places, { onSelect: (place) => focusPlace(place) });
+  const pins = createPins(container, places, { onSelect: (place) => focusPlace(place), scene });
   pins.init((lat, lon, target) => terrain.directionFromLatLon(lat, lon, target));
   const siteList = createSiteList(container, listedPlaces, {
     onSelect: (place) => {
@@ -489,7 +533,7 @@ async function loadMoon(container, loadingStatus) {
     setViewPressed(view);
   }
 
-  function surfaceEye(lat, lon) {
+  function surfaceEye(lat, lon, place) {
     terrain.directionFromLatLon(lat, lon, scratch);
     const up = scratch.clone();
     const radius = terrain.surfaceRadius(up);
@@ -497,13 +541,24 @@ async function loadMoon(container, loadingStatus) {
     const sunHoriz = sunlight.position.clone().addScaledVector(up, -sunlight.position.dot(up));
     const ahead = sunHoriz.lengthSq() > 1e-8 ? sunHoriz.normalize() : north;
     const pos = up.clone().multiplyScalar(radius + EYE_METERS / MOON_RADIUS_METERS);
+    let target = pos.clone().addScaledVector(ahead, 600 / MOON_RADIUS_METERS);
+    // Stand a short way back from landed spacecraft so the exact point stays in frame,
+    // and look at the marker. Seat the camera on the terrain under that offset so a
+    // crater floor or coarse DEM wave cannot drop the point out of view.
+    if (place && (place.group === 'apollo' || place.group === 'lander')) {
+      pos.addScaledVector(ahead, -20 / MOON_RADIUS_METERS);
+      const camUp = pos.clone().normalize();
+      pos.copy(camUp).multiplyScalar(terrain.surfaceRadius(camUp) + EYE_METERS / MOON_RADIUS_METERS);
+      target = up.clone().multiplyScalar(radius + 1.6 / MOON_RADIUS_METERS);
+    }
     return {
       pos,
-      target: pos.clone().addScaledVector(ahead, 600 / MOON_RADIUS_METERS),
+      target,
       up: orbitUp(up, ahead),
       fov: 58,
       minDistance: 1.2 / MOON_RADIUS_METERS,
-      maxPolarAngle: Math.PI / 2,
+      // Allow a slight downward look so a crater-floor site stays in frame.
+      maxPolarAngle: (place && (place.group === 'apollo' || place.group === 'lander')) ? Math.PI * 0.65 : Math.PI / 2,
     };
   }
 
@@ -556,11 +611,11 @@ async function loadMoon(container, loadingStatus) {
       relief = 1;
       terrain.setRelief(relief);
     }
-    flyTo(surface ? surfaceEye(place.lat, place.lon) : overviewEye(place.lat, place.lon), instant);
+    flyTo(surface ? surfaceEye(place.lat, place.lon, place) : overviewEye(place.lat, place.lon), instant);
     if (!place.id) return;
     terrain.preloadSite(place.id).then((loaded) => {
       if (currentPlace !== place || !loaded || !surface || freeFlight || navigationRevision !== revision) return;
-      const eye = surfaceEye(place.lat, place.lon);
+      const eye = surfaceEye(place.lat, place.lon, place);
       if (flight) Object.assign(flight, { toPos: eye.pos, toTarget: eye.target });
       else flyTo(eye, true);
     });
