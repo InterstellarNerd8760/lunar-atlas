@@ -134,7 +134,7 @@ function sourceLabel(url, index, total) {
   }
 }
 
-export function createDrawer(container, { onClose, onFlyTo, onStand, onEarth }) {
+export function createDrawer(container, { onClose, onFlyTo, onStand, onEarth, onCompare }) {
   const title = el('h2', { class: 'drawer__title', id: 'drawer-title' });
   const statusChip = el('span', { class: 'status-chip' });
   const coordsText = el('span', { class: 'mono' });
@@ -166,6 +166,7 @@ export function createDrawer(container, { onClose, onFlyTo, onStand, onEarth }) 
     el('button', { type: 'button', class: 'btn btn--outline', text: 'View from above', onclick: () => onFlyTo() }),
     el('button', { type: 'button', class: 'btn btn--outline', text: 'Stand on surface', onclick: () => onStand() }),
     el('button', { type: 'button', class: 'btn btn--outline', text: 'Look at Earth', onclick: () => onEarth() }),
+    el('button', { type: 'button', class: 'btn btn--outline', text: 'Compare', title: 'Add this site to the side-by-side comparison', onclick: () => onCompare?.() }),
   ]);
 
   const drawer = el('aside', { class: 'drawer glass', 'aria-labelledby': 'drawer-title', hidden: true }, [
