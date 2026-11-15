@@ -451,13 +451,22 @@ async function loadMoon(container, loadingStatus) {
   namesToggle.addEventListener('change', () => featureLabels?.setEnabled(namesToggle.checked));
   layerRows.push(el('div', { class: 'switch-row' }, [el('label', { for: 'layer-feature-names', text: 'Feature names' }), namesToggle]));
   const layersMenu = el('div', { class: 'popover layers-menu', role: 'dialog', 'aria-label': 'Layers' }, [
-    el('div', { class: 'field' }, [el('h2', { text: 'Terrain relief' }), reliefControl]),
     ...layerRows,
-    layersStatus,
   ]);
   container.append(layersMenu);
+  const terrainSummary = el('aside', { class: 'terrain-summary glass', 'aria-label': 'Terrain relief and sources' }, [
+    el('div', { class: 'terrain-summary__controls' }, [
+      el('span', { text: 'Relief' }), reliefControl,
+    ]),
+    layersStatus,
+    el('a', {
+      href: 'https://github.com/InterstellarNerd8760/lunar-atlas/blob/main/docs/data-sources.md',
+      target: '_blank', rel: 'noopener', text: 'Data sources',
+    }),
+  ]);
+  container.append(terrainSummary);
   const layersPopover = bindPopover(layersButton, layersMenu, {
-    onOpen: () => reliefControl.querySelector('[aria-pressed="true"]').focus(),
+    onOpen: () => layersMenu.querySelector('input')?.focus(),
   });
 
   const featureNote = el('p', { class: 'feature-note glass text-xs', hidden: true, role: 'status' });
