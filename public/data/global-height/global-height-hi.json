@@ -1,0 +1,34 @@
+{
+  "source": "https://imbrium.mit.edu/DATA/LOLA_GDR/CYLINDRICAL/IMG/LDEM_16.IMG",
+  "productLabel": "https://imbrium.mit.edu/DATA/LOLA_GDR/CYLINDRICAL/IMG/LDEM_16.LBL",
+  "credit": "NASA/GSFC LOLA team (LRO LOLA GDR, 16 px/deg)",
+  "width": 5760,
+  "height": 2880,
+  "encoding": "int16-le",
+  "scale": 0.5,
+  "offset": 0.0,
+  "units": "m",
+  "order": "row-major",
+  "rowOrder": "north to south",
+  "nodataEncoding": "none",
+  "referenceRadiusM": 1737400.0,
+  "globalExtentDegrees": [
+    -180,
+    -90,
+    180,
+    90
+  ],
+  "crsWkt": "GEOGCS[\"GCS_Moon_2000\",DATUM[\"D_Moon_2000\",SPHEROID[\"Moon_2000_IAU_IAG\",1737400,0,AUTHORITY[\"ESRI\",\"107903\"]],AUTHORITY[\"ESRI\",\"106903\"]],PRIMEM[\"Reference_Meridian\",0,AUTHORITY[\"ESRI\",\"108900\"]],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AXIS[\"Latitude\",NORTH],AXIS[\"Longitude\",EAST],AUTHORITY[\"ESRI\",\"104903\"]]",
+  "affine": [
+    0.0625,
+    0.0,
+    -180.0,
+    0.0,
+    -0.0625,
+    90.0
+  ],
+  "resampling": "none (native LDEM_16 posts, longitudes rolled to start at 180 W)",
+  "minElevationM": -8981.5,
+  "maxElevationM": 10685.5,
+  "processedUtc": "2026-11-15T05:44:11.627764+00:00"
+}

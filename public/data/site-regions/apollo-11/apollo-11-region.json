@@ -1,0 +1,44 @@
+{
+  "source": "https://imbrium.mit.edu/DATA/SLDEM2015/GLOBAL/FLOAT_IMG/SLDEM2015_256_60S_60N_000_360_FLOAT.IMG",
+  "productLabel": "https://imbrium.mit.edu/DATA/SLDEM2015/GLOBAL/FLOAT_IMG/SLDEM2015_256_60S_60N_000_360_FLOAT.LBL",
+  "credit": "SLDEM2015, LOLA + SELENE Terrain Camera (Barker et al. 2016), 256 px/deg",
+  "siteId": "apollo-11",
+  "siteName": "Apollo 11 (Tranquility Base)",
+  "width": 1280,
+  "height": 1280,
+  "encoding": "int16-le",
+  "scale": 0.5,
+  "offset": 0.0,
+  "units": "m",
+  "order": "row-major",
+  "rowOrder": "north to south",
+  "nodataEncoding": "none",
+  "referenceRadiusM": 1737400.0,
+  "projection": "azimuthal equidistant centered on the landing site; x east, y north, meters",
+  "crsWkt": "PROJCS[\"unknown\",GEOGCS[\"unknown\",DATUM[\"unknown\",SPHEROID[\"unknown\",1737400,0]],PRIMEM[\"Reference meridian\",0],UNIT[\"degree\",0.0174532925199433]],PROJECTION[\"Azimuthal_Equidistant\"],PARAMETER[\"latitude_of_center\",0.67416],PARAMETER[\"longitude_of_center\",23.47314],PARAMETER[\"false_easting\",0],PARAMETER[\"false_northing\",0],UNIT[\"metre\",1]]",
+  "affine": [
+    125.0,
+    0.0,
+    -80000.0,
+    0.0,
+    -125.0,
+    80000.0
+  ],
+  "extentM": [
+    -80000.0,
+    -80000.0,
+    80000.0,
+    80000.0
+  ],
+  "centerLatLon": [
+    0.67416,
+    23.47314
+  ],
+  "resolutionM": 125.0,
+  "sourceResolutionM": 118.5,
+  "resampling": "bilinear from 256 ppd simple cylindrical",
+  "readMethod": "http-range per row",
+  "minElevationM": -2789.0,
+  "maxElevationM": 55.0,
+  "processedUtc": "2026-11-15T05:44:25.229922+00:00"
+}

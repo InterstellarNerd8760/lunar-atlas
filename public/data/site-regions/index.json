@@ -1,0 +1,103 @@
+{
+  "description": "SLDEM2015 regional terrain, 160 km azimuthal-equidistant crops around the Apollo NAC DTM sites. Blends between the fine site DEM and the global grid.",
+  "encoding": "int16-le",
+  "scale": 0.5,
+  "offset": 0.0,
+  "units": "m",
+  "order": "row-major",
+  "rowOrder": "north to south",
+  "referenceRadiusM": 1737400.0,
+  "processedUtc": "2026-11-15T05:45:47.830818+00:00",
+  "regions": [
+    {
+      "siteId": "apollo-11",
+      "siteName": "Apollo 11 (Tranquility Base)",
+      "width": 1280,
+      "height": 1280,
+      "centerLatLon": [
+        0.67416,
+        23.47314
+      ],
+      "resolutionM": 125.0,
+      "minElevationM": -2789.0,
+      "maxElevationM": 55.0,
+      "id": "apollo-11",
+      "file": "apollo-11/apollo-11-region.i16"
+    },
+    {
+      "siteId": "apollo-12",
+      "siteName": "Apollo 12",
+      "width": 1280,
+      "height": 1280,
+      "centerLatLon": [
+        -3.0128,
+        -23.4219
+      ],
+      "resolutionM": 125.0,
+      "minElevationM": -3261.5,
+      "maxElevationM": -22.5,
+      "id": "apollo-12",
+      "file": "apollo-12/apollo-12-region.i16"
+    },
+    {
+      "siteId": "apollo-14",
+      "siteName": "Apollo 14",
+      "width": 1280,
+      "height": 1280,
+      "centerLatLon": [
+        -3.64589,
+        -17.47194
+      ],
+      "resolutionM": 125.0,
+      "minElevationM": -2225.5,
+      "maxElevationM": 172.5,
+      "id": "apollo-14",
+      "file": "apollo-14/apollo-14-region.i16"
+    },
+    {
+      "siteId": "apollo-15",
+      "siteName": "Apollo 15",
+      "width": 1280,
+      "height": 1280,
+      "centerLatLon": [
+        26.13239,
+        3.6333
+      ],
+      "resolutionM": 125.0,
+      "minElevationM": -3071.5,
+      "maxElevationM": 3291.5,
+      "id": "apollo-15",
+      "file": "apollo-15/apollo-15-region.i16"
+    },
+    {
+      "siteId": "apollo-16",
+      "siteName": "Apollo 16",
+      "width": 1280,
+      "height": 1280,
+      "centerLatLon": [
+        -8.9734,
+        15.5011
+      ],
+      "resolutionM": 125.0,
+      "minElevationM": -606.0,
+      "maxElevationM": 2847.0,
+      "id": "apollo-16",
+      "file": "apollo-16/apollo-16-region.i16"
+    },
+    {
+      "siteId": "apollo-17",
+      "siteName": "Apollo 17",
+      "width": 1280,
+      "height": 1280,
+      "centerLatLon": [
+        20.1911,
+        30.7723
+      ],
+      "resolutionM": 125.0,
+      "minElevationM": -3790.0,
+      "maxElevationM": 823.5,
+      "id": "apollo-17",
+      "file": "apollo-17/apollo-17-region.i16"
+    }
+  ]
+}
