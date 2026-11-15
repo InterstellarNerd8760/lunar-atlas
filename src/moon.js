@@ -557,7 +557,7 @@ async function loadMoon(container, loadingStatus) {
     }));
   }
   const joystickKnob = el('span', { class: 'flight-stick__knob' });
-  const joystick = el('div', { class: 'flight-stick glass', role: 'group', 'aria-label': 'Movement joystick. Drag to move.' }, [joystickKnob]);
+  const joystick = el('div', { class: 'flight-stick', role: 'group', 'aria-label': 'Movement joystick. Drag to move.' }, [joystickKnob]);
   let stickPointer = null;
   const stick = { x: 0, y: 0 };
   function resetStick() {
