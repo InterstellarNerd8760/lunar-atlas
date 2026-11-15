@@ -242,6 +242,7 @@ async function loadMoon(container, loadingStatus) {
       sites: await loadLandingSites(dataDirectory),
       canvas: renderer.domElement,
       renderer,
+      showPins: false, // sites.js draws the site pins in the same style
       modelsDirectory: new URL('../public/models/', import.meta.url),
     });
     createLanderToggle(container, landers);

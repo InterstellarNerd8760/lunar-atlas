@@ -224,10 +224,10 @@ export function createPins(container, places, { onSelect }) {
   const pins = places.map((place) => {
     const button = el('button', {
       type: 'button',
-      class: `pin${place.group === 'artemis' ? ' pin--proxy' : ''}`,
+      class: `pin pin--${place.group}${place.group === 'artemis' ? ' pin--proxy' : ''}`,
       tabindex: '-1',
       'aria-label': place.name,
-    }, [el('span', { class: 'pin__dot' }), el('span', { class: 'pin__label', text: place.name })]);
+    }, [el('span', { class: 'pin__stalk' }), el('span', { class: 'pin__dot' }), el('span', { class: 'pin__label', text: place.name })]);
     button.addEventListener('click', () => onSelect(place));
     layer.append(button);
     return { place, button, direction: new THREE.Vector3(), radius: 1, shown: true };

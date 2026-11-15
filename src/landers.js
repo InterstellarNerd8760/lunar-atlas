@@ -324,7 +324,7 @@ function classify(row) {
 }
 
 // ------------------------------------------------------------ overlay ----
-export function createLanderOverlay({ scene, terrain, sites, canvas, modelsDirectory, renderer = null }) {
+export function createLanderOverlay({ scene, terrain, sites, canvas, modelsDirectory, renderer = null, showPins = true }) {
   const group = new THREE.Group();
   group.name = 'lander-overlay';
   scene.add(group);
@@ -507,6 +507,7 @@ export function createLanderOverlay({ scene, terrain, sites, canvas, modelsDirec
   const pins = new THREE.InstancedMesh(pinGeometry, new THREE.MeshBasicMaterial({ vertexColors: true }), entries.length);
   pins.frustumCulled = false;
   pins.name = 'lander-pins';
+  pins.visible = showPins; // off when the app draws its own site pins
   entries.forEach((e, i) => pins.setColorAt(i, new THREE.Color(PIN_COLORS[e.type])));
   if (pins.instanceColor) pins.instanceColor.needsUpdate = true;
   group.add(pins);

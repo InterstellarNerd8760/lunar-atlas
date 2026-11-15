@@ -91,3 +91,7 @@ This overlay draws 3D models of the hardware at each landing site in `public/dat
 Model credits are in `docs/CREDITS.md`.
 
 **HLS splat (opt-in):** `?hlsSplat=1` swaps the procedural Starship HLS for the Budget3D Gaussian splat (`starship-hls-budget3d.spz`, 3.8 MB). It's drawn by Spark, lazy-loaded from the CDN, in a second pass with its own camera range and no depth test. In headless SwiftShader the page froze once the splat came on screen, so it's off by default until someone checks it on a real GPU.
+
+### Site pins share the overlay pin style
+
+The DOM site pins in `src/sites.js` use the lander overlay's pin look: a thin stalk with a diamond head, coloured by group (gold for Apollo, white for robotic landers, cyan outline for Artemis regions). They keep the 32 px button hit area (the stalk foot sits on the site), the label chip, and selection. Because the app draws these pins itself, `moon.js` passes `showPins: false` to `createLanderOverlay`, so the overlay's instanced 3D pins stay hidden. Standalone users of `landers.js` still get them by default.

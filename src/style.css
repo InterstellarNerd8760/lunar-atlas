@@ -599,12 +599,13 @@ a { color: var(--primary); }
 .pins { position: absolute; inset: 0; z-index: 1; pointer-events: none; overflow: hidden; }
 
 .pin {
+  --pin-color: #d8dde6; /* robotic landers */
   position: absolute;
   top: 0;
   left: 0;
   width: 32px;
   height: 32px;
-  margin: -16px 0 0 -16px;
+  margin: -32px 0 0 -16px; /* the stalk foot sits on the site; 32px hit area above it */
   padding: 0;
   border: 0;
   background: transparent;
@@ -612,28 +613,43 @@ a { color: var(--primary); }
   cursor: pointer;
 }
 
+.pin--apollo { --pin-color: #f0c75e; }
+.pin--artemis { --pin-color: #5fd4ff; }
+.pin--feature { --pin-color: #c5cad5; }
+
+/* Stalk and diamond head, matching the lander overlay's 3D pins. */
+.pin__stalk {
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  width: 2px;
+  height: 16px;
+  border-radius: 1px;
+  background: var(--pin-color);
+  transform: translateX(-50%);
+}
+
 .pin__dot {
   position: absolute;
-  top: 50%;
   left: 50%;
-  width: 10px;
-  height: 10px;
-  border: 1px solid var(--background);
-  border-radius: 50%;
-  background: var(--foreground);
-  transform: translate(-50%, -50%);
+  bottom: 13px;
+  width: 9px;
+  height: 9px;
+  border: 1px solid rgb(0 0 0 / 0.35);
+  background: var(--pin-color);
+  transform: translateX(-50%) rotate(45deg);
   transition: width 120ms ease-out, height 120ms ease-out, background-color 120ms ease-out;
 }
 
-.pin--proxy .pin__dot { background: transparent; border: 2px solid var(--foreground); box-shadow: 0 0 0 1px var(--background); }
-.pin:hover .pin__dot, .pin:focus-visible .pin__dot { width: 12px; height: 12px; }
-.pin--selected .pin__dot { width: 14px; height: 14px; background: var(--primary); outline: 2px solid var(--primary); outline-offset: 2px; }
-.pin--proxy.pin--selected .pin__dot { background: transparent; border-color: var(--primary); }
+.pin--proxy .pin__dot { background: color-mix(in srgb, var(--pin-color) 35%, transparent); border: 2px solid var(--pin-color); }
+.pin:hover .pin__dot, .pin:focus-visible .pin__dot { width: 11px; height: 11px; }
+.pin--selected .pin__dot { width: 12px; height: 12px; outline: 2px solid var(--primary); outline-offset: 2px; }
+.pin--selected .pin__stalk { background: var(--primary); }
 
 .pin__label {
   position: absolute;
   left: 50%;
-  bottom: 28px;
+  bottom: 34px;
   padding: 1px 8px;
   border: 1px solid var(--border);
   border-radius: 999px;
