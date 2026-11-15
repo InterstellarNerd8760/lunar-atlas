@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import { el } from './ui.js';
 
 const MOON_RADIUS_KM = 1_737.4;
-const MAX_LABELS = 28;
+const MAX_LABELS = 16;
 const TYPE_RANK = {
   Oceanus: 0, Mare: 1, Palus: 2, Sinus: 3, Lacus: 4, Mons: 5, Rupes: 6, Vallis: 7, Crater: 8,
 };
@@ -23,12 +23,22 @@ function scaleKm(feature) {
 function visibilityWindow(feature) {
   const d = scaleKm(feature);
   const group = typeGroup(feature.type);
-  const kMax = group === 'mare' ? (d >= 400 ? 70 : 22)
-    : group === 'sea' ? (d >= 250 ? 28 : 16)
-    : group === 'range' ? 24
-    : (d >= 80 ? 28 : 16);
-  const kMin = group === 'mare' ? 0.08 : group === 'sea' ? 0.12 : 0.2;
-  return { minKm: d * kMin, maxKm: d * kMax };
+  const proposed = feature.status === 'proposed';
+  // Multiples of feature diameter. Kept tight so a whole-globe view is almost
+  // bare, with only the largest maria fading in, and craters waiting until you
+  // are fairly close. Click-to-fly altitude is about 2.1× the framed size.
+  const kMax = proposed ? 12
+    : group === 'mare' ? (d >= 800 ? 4.5 : d >= 400 ? 3.8 : 3.2)
+    : group === 'sea' ? (d >= 250 ? 3.6 : 3.0)
+    : group === 'range' ? 3.6
+    : 10;
+  const kMin = group === 'mare' ? 0.1 : group === 'sea' ? 0.15 : 0.25;
+  let maxKm = d * kMax;
+  if (group === 'crater' || proposed) {
+    const frameKm = Math.max(feature.diameter_km || d, proposed ? 120 : 20);
+    maxKm = Math.min(Math.max(maxKm, frameKm * 2.1 * 2), 2200);
+  }
+  return { minKm: d * kMin, maxKm };
 }
 
 function fadeAt(altitudeKm, minKm, maxKm) {
@@ -44,12 +54,12 @@ function fadeAt(altitudeKm, minKm, maxKm) {
 function fontSize(feature) {
   const d = scaleKm(feature);
   const group = typeGroup(feature.type);
-  if (feature.type === 'Oceanus') return 26;
-  if (group === 'mare') return Math.round(16 + Math.min(8, (d / 1400) * 8));
-  if (group === 'sea') return d > 200 ? 14 : 12;
-  if (group === 'range') return d > 300 ? 14 : 12;
-  if (feature.status === 'proposed') return 13;
-  return Math.round(10 + Math.min(5, (d / 250) * 5));
+  if (feature.type === 'Oceanus') return 18;
+  if (group === 'mare') return Math.round(13 + Math.min(4, (d / 1400) * 4));
+  if (group === 'sea') return d > 200 ? 11 : 10;
+  if (group === 'range') return d > 300 ? 11 : 10;
+  if (feature.status === 'proposed') return 11;
+  return Math.round(10 + Math.min(2, (d / 250) * 2));
 }
 
 function labelSize(feature, text) {
@@ -148,7 +158,7 @@ export function createFeatureLabels(container, features, { onSelect } = {}) {
       const cy = height / 2;
       craters.sort((a, b) => ((a.x - cx) ** 2 + (a.y - cy) ** 2) - ((b.x - cx) ** 2 + (b.y - cy) ** 2));
       add(proposed);
-      add(others, MAX_LABELS - 8);
+      add(others, Math.max(4, MAX_LABELS - 6));
       add(craters);
 
       for (let i = 0; i < pool.length; i++) {
