@@ -857,3 +857,28 @@ a { color: var(--primary); }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { transition: none !important; animation: none !important; }
 }
+
+/* Always-visible relief controls and dataset summary. */
+.terrain-summary {
+  position: absolute;
+  z-index: 2;
+  top: var(--panel-top);
+  left: 50%;
+  transform: translateX(-50%);
+  width: max-content;
+  max-width: min(360px, calc(100% - 2 * var(--edge)));
+  padding: 8px 12px;
+  font-size: 11px;
+  line-height: 16px;
+}
+.terrain-summary__controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+.terrain-summary .layers-menu__status { margin: 6px 0 2px; }
+.terrain-summary > a { display: block; text-align: center; }
+@media (pointer: coarse) {
+  .terrain-summary .btn { min-height: 44px; min-width: 40px; }
+}
