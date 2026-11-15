@@ -3,6 +3,7 @@ import { OrbitControls } from 'https://cdn.jsdelivr.net/npm/three@0.180.0/exampl
 
 import { addSky } from './sky.js';
 import { createTerrain } from './terrain.js';
+import { createLanderOverlay, createLanderToggle, loadLandingSites } from './landers.js';
 
 const MOON_RADIUS_METERS = 1_737_400;
 const EYE_METERS = 2.2;
@@ -187,6 +188,23 @@ async function loadMoon(container, status) {
   } catch (error) {
     console.warn(error);
     skyStatus = 'Preview lighting';
+  }
+
+  // Lander model overlay (src/landers.js). Toggle: checkbox or the L key.
+  let landers = null;
+  try {
+    landers = createLanderOverlay({
+      scene,
+      terrain,
+      sites: await loadLandingSites(dataDirectory),
+      canvas: renderer.domElement,
+      modelsDirectory: new URL('../public/models/', import.meta.url),
+    });
+    createLanderToggle(container, landers);
+    if (params.get('landers') === '0') landers.setVisible(false);
+    window.__lunarLanders = landers;
+  } catch (error) {
+    console.warn('Lander overlay unavailable', error);
   }
 
   const canvas = renderer.domElement;
@@ -650,6 +668,7 @@ async function loadMoon(container, status) {
     if (!currentPlace) {
       status.textContent = `LOLA terrain + ${textureLabel} · ${describeRelief()} · ${skyStatus}`;
     }
+    landers?.update(camera);
     renderer.render(scene, camera);
   });
 }

@@ -71,3 +71,21 @@ The height at a point is computed in this order, finest layer last:
 3. Grain shimmer: fade the `grain()` octaves in the fragment shader by `fwidth(pm)` and distance.
 4. SLDEM2015 regional crops for the other preset sites (outside ±60° only LOLA is available). The same script works if you add ids to `SITES`.
 5. Then UI (KSP-style), the visibility panel polish, and the submission (Sun Nov 15, 11:59 PM PT).
+
+## Lander model overlay (`src/landers.js`)
+
+This overlay draws 3D models of the hardware at each landing site in `public/data/landing-sites.csv`. Every model is at true scale, in metres.
+
+- **Apollo 11–17:** NASA's Apollo LM model (`public/models/apollo-lm.glb`, from NASA 3D Resources). The ascent stage is hidden because only the descent stage stayed on the Moon. Apollo 15, 16 and 17 also get a procedural Lunar Roving Vehicle (3.1 × 2.3 × 1.14 m, 0.82 m wheels) about 17 m from the LM.
+- **Robotic landings:** a procedural lander sized from the `LANDER_DIMS` table (span and height per mission). Lunokhod 1 and 2, Yutu, Yutu-2 and Pragyan get a small rover marker 7 m away. The real rovers drove much farther.
+- **Artemis regions with coordinates:** concept hardware only, tinted cyan. The regions alternate between a Starship HLS (9 × 50 m) and a Blue Moon MK2 (7 × 16 m) with an MK1 cargo lander (3.1 × 8 m). Each region also gets NASA's Habitat Demonstration Unit (`public/models/nasa-hdu-habitat.glb`, scaled to 4 m tall), two 10 m solar towers, and NASA's Space Exploration Vehicle (`public/models/nasa-sev-rover.glb`, scaled to 6 m long) as the pressurized rover. None of this is a real selected site or real hardware.
+
+**Models are slots.** Each model type is a slot in `SLOTS` (in `landers.js`) with a true-scale target size and a procedural fallback. `public/models/models.json` maps slots to GLB files. To swap in a better model, add the GLB to `public/models/`, add `"slotName": { "file": "x.glb" }` to the manifest (optionally with `height` / `length` in metres or `rotationY` in degrees), and credit it in `docs/CREDITS.md`. The loader scales it to the target size and puts it on the ground, with no code change. Slots: apolloLM, apolloLRV, starshipHLS, blueMoonMK1, blueMoonMK2, habitat, solarTower, pressurizedRover, luna9, surveyor, lunaLander, lunokhodLander, change3, change5, vikram, slim, novaC, blueGhost, genericLander, lunokhod, yutu, pragyan.
+
+**How it works:** each site gets an anchor at `terrain.surfaceRadius()`, oriented to local up (X east, Y up, Z south), with scale `1 / R`. Each part sits at the lowest terrain point under its footprint, so no legs float. Sites are re-seated when the relief scale or the number of loaded DEMs changes. Models are built, and GLBs fetched, only when the camera comes within 60 km of a site. When a model would be under about 14 px on screen, the site shows a constant-size pin instead (gold for Apollo, white for robotic, cyan for concept). A part the camera is standing inside is hidden, because the site views put the eye right at the catalog coordinate.
+
+**API:** `createLanderOverlay({ scene, terrain, sites, canvas, modelsDirectory })` returns `{ group, update(camera), setVisible(bool), visible, entries }`. `loadLandingSites(dataDirectory)` parses the CSV.
+
+**Toggle:** it's on by default. Use the "Lander models (L)" checkbox at the bottom left, the `L` key, or `?landers=0` in the URL. `createLanderToggle(container, overlay)` is self-contained and only calls `overlay.setVisible()`, so it can move into the layers menu. The wiring in `moon.js` is about 20 lines: one import, the create call after the sky, and `landers?.update(camera)` before render.
+
+Model credits are in `docs/CREDITS.md`.
