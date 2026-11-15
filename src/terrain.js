@@ -46,6 +46,7 @@ const vert = /* glsl */ `
 attribute vec3 aDir;
 attribute vec3 aNormal;
 attribute float aHeight;
+attribute float aMicroW;
 uniform float uRelief;
 uniform float uInvRadius;
 uniform vec3 uOriginDir;
@@ -54,6 +55,7 @@ varying vec3 vNormal;
 varying vec3 vDir;
 varying vec3 vLocal;
 varying vec3 vView;
+varying float vMicroW;
 void main() {
   float extra = (uRelief - 1.0) * uInvRadius;
   vec3 local = position + aDir * (aHeight * extra) - uOriginDir * (uOriginHeight * extra);
@@ -65,6 +67,7 @@ void main() {
   vNormal = normalize(aDir * inv + (slope > 1e-5 ? tilt * ((t * inv) / slope) : vec3(0.0)));
   vDir = aDir;
   vLocal = local;
+  vMicroW = aMicroW;
   vec4 viewPos = modelViewMatrix * vec4(local, 1.0);
   vView = viewPos.xyz;
   gl_Position = projectionMatrix * viewPos;
@@ -79,6 +82,7 @@ varying vec3 vNormal;
 varying vec3 vDir;
 varying vec3 vLocal;
 varying vec3 vView;
+varying float vMicroW;
 uniform vec3 uOriginDir;
 uniform float uRadius;
 uniform vec3 uSunView;
@@ -192,7 +196,9 @@ void main() {
   // as surface texture instead of aliasing into speckle near the horizon.
   float fadeFine = 1.0 - smoothstep(120.0, 700.0, distM);
   float fadeMid = 1.0 - smoothstep(300.0, 2000.0, distM);
-  float fadeCoarse = 1.0 - smoothstep(400.0, 4000.0, distM);
+  // The coarse octave stands in for relief LOLA cannot resolve, so it mostly
+  // gives way inside site DEMs, which carry that relief themselves.
+  float fadeCoarse = (1.0 - smoothstep(400.0, 4000.0, distM)) * mix(0.3, 1.0, vMicroW);
   vec3 N = normalize(vNormal);
   if (fadeCoarse > 0.002) {
     vec4 g2 = grain(pm, tw, 2.0);
@@ -398,6 +404,55 @@ function sampleGrid(grid, x, y) {
   return weight > 0 ? sum / weight : Number.NaN;
 }
 
+// Distance in meters from each DEM post to the nearest no-data post (chamfer
+// transform, capped at the void blend margin). Null when the DEM has no voids.
+function voidDistance(dem) {
+  const { data, width, height } = dem;
+  let any = false;
+  for (let i = 0; i < data.length; i++) {
+    if (data[i] !== data[i]) {
+      any = true;
+      break;
+    }
+  }
+  if (!any) return null;
+  const post = Math.abs(dem.pw);
+  const cap = dem.voidMargin / post;
+  const dist = new Float32Array(width * height);
+  for (let i = 0; i < dist.length; i++) dist[i] = data[i] === data[i] ? cap : 0;
+  const diag = Math.SQRT2;
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      const i = y * width + x;
+      let v = dist[i];
+      if (v === 0) continue;
+      if (x > 0) v = Math.min(v, dist[i - 1] + 1);
+      if (y > 0) {
+        v = Math.min(v, dist[i - width] + 1);
+        if (x > 0) v = Math.min(v, dist[i - width - 1] + diag);
+        if (x < width - 1) v = Math.min(v, dist[i - width + 1] + diag);
+      }
+      dist[i] = v;
+    }
+  }
+  for (let y = height - 1; y >= 0; y--) {
+    for (let x = width - 1; x >= 0; x--) {
+      const i = y * width + x;
+      let v = dist[i];
+      if (v === 0) continue;
+      if (x < width - 1) v = Math.min(v, dist[i + 1] + 1);
+      if (y < height - 1) {
+        v = Math.min(v, dist[i + width] + 1);
+        if (x < width - 1) v = Math.min(v, dist[i + width + 1] + diag);
+        if (x > 0) v = Math.min(v, dist[i + width - 1] + diag);
+      }
+      dist[i] = v;
+    }
+  }
+  for (let i = 0; i < dist.length; i++) dist[i] *= post;
+  return { data: dist, width, height, west: dem.west, north: dem.north, pw: dem.pw, ph: dem.ph, wrapX: false };
+}
+
 function makeIndex() {
   const indices = [];
   const gi = (row, col) => row * STRIDE + col;
@@ -556,7 +611,12 @@ export async function createTerrain({ scene, renderer, dataDirectory, demCatalog
     if (edge <= 0) return h;
     const hs = sampleGrid(dem, px, py);
     if (hs !== hs) return h;
-    demWeight = smoothstep(0, dem.margin, edge);
+    let weight = smoothstep(0, dem.margin, edge);
+    if (dem.voidGrid) {
+      const gap = sampleGrid(dem.voidGrid, px, py);
+      if (gap === gap) weight *= smoothstep(0, dem.voidMargin, gap);
+    }
+    demWeight = weight;
     return h + (hs - h) * demWeight;
   }
 
@@ -685,7 +745,7 @@ export async function createTerrain({ scene, renderer, dataDirectory, demCatalog
     const normals = new Float32Array(VERTS * 3);
     const heights = new Float32Array(VERTS);
     const micro = new Float32Array(STRIDE * STRIDE);
-    const microW = new Float32Array(STRIDE * STRIDE);
+    const microW = new Float32Array(VERTS);
     const n = GRID;
     for (let row = 0; row <= n; row++) {
       const v = tile.v0 + (tile.v1 - tile.v0) * (row / n);
@@ -797,6 +857,7 @@ export async function createTerrain({ scene, renderer, dataDirectory, demCatalog
       normals[index * 3 + 1] = normals[src * 3 + 1];
       normals[index * 3 + 2] = normals[src * 3 + 2];
       heights[index] = heights[src] - skirt;
+      microW[index] = microW[src];
       dir64[index * 3] = dir64[src * 3];
       dir64[index * 3 + 1] = dir64[src * 3 + 1];
       dir64[index * 3 + 2] = dir64[src * 3 + 2];
@@ -811,6 +872,7 @@ export async function createTerrain({ scene, renderer, dataDirectory, demCatalog
     geometry.setAttribute('aDir', new THREE.BufferAttribute(dirs, 3));
     geometry.setAttribute('aNormal', new THREE.BufferAttribute(normals, 3));
     geometry.setAttribute('aHeight', new THREE.BufferAttribute(heights, 1));
+    geometry.setAttribute('aMicroW', new THREE.BufferAttribute(microW, 1));
     geometry.setIndex(sharedIndex);
     geometry.boundingSphere = new THREE.Sphere(
       new THREE.Vector3(),
@@ -860,25 +922,34 @@ export async function createTerrain({ scene, renderer, dataDirectory, demCatalog
     queue.push(tile);
   }
 
-  function splitOne() {
-    let best = null;
-    for (const leaf of leaves) {
-      if (leaf.score <= 1) continue;
-      if (!best || leaf.score > best.score) best = leaf;
-    }
-    if (!best || leaves.size + 3 > MAX_LEAVES) return;
+  function splitOne(camera) {
+    if (leaves.size + 3 > MAX_LEAVES) return;
     if (forcedLevel < 0 && queue.length > 12) return;
-    const kids = [0, 1, 2, 3].map((q) => makeTile(
-      best.face,
-      best.level + 1,
-      best.ix * 2 + (q & 1),
-      best.iy * 2 + (q >> 1),
-      best,
-    ));
-    best.children = kids;
-    best.split = true;
-    leaves.delete(best);
-    for (let i = 0; i < kids.length; i++) leaves.add(kids[i]);
+    const candidates = [];
+    for (const leaf of leaves) if (leaf.score > 1) candidates.push(leaf);
+    candidates.sort((a, b) => b.score - a.score);
+    for (let c = 0; c < Math.min(candidates.length, 4); c++) {
+      const best = candidates[c];
+      const kids = [0, 1, 2, 3].map((q) => makeTile(
+        best.face,
+        best.level + 1,
+        best.ix * 2 + (q & 1),
+        best.iy * 2 + (q >> 1),
+        best,
+      ));
+      // A coarse tile's bounding cone can contain the camera while none of its
+      // children are visible. Splitting it would be merged straight back and
+      // starve every other split, so try the next candidate instead.
+      if (forcedLevel < 0 && !kids.some((kid) => visibleFrom(kid, camera))) {
+        for (const kid of kids) tiles.delete(`${kid.face}/${kid.level}/${kid.ix}/${kid.iy}`);
+        continue;
+      }
+      best.children = kids;
+      best.split = true;
+      leaves.delete(best);
+      for (let i = 0; i < kids.length; i++) leaves.add(kids[i]);
+      return;
+    }
   }
 
   function mergePass() {
@@ -985,6 +1056,8 @@ export async function createTerrain({ scene, renderer, dataDirectory, demCatalog
       dem.resolutionM = meta.resolutionM || dem.resolutionM;
       const span = Math.max(dem.east - dem.west, dem.north - dem.south);
       dem.margin = Math.min(Math.max(span * 0.25, 200), 8000);
+      dem.voidMargin = Math.min(dem.margin, 600);
+      dem.voidGrid = voidDistance(dem);
       dem.polar = /stereographic/i.test(meta.projection || '');
       if (!dem.polar) bindAeqd(dem, meta.centerLatLon || dem.centerLatLon);
       dem.epoch = ++heightEpoch;
@@ -1024,7 +1097,7 @@ export async function createTerrain({ scene, renderer, dataDirectory, demCatalog
     mergePass();
     for (const root of roots) refresh(root, camera);
     const splitBudget = forcedLevel >= 0 ? 8 : 1;
-    for (let i = 0; i < splitBudget; i++) splitOne();
+    for (let i = 0; i < splitBudget; i++) splitOne(camera);
     for (const leaf of leaves) {
       leaf.visible = visibleFrom(leaf, camera);
       leaf.score = splitScore(leaf, camera);
