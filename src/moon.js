@@ -7,6 +7,8 @@ import { createFeatureLabels } from './features.js';
 import { createDrawer, createPins, createSiteList } from './sites.js';
 import { bindPopover, closeOpenPopover, el, icons, isTextField, reducedMotion } from './ui.js';
 import { createTerrain } from './terrain.js';
+import { createHorizonSource } from './horizon.js';
+import { createComparePanel } from './compare.js';
 
 const MOON_RADIUS_METERS = 1_737_400;
 const EYE_METERS = 2.2;
@@ -230,7 +232,7 @@ export function mountMoonView(container) {
 async function loadMoon(container, loadingStatus) {
   const dataDirectory = new URL('../public/data/', import.meta.url);
   const params = new URLSearchParams(window.location.search);
-  const [demResponse, previewResponse, notesResponse, photosResponse, catalogResponse, writeupsResponse, featuresResponse] = await Promise.all([
+  const [demResponse, previewResponse, notesResponse, photosResponse, catalogResponse, writeupsResponse, featuresResponse, horizonsResponse] = await Promise.all([
     fetch(new URL('site-dems/index.json', dataDirectory)),
     fetch(new URL('site-previews/index.json', dataDirectory)),
     fetch(new URL('site-notes.json', dataDirectory)),
@@ -238,6 +240,7 @@ async function loadMoon(container, loadingStatus) {
     fetch(new URL('landing-sites.csv', dataDirectory)),
     fetch(new URL('site-writeups.json', dataDirectory)),
     fetch(new URL('features.json', dataDirectory)),
+    fetch(new URL('horizons.json', dataDirectory)),
   ]);
   const demIndex = demResponse.ok ? await demResponse.json() : { sites: [] };
   const previewIndex = previewResponse.ok ? await previewResponse.json() : { sites: [] };
@@ -320,6 +323,14 @@ async function loadMoon(container, loadingStatus) {
     onFlyTo: () => { if (currentPlace) focusPlace(currentPlace, { surface: false }); },
     onStand: () => { if (currentPlace) focusPlace(currentPlace); },
     onEarth: lookAtEarth,
+    onCompare: () => compare?.open(currentPlace),
+  });
+
+  const horizon = createHorizonSource({
+    sample: terrain.sampleBaseMeters,
+    precomputed: horizonsResponse.ok ? await horizonsResponse.json().catch(() => null) : null,
+    label: () => terrain.heightsLabel,
+    epoch: () => terrain.heightsEpoch,
   });
 
   let sky;
@@ -328,11 +339,23 @@ async function loadMoon(container, loadingStatus) {
     sky = await addSky(scene, camera, sunlight, container, {
       visibilitySection: drawer.visSection,
       onVisibilityStatus: (text) => drawer.setPeek(text),
+      horizon,
     });
   } catch (error) {
     console.warn(error);
     skyStatus = 'Preview lighting';
   }
+
+  const compare = sky ? createComparePanel(container, {
+    places,
+    positions: sky.positions,
+    horizon,
+    getPoint: () => (currentPlace?.group === 'point' ? currentPlace : null),
+  }) : null;
+  // Horizons computed on the startup grid are refreshed once the 16 px/deg grid lands.
+  terrain.heightsReady.then(() => {
+    if (currentPlace && Number.isFinite(currentPlace.lat)) analyzePlace(currentPlace);
+  });
 
   const canvas = renderer.domElement;
   let controls;
@@ -362,12 +385,14 @@ async function loadMoon(container, loadingStatus) {
     ['globe', 'Globe'], ['north', 'N pole'], ['south', 'S pole'],
   ].map(([view, label]) => el('button', { type: 'button', class: 'btn', 'data-view': view, 'aria-pressed': String(view === 'globe'), text: label }));
   const flightButton = el('button', { type: 'button', class: 'btn', 'aria-pressed': 'false', text: 'Free flight' });
+  const compareButton = el('button', { type: 'button', class: 'btn', 'aria-haspopup': 'dialog', title: 'Compare sites side by side', text: 'Compare', hidden: !compare, onclick: () => compare?.toggle(currentPlace) });
   const layersButton = el('button', { type: 'button', class: 'btn', 'aria-haspopup': 'dialog', 'aria-keyshortcuts': 'L', title: 'Layers (L)', html: `${icons.layers}<span>Layers</span>` });
   const topbar = el('header', { class: 'topbar glass' }, [
     el('h1', { class: 'brand', text: 'Lunar Atlas' }),
     el('nav', { class: 'topbar__nav', 'aria-label': 'Camera' }, [
       sitesButton,
       el('div', { class: 'topbar__nav topbar__views' }, [...viewButtons, flightButton]),
+      compareButton,
       layersButton,
     ]),
   ]);

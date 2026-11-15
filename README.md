@@ -80,3 +80,11 @@ Validation: JavaScript syntax and whitespace checks passed. Browser acceptance
 is pending: the available Chromium process fails to launch in this environment
 with an operation-not-permitted socket error. Ground-view appearance, terrain
 collision at human height, GPU performance and mobile layout require review.
+
+## Terrain horizon and site comparison
+
+Sunlight and Earth visibility use a 360° terrain horizon instead of a smooth sphere. For each point the viewer ray-marches 150 km outward along every azimuth through the LOLA heights (16 px/deg global grid plus the 80°S polar grid), with lunar curvature, from 2 m above the ground. The 14 sites with a bundled DEM use precomputed profiles in `public/data/horizons.json`, whose near field comes from the PGDA LOLA 5 m or LROC NAC 2 m grid. Rebuild them with `node scripts/build-horizons.mjs`. The panel shows Sunlight, Earth in view, Sun + Earth (solar power and direct-to-Earth radio at once), longest dark, and longest without Earth, each with the smooth-sphere value for comparison. The sky chart draws the terrain skyline. Sun and Earth are treated as points at their centers.
+
+**Compare** in the top bar (or on a site's panel) puts up to three sites side by side over the same Horizons window.
+
+Tests: `node --test tests/horizon.test.mjs`.
