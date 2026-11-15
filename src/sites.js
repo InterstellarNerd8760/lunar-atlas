@@ -20,6 +20,15 @@ function metaLine(place) {
 
 export function createSiteList(container, places, { onSelect }) {
   const search = el('input', { type: 'search', placeholder: 'Search sites', 'aria-label': 'Search sites', 'aria-keyshortcuts': '/', autocomplete: 'off', spellcheck: 'false' });
+  const destinations = places.filter((place) => !place.disabled);
+  let selectedId = null;
+  const randomButton = el('button', { type: 'button', class: 'btn', text: 'Random site' });
+  randomButton.disabled = destinations.length === 0;
+  randomButton.addEventListener('click', () => {
+    const otherSites = destinations.filter((place) => place.id !== selectedId);
+    const choices = otherSites.length ? otherSites : destinations;
+    if (choices.length) onSelect(choices[Math.floor(Math.random() * choices.length)]);
+  });
   const groupsWithSites = GROUPS.filter((group) => places.some((place) => place.group === group.id));
   let filter = 'all';
   const chips = el('div', { class: 'chips', role: 'group', 'aria-label': 'Filter sites' }, [
@@ -32,6 +41,7 @@ export function createSiteList(container, places, { onSelect }) {
     railButton,
     el('div', { class: 'site-list__head' }, [
       el('div', { class: 'search' }, [el('span', { html: icons.search }), search, el('kbd', { 'aria-hidden': 'true', text: '/' })]),
+      randomButton,
       chips,
     ]),
     body,
@@ -109,6 +119,7 @@ export function createSiteList(container, places, { onSelect }) {
     railButton,
     search,
     setSelected(id) {
+      selectedId = id;
       for (const { row } of rows.values()) {
         if (row.dataset.id === id) row.setAttribute('aria-current', 'true');
         else row.removeAttribute('aria-current');
