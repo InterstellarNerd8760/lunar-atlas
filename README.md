@@ -7,12 +7,12 @@ A browser-based Moon explorer for comparing sunlight and Earth visibility at lun
 Install Python 3 and Git. If you already have a checkout, open Terminal and run:
 
 ```bash
-cd ~/Documents/lunar-atlas-pr1
+cd ~/Documents/lunar-atlas
 git pull --ff-only origin main
 python3 -m http.server 8000
 ```
 
-Use your actual checkout path if it differs. For a fresh checkout, run:
+Use the folder where you cloned the repository. If a pull reports that an untracked `public/data/wac-texture.jpg` would be overwritten, stop the server with Ctrl+C, back up and move that local file out of the repository, then rerun `git pull --ff-only origin main`. For example, run the following from the repository root:\n\n```bash\nmkdir -p ~/Documents/lunar-atlas-local-backup\nmv public/data/wac-texture.jpg ~/Documents/lunar-atlas-local-backup/\ngit pull --ff-only origin main\n```\n\nFor a fresh checkout, run:
 
 ```bash
 git clone https://github.com/InterstellarNerd8760/lunar-atlas.git
