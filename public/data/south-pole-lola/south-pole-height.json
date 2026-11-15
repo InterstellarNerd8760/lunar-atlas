@@ -1,0 +1,28 @@
+{
+  "processedUtc": "2026-11-14T23:41:43.113979+00:00",
+  "source": "https://pgda.gsfc.nasa.gov/data/LOLA_20mpp/LDEM_80S_80MPP_ADJ.TIF",
+  "credit": "NASA GSFC PGDA / LOLA",
+  "radiusM": 1737400.0,
+  "units": "meters above reference sphere",
+  "width": 1024,
+  "height": 1024,
+  "encoding": "float32-le",
+  "nodata": "NaN",
+  "crsWkt": "PROJCS[\"Moon (2015) - Sphere / Ocentric / South Polar\",GEOGCS[\"Moon (2015) - Sphere / Ocentric\",DATUM[\"Moon (2015) - Sphere\",SPHEROID[\"Moon (2015) - Sphere\",1737400,0,AUTHORITY[\"IAU\",\"30100\"]],AUTHORITY[\"IAU\",\"30100\"]],PRIMEM[\"Reference Meridian\",0,AUTHORITY[\"IAU\",\"30100\"]],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"IAU\",\"30100\"]],PROJECTION[\"Polar_Stereographic\"],PARAMETER[\"latitude_of_origin\",-90],PARAMETER[\"central_meridian\",0],PARAMETER[\"false_easting\",0],PARAMETER[\"false_northing\",0],UNIT[\"metre\",1,AUTHORITY[\"EPSG\",\"9001\"]],AXIS[\"Easting\",NORTH],AXIS[\"Northing\",NORTH],AUTHORITY[\"IAU\",\"30135\"]]",
+  "affine": [
+    593.75,
+    0.0,
+    -304000.0,
+    0.0,
+    -593.75,
+    304000.0
+  ],
+  "extentM": [
+    -304000.0,
+    -304000.0,
+    304000.0,
+    304000.0
+  ],
+  "nativeResolutionM": 80,
+  "rowOrder": "north to south"
+}
