@@ -92,6 +92,7 @@ uniform sampler2D uAlbedo;
 uniform sampler2D uPolarS;
 uniform sampler2D uPolarN;
 uniform float uHasAlbedo;
+uniform float uImageryOnly;
 uniform float uHasPolar;
 uniform vec3 uOriginWrap;
 
@@ -175,7 +176,7 @@ void main() {
         vec3 polar = polarColor(dir, 1.0);
         if (polar.r >= 0.0) {
           polar = sRGBTransferEOTF(vec4(polar, 1.0)).rgb;
-          albedo = mix(equirect, polar, smoothstep(-78.0, -83.0, lat));
+          albedo = mix(equirect, polar, smoothstep(78.0, 83.0, -lat));
         }
       } else if (lat > 78.0) {
         vec3 polar = polarColor(dir, 0.0);
@@ -185,6 +186,12 @@ void main() {
         }
       }
     }
+  }
+
+  if (uImageryOnly > 0.5 && uHasAlbedo > 0.5) {
+    gl_FragColor = vec4(albedo, 1.0);
+    #include <colorspace_fragment>
+    return;
   }
 
   float distM = length(vView) * uRadius;
@@ -513,6 +520,19 @@ export async function createTerrain({ scene, renderer, dataDirectory, demCatalog
   const polar = await loadRaster(new URL('south-pole-lola/south-pole-height', dataDirectory), false);
 
   const dems = demCatalog.map((site) => prepareDem(site)).filter(Boolean);
+  // SLDEM2015 regional crops (160 km) sit between the site DTMs and the global grid.
+  try {
+    const response = await fetch(new URL('site-regions/index.json', dataDirectory));
+    if (response.ok) {
+      const index = await response.json();
+      for (const entry of index.regions || []) {
+        const dem = prepareDem({ ...entry, id: `${entry.id}-region` }, 'site-regions');
+        if (dem) dems.push(dem);
+      }
+    }
+  } catch (error) {
+    console.warn('site-regions unavailable', error);
+  }
   const loaded = [];
   let heightEpoch = 1;
   let relief = 1;
@@ -533,6 +553,7 @@ export async function createTerrain({ scene, renderer, dataDirectory, demCatalog
     uPolarS: { value: fallback },
     uPolarN: { value: fallback },
     uHasAlbedo: { value: 0 },
+    uImageryOnly: { value: 0 },
     uHasPolar: { value: 0 },
     uOriginWrap: { value: new THREE.Vector3() },
   };
@@ -578,7 +599,7 @@ export async function createTerrain({ scene, renderer, dataDirectory, demCatalog
     let maxDemWeight = 0;
     for (let i = 0; i < loaded.length; i++) {
       h = blendDem(loaded[i], x, y, z, h);
-      if (demWeight > maxDemWeight) maxDemWeight = demWeight;
+      if (!loaded[i].region && demWeight > maxDemWeight) maxDemWeight = demWeight;
     }
     microWeight = 1 - maxDemWeight;
     microPart = microWeight > 0.001 ? microRelief(x, y, z) * microWeight : 0;
@@ -999,13 +1020,33 @@ export async function createTerrain({ scene, renderer, dataDirectory, demCatalog
     buildTile(root);
   }
 
+  // Swap in the native 16 px/deg LOLA grid once it arrives; the 1024x512 grid
+  // stays the startup copy. Every cached tile is rebuilt with the new heights.
+  loadRaster(new URL('global-height/global-height-hi', dataDirectory), false).then((hi) => {
+    if (!hi) return;
+    Object.assign(global, hi);
+    for (const tile of tiles.values()) {
+      if (tile.geometry) tile.evicted = true;
+    }
+    heightEpoch++;
+  }).catch((error) => console.warn('global-height-hi unavailable', error));
+
   function considerLoads(camera) {
     const cam = camera.position;
     let nearest = null;
     let nearestDist = Infinity;
+    let nearestRegion = null;
+    let nearestRegionDist = Infinity;
     for (let i = 0; i < dems.length; i++) {
       const dem = dems[i];
       const dist = cam.distanceTo(dem.center) * RADIUS;
+      if (dem.region) {
+        if (dist < nearestRegionDist) {
+          nearestRegion = dem;
+          nearestRegionDist = dist;
+        }
+        continue;
+      }
       if (!dem.pinned && dist < nearestDist) {
         nearest = dem;
         nearestDist = dist;
@@ -1023,9 +1064,22 @@ export async function createTerrain({ scene, renderer, dataDirectory, demCatalog
         nearest.loading = null;
       });
     }
-    if (loaded.length > 2) {
-      const ranked = loaded.slice().sort((a, b) => cam.distanceTo(b.center) - cam.distanceTo(a.center));
-      while (loaded.length > 2) {
+    if (nearestRegion && nearestRegionDist < 400_000 && !nearestRegion.data && !nearestRegion.loading) {
+      const dem = nearestRegion;
+      dem.loading = fetchDem(dem).finally(() => {
+        dem.loading = null;
+      });
+    }
+    evict(cam, false, 2);
+    evict(cam, true, 2);
+  }
+
+  function evict(cam, region, limit) {
+    const count = () => loaded.filter((dem) => dem.region === region).length;
+    if (count() > limit) {
+      const ranked = loaded.filter((dem) => dem.region === region)
+        .sort((a, b) => cam.distanceTo(b.center) - cam.distanceTo(a.center));
+      while (count() > limit) {
         const drop = ranked.find((dem) => !dem.pinned && loaded.includes(dem));
         if (!drop) break;
         // Cached meshes still hold the dropped DEM's heights; rebuild them when shown.
@@ -1043,8 +1097,8 @@ export async function createTerrain({ scene, renderer, dataDirectory, demCatalog
   async function fetchDem(dem) {
     pending.add(dem);
     try {
-      const base = new URL(`site-dems/${dem.file}`, dataDirectory);
-      const metaUrl = new URL(base.href.replace(/\.f32$/, '.json'));
+      const base = new URL(`${dem.dir}/${dem.file}`, dataDirectory);
+      const metaUrl = new URL(base.href.replace(/\.(f32|i16)$/, '.json'));
       const [buffer, meta] = await Promise.all([
         fetch(base).then((response) => {
           if (!response.ok) throw new Error(`DEM ${dem.id} failed`);
@@ -1052,10 +1106,9 @@ export async function createTerrain({ scene, renderer, dataDirectory, demCatalog
         }),
         fetch(metaUrl).then((response) => response.json()),
       ]);
-      if (buffer.byteLength !== meta.width * meta.height * 4) throw new Error(`DEM ${dem.id} size mismatch`);
+      dem.data = decodeHeights(buffer, meta, `DEM ${dem.id}`);
       dem.width = meta.width;
       dem.height = meta.height;
-      dem.data = new Float32Array(buffer);
       dem.west = meta.extentM[0];
       dem.south = meta.extentM[1];
       dem.east = meta.extentM[2];
@@ -1064,7 +1117,9 @@ export async function createTerrain({ scene, renderer, dataDirectory, demCatalog
       dem.ph = meta.affine[4];
       dem.resolutionM = meta.resolutionM || dem.resolutionM;
       const span = Math.max(dem.east - dem.west, dem.north - dem.south);
-      dem.margin = Math.min(Math.max(span * 0.25, 200), 8000);
+      // Regional SLDEM crops feather into the global grid over a wide band so
+      // the 125 m -> ~470 m step is not visible; site DTMs keep the tight band.
+      dem.margin = dem.region ? span * 0.2 : Math.min(Math.max(span * 0.25, 200), 8000);
       dem.voidMargin = Math.min(dem.margin, 600);
       dem.voidGrid = voidDistance(dem);
       dem.polar = /stereographic/i.test(meta.projection || '');
@@ -1286,6 +1341,7 @@ export async function createTerrain({ scene, renderer, dataDirectory, demCatalog
     update,
     setRelief,
     setAlbedo,
+    setImageryOnly(on) { uniforms.uImageryOnly.value = on ? 1 : 0; },
     preloadSite,
     setWireframe(on) { material.wireframe = Boolean(on); },
     surfaceRadius,
@@ -1325,18 +1381,33 @@ function raySphere(origin, direction, radius) {
   return { tEnter: -b - s, tExit: -b + s };
 }
 
+// Heights are float32 (NaN = no data) or int16 with height = DN * scale + offset.
+function decodeHeights(buffer, meta, label) {
+  const count = meta.width * meta.height;
+  if (meta.encoding === 'int16-le') {
+    if (buffer.byteLength !== count * 2) throw new Error(`${label} does not match its metadata.`);
+    const dn = new Int16Array(buffer);
+    const out = new Float32Array(count);
+    const scale = meta.scale ?? 1;
+    const offset = meta.offset ?? 0;
+    for (let i = 0; i < count; i++) out[i] = dn[i] * scale + offset;
+    return out;
+  }
+  if (buffer.byteLength !== count * 4) throw new Error(`${label} does not match its metadata.`);
+  return new Float32Array(buffer);
+}
+
 async function loadRaster(base, required) {
   const metaResponse = await fetch(new URL(`${base.pathname}.json`, base));
-  const dataResponse = await fetch(new URL(`${base.pathname}.f32`, base));
-  if (!metaResponse.ok || !dataResponse.ok) {
+  if (!metaResponse.ok) return null;
+  const meta = await metaResponse.json();
+  const ext = meta.encoding === 'int16-le' ? 'i16' : 'f32';
+  const dataResponse = await fetch(new URL(`${base.pathname}.${ext}`, base));
+  if (!dataResponse.ok) {
     if (required) return null;
     return null;
   }
-  const meta = await metaResponse.json();
-  const buffer = await dataResponse.arrayBuffer();
-  if (buffer.byteLength !== meta.width * meta.height * 4) {
-    throw new Error(`${base.pathname} does not match its metadata.`);
-  }
+  const data = decodeHeights(await dataResponse.arrayBuffer(), meta, base.pathname);
   const extent = meta.extentM || [
     meta.affine[2],
     meta.affine[5] + meta.affine[4] * meta.height,
@@ -1344,7 +1415,7 @@ async function loadRaster(base, required) {
     meta.affine[5],
   ];
   const grid = {
-    data: new Float32Array(buffer),
+    data,
     width: meta.width,
     height: meta.height,
     west: meta.affine[2],
@@ -1368,7 +1439,7 @@ async function loadRaster(base, required) {
   return grid;
 }
 
-function prepareDem(site) {
+function prepareDem(site, dir = 'site-dems') {
   if (!site.file || !site.centerLatLon) return null;
   const [lat, lon] = site.centerLatLon;
   const centerArr = [0, 0, 0];
@@ -1378,6 +1449,8 @@ function prepareDem(site) {
   return {
     id: site.id,
     file: site.file,
+    dir,
+    region: dir === 'site-regions',
     resolutionM: site.resolutionM || 5,
     centerLatLon: site.centerLatLon,
     center,
