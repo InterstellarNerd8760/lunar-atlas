@@ -1097,7 +1097,12 @@ export async function createTerrain({ scene, renderer, dataDirectory, demCatalog
       const pixelsHigh = Math.max(renderer.domElement.clientHeight || 700, 1);
       const spacingWanted = distM * 2 * Math.tan(fov / 2) / pixelsHigh * PIXEL_TARGET;
       let level = 0;
-      while (level < 4 && tileEdgeMeters(level) / GRID > spacingWanted) level++;
+      // A uniform level covers every face, so 6 * 4^level leaves. Stop before
+      // the next level would exceed the leaf cap and leave the tree mixed.
+      while (level < 4 && tileEdgeMeters(level) / GRID > spacingWanted) {
+        if (6 * (4 ** (level + 1)) > MAX_LEAVES) break;
+        level++;
+      }
       forcedLevel = level;
     } else {
       forcedLevel = -1;
