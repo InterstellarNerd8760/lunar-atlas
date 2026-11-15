@@ -251,7 +251,7 @@ async function loadMoon(container, status) {
   function desiredRelief() {
     if (reliefMode === 'true') return 1;
     const altitude = Math.max(0, camera.position.length() - 1);
-    return Math.round((1 + 7 * THREE.MathUtils.smoothstep(altitude, 0.08, 2)) * 10) / 10;
+    return Math.round((1 + 2 * THREE.MathUtils.smoothstep(altitude, 0.08, 2)) * 10) / 10;
   }
 
   function applyRelief() {

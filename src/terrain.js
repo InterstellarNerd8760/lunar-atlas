@@ -23,6 +23,12 @@ const PIXEL_TARGET = 8;
 // Coarse global postings are still meshed down to this spacing so the horizon
 // stays a curve when the camera is low and the only DEM is LOLA 16.
 const SMOOTH_FLOOR_M = 36;
+// Shader grain lattice period; keep in sync with GRAIN_PERIOD_M in frag.
+const GRAIN_PERIOD_M = 32768;
+// LOLA-only micro-relief: [wavelength m, amplitude m]. Peak sum stays under
+// 9 m so it never competes with the measured macro relief.
+const MICRO_OCTAVES = [[800, 5], [400, 2.5], [200, 1.25]];
+const MICRO_SLOPE_STEP_M = 4;
 
 const FACES = new Float32Array([
   // uAxis, vAxis, origin — point = origin + uAxis * u + vAxis * v, u,v in [-1, 1]
@@ -83,23 +89,52 @@ uniform sampler2D uPolarS;
 uniform sampler2D uPolarN;
 uniform float uHasAlbedo;
 uniform float uHasPolar;
+uniform vec3 uOriginWrap;
 
 #define POLE_RHO 0.245575
+#define GRAIN_PERIOD_M 32768.0
 
 float hash21(vec2 p) {
   vec3 p3 = fract(vec3(p.xyx) * 0.1031);
   p3 += dot(p3, p3.yzx + 33.33);
   return fract((p3.x + p3.y) * p3.z);
 }
-float vnoise(vec2 p) {
+// Value noise and its gradient (per cell). The lattice wraps every period
+// cells so a tile-local, wrapped origin gives the same field on every tile.
+vec3 vnoiseD(vec2 p, float period) {
   vec2 i = floor(p);
-  vec2 f = fract(p);
+  vec2 f = p - i;
   vec2 u = f * f * (3.0 - 2.0 * f);
-  return mix(
-    mix(hash21(i), hash21(i + vec2(1.0, 0.0)), u.x),
-    mix(hash21(i + vec2(0.0, 1.0)), hash21(i + vec2(1.0, 1.0)), u.x),
-    u.y
+  vec2 du = 6.0 * f * (1.0 - f);
+  float a = hash21(mod(i, period));
+  float b = hash21(mod(i + vec2(1.0, 0.0), period));
+  float c = hash21(mod(i + vec2(0.0, 1.0), period));
+  float d = hash21(mod(i + vec2(1.0, 1.0), period));
+  float k = a - b - c + d;
+  return vec3(
+    a + (b - a) * u.x + (c - a) * u.y + k * u.x * u.y,
+    du * vec2(b - a + k * u.y, c - a + k * u.x)
   );
+}
+// Triplanar over the surface point in meters: x = value in [0, 1], yzw = world
+// gradient per meter.
+vec4 grain(vec3 pm, vec3 w, float cellM) {
+  float freq = 1.0 / cellM;
+  float period = GRAIN_PERIOD_M * freq;
+  vec4 r = vec4(0.0);
+  if (w.x > 0.01) {
+    vec3 n = vnoiseD(pm.yz * freq, period);
+    r += w.x * vec4(n.x, 0.0, n.yz * freq);
+  }
+  if (w.y > 0.01) {
+    vec3 n = vnoiseD(pm.zx * freq, period);
+    r += w.y * vec4(n.x, n.z * freq, 0.0, n.y * freq);
+  }
+  if (w.z > 0.01) {
+    vec3 n = vnoiseD(pm.xy * freq, period);
+    r += w.z * vec4(n.x, n.yz * freq, 0.0);
+  }
+  return r;
 }
 
 vec3 equirectColor(vec3 dir) {
@@ -148,28 +183,31 @@ void main() {
     }
   }
 
-  vec3 east = cross(vec3(0.0, 1.0, 0.0), dir);
-  float eastLen = length(east);
-  east = eastLen > 1e-4 ? east / eastLen : vec3(1.0, 0.0, 0.0);
-  vec3 north = cross(dir, east);
-  vec2 st = vec2(dot(vLocal, east), dot(vLocal, north)) * uRadius;
-  st += vec2(atan(uOriginDir.z, uOriginDir.x), asin(clamp(uOriginDir.y, -1.0, 1.0))) * uRadius;
-
   float distM = length(vView) * uRadius;
-  // Drop the grain before it aliases into a horizon checkerboard.
-  float detail = 1.0 - smoothstep(180.0, 1100.0, distM);
-  float grain = vnoise(st * 0.55);
-  albedo *= mix(1.0, 0.88 + 0.22 * grain, detail);
-
-  vec3 N = normalize(mat3(viewMatrix) * normalize(vNormal));
-  if (detail > 0.02) {
-    float e = 0.6;
-    float dx = vnoise(st * 0.55 + vec2(e, 0.0)) - grain;
-    float dy = vnoise(st * 0.55 + vec2(0.0, e)) - grain;
-    vec3 eastV = normalize(mat3(viewMatrix) * east);
-    vec3 northV = normalize(mat3(viewMatrix) * north);
-    N = normalize(N + (eastV * dx + northV * dy) * detail * 0.85);
+  vec3 pm = uOriginWrap + vLocal * uRadius;
+  vec3 tw = dir * dir;
+  tw *= tw;
+  tw /= tw.x + tw.y + tw.z;
+  // Each octave fades before it shrinks below a few pixels, so the grain reads
+  // as surface texture instead of aliasing into speckle near the horizon.
+  float fadeFine = 1.0 - smoothstep(120.0, 700.0, distM);
+  float fadeMid = 1.0 - smoothstep(300.0, 2000.0, distM);
+  float fadeCoarse = 1.0 - smoothstep(400.0, 4000.0, distM);
+  vec3 N = normalize(vNormal);
+  if (fadeCoarse > 0.002) {
+    vec4 g2 = grain(pm, tw, 2.0);
+    vec4 g8 = grain(pm, tw, 8.0);
+    vec4 g32 = grain(pm, tw, 32.0);
+    float mottle = (g2.x - 0.5) * 0.07 * fadeFine
+      + (g8.x - 0.5) * 0.06 * fadeMid
+      + (g32.x - 0.5) * 0.05 * fadeCoarse;
+    albedo *= 1.0 + mottle;
+    // Treat the octaves as a small height field: tilt = -grad(h), tangent part only.
+    vec3 G = g2.yzw * (0.2 * fadeFine) + g8.yzw * (0.5 * fadeMid) + g32.yzw * (1.4 * fadeCoarse);
+    G -= dir * dot(G, dir);
+    N = normalize(N - G);
   }
+  N = normalize(mat3(viewMatrix) * N);
 
   vec3 V = normalize(-vView);
   vec3 L = normalize(uSunView);
@@ -226,6 +264,62 @@ function clamp01(v) {
 function smoothstep(e0, e1, x) {
   const t = clamp01((x - e0) / (e1 - e0));
   return t * t * (3 - 2 * t);
+}
+
+// Same hash and value noise as the fragment shader.
+function hash21(x, y) {
+  let ax = x * 0.1031;
+  let ay = y * 0.1031;
+  ax -= Math.floor(ax);
+  ay -= Math.floor(ay);
+  const az = ax;
+  const d = ax * (ay + 33.33) + ay * (az + 33.33) + az * (ax + 33.33);
+  const r = (ax + d + ay + d) * (az + d);
+  return r - Math.floor(r);
+}
+
+function vnoise(x, y) {
+  const ix = Math.floor(x);
+  const iy = Math.floor(y);
+  const fx = x - ix;
+  const fy = y - iy;
+  const ux = fx * fx * (3 - 2 * fx);
+  const uy = fy * fy * (3 - 2 * fy);
+  const a = hash21(ix, iy);
+  const b = hash21(ix + 1, iy);
+  const c = hash21(ix, iy + 1);
+  const d = hash21(ix + 1, iy + 1);
+  return a + (b - a) * ux + (c - a) * uy + (a - b - c + d) * ux * uy;
+}
+
+// Deterministic meters of relief for a unit direction. Triplanar projections of
+// the surface point act as a local tangent frame everywhere, with no seam at
+// ±180° and no pinch at the poles, and do not depend on tile or LOD.
+function microRelief(x, y, z) {
+  let wx = x * x;
+  let wy = y * y;
+  let wz = z * z;
+  wx *= wx;
+  wy *= wy;
+  wz *= wz;
+  const wsum = wx + wy + wz;
+  wx /= wsum;
+  wy /= wsum;
+  wz /= wsum;
+  const px = x * RADIUS;
+  const py = y * RADIUS;
+  const pz = z * RADIUS;
+  let h = 0;
+  for (let o = 0; o < MICRO_OCTAVES.length; o++) {
+    const f = 1 / MICRO_OCTAVES[o][0];
+    const shift = 37.17 * (o + 1);
+    let n = 0;
+    if (wx > 0.01) n += wx * vnoise(py * f + shift, pz * f);
+    if (wy > 0.01) n += wy * vnoise(pz * f + shift, px * f);
+    if (wz > 0.01) n += wz * vnoise(px * f + shift, py * f);
+    h += (n * 2 - 1) * MICRO_OCTAVES[o][1];
+  }
+  return h;
 }
 
 function cubeDir(face, u, v, out) {
@@ -385,6 +479,7 @@ export async function createTerrain({ scene, renderer, dataDirectory, demCatalog
     uPolarN: { value: fallback },
     uHasAlbedo: { value: 0 },
     uHasPolar: { value: 0 },
+    uOriginWrap: { value: new THREE.Vector3() },
   };
   const material = new THREE.ShaderMaterial({
     uniforms,
@@ -425,13 +520,25 @@ export async function createTerrain({ scene, renderer, dataDirectory, demCatalog
         }
       }
     }
+    let maxDemWeight = 0;
     for (let i = 0; i < loaded.length; i++) {
       h = blendDem(loaded[i], x, y, z, h);
+      if (demWeight > maxDemWeight) maxDemWeight = demWeight;
     }
-    return h;
+    microWeight = 1 - maxDemWeight;
+    microPart = microWeight > 0.001 ? microRelief(x, y, z) * microWeight : 0;
+    return h + microPart;
   }
 
+  // Micro-relief share and fade of the most recent sampleMeters call.
+  let microPart = 0;
+  let microWeight = 0;
+
+  // Blend weight of the most recent blendDem call.
+  let demWeight = 0;
+
   function blendDem(dem, x, y, z, h) {
+    demWeight = 0;
     let px;
     let py;
     if (dem.polar) {
@@ -449,7 +556,8 @@ export async function createTerrain({ scene, renderer, dataDirectory, demCatalog
     if (edge <= 0) return h;
     const hs = sampleGrid(dem, px, py);
     if (hs !== hs) return h;
-    return h + (hs - h) * smoothstep(0, dem.margin, edge);
+    demWeight = smoothstep(0, dem.margin, edge);
+    return h + (hs - h) * demWeight;
   }
 
   function makeTile(face, level, ix, iy, parent) {
@@ -470,6 +578,7 @@ export async function createTerrain({ scene, renderer, dataDirectory, demCatalog
       mesh: null,
       originDir: new THREE.Vector3(),
       originHeight: 0,
+      originWrap: new THREE.Vector3(),
       halfAngle: 0,
       visible: true,
       score: 0,
@@ -575,6 +684,8 @@ export async function createTerrain({ scene, renderer, dataDirectory, demCatalog
     const dir64 = new Float64Array(VERTS * 3);
     const normals = new Float32Array(VERTS * 3);
     const heights = new Float32Array(VERTS);
+    const micro = new Float32Array(STRIDE * STRIDE);
+    const microW = new Float32Array(STRIDE * STRIDE);
     const n = GRID;
     for (let row = 0; row <= n; row++) {
       const v = tile.v0 + (tile.v1 - tile.v0) * (row / n);
@@ -591,6 +702,8 @@ export async function createTerrain({ scene, renderer, dataDirectory, demCatalog
         let h = sampleMeters(scratch[0], scratch[1], scratch[2]);
         if (h !== h) h = 0;
         heights[index] = h;
+        micro[index] = microPart;
+        microW[index] = microWeight;
       }
     }
     cubeDir(tile.face, (tile.u0 + tile.u1) / 2, (tile.v0 + tile.v1) / 2, scratch);
@@ -598,6 +711,12 @@ export async function createTerrain({ scene, renderer, dataDirectory, demCatalog
     let originH = sampleMeters(scratch[0], scratch[1], scratch[2]);
     if (originH !== originH) originH = 0;
     tile.originHeight = originH;
+    const wrap = (v) => ((v % GRAIN_PERIOD_M) + GRAIN_PERIOD_M) % GRAIN_PERIOD_M;
+    tile.originWrap.set(
+      wrap(tile.originDir.x * (RADIUS + originH)),
+      wrap(tile.originDir.y * (RADIUS + originH)),
+      wrap(tile.originDir.z * (RADIUS + originH)),
+    );
     const ox = tile.originDir.x * (1 + originH * INV_R);
     const oy = tile.originDir.y * (1 + originH * INV_R);
     const oz = tile.originDir.z * (1 + originH * INV_R);
@@ -607,6 +726,8 @@ export async function createTerrain({ scene, renderer, dataDirectory, demCatalog
     const skirt = tile.level < 7 ? 0 : 20;
 
     const step = Math.max(tileEdgeMeters(tile.level) / GRID, 40) * INV_R;
+    // Micro-relief slope uses a fixed step so normals match across LOD levels.
+    const microStep = MICRO_SLOPE_STEP_M * INV_R;
     const probe = [0, 0, 0];
     for (let row = 0; row <= n; row++) {
       for (let col = 0; col <= n; col++) {
@@ -624,6 +745,7 @@ export async function createTerrain({ scene, renderer, dataDirectory, demCatalog
         const nx = dy * ez - dz * 0;
         const ny = dz * ex - dx * ez;
         const nz = dx * 0 - dy * ex;
+        const macro0 = heights[index] - micro[index];
         const push = (dirx, diry, dirz) => {
           const px = dx + dirx * step;
           const py = dy + diry * step;
@@ -632,12 +754,20 @@ export async function createTerrain({ scene, renderer, dataDirectory, demCatalog
           probe[0] = px / plen;
           probe[1] = py / plen;
           probe[2] = pz / plen;
-          let h = sampleMeters(probe[0], probe[1], probe[2]);
-          if (h !== h) h = heights[index];
-          return h;
+          const h = sampleMeters(probe[0], probe[1], probe[2]);
+          return h === h ? h - microPart : macro0;
         };
-        const slopeE = (push(ex, 0, ez) - heights[index]) / (step * RADIUS);
-        const slopeN = (push(nx, ny, nz) - heights[index]) / (step * RADIUS);
+        const microSlope = (dirx, diry, dirz) => {
+          if (microW[index] <= 0.001) return 0;
+          const px = dx + dirx * microStep;
+          const py = dy + diry * microStep;
+          const pz = dz + dirz * microStep;
+          const plen = Math.hypot(px, py, pz);
+          const dh = microRelief(px / plen, py / plen, pz / plen) - microRelief(dx, dy, dz);
+          return dh * microW[index] / MICRO_SLOPE_STEP_M;
+        };
+        const slopeE = (push(ex, 0, ez) - macro0) / (step * RADIUS) + microSlope(ex, 0, ez);
+        const slopeN = (push(nx, ny, nz) - macro0) / (step * RADIUS) + microSlope(nx, ny, nz);
         let nnx = dx - ex * slopeE - nx * slopeN;
         let nny = dy - 0 * slopeE - ny * slopeN;
         let nnz = dz - ez * slopeE - nz * slopeN;
@@ -691,6 +821,7 @@ export async function createTerrain({ scene, renderer, dataDirectory, demCatalog
     mesh.onBeforeRender = () => {
       uniforms.uOriginDir.value.copy(tile.originDir);
       uniforms.uOriginHeight.value = tile.originHeight;
+      uniforms.uOriginWrap.value.copy(tile.originWrap);
     };
     tile.geometry = geometry;
     tile.mesh = mesh;
@@ -853,7 +984,7 @@ export async function createTerrain({ scene, renderer, dataDirectory, demCatalog
       dem.ph = meta.affine[4];
       dem.resolutionM = meta.resolutionM || dem.resolutionM;
       const span = Math.max(dem.east - dem.west, dem.north - dem.south);
-      dem.margin = Math.min(Math.max(span * 0.16, 80), 2000);
+      dem.margin = Math.min(Math.max(span * 0.25, 200), 8000);
       dem.polar = /stereographic/i.test(meta.projection || '');
       if (!dem.polar) bindAeqd(dem, meta.centerLatLon || dem.centerLatLon);
       dem.epoch = ++heightEpoch;
