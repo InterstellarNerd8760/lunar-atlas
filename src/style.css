@@ -380,6 +380,8 @@ a { color: var(--primary); }
 
 .drawer__handle { display: none; }
 
+.site-list__body, .drawer__scroll { scrollbar-width: thin; scrollbar-color: var(--border-strong) transparent; }
+
 .drawer__scroll {
   overflow-y: auto;
   overscroll-behavior: contain;
@@ -695,7 +697,7 @@ a { color: var(--primary); }
     right: var(--edge);
     bottom: var(--panel-bottom);
     width: auto;
-    height: 116px;
+    height: 140px;
     max-height: none;
     transition: height 180ms ease-out;
   }
