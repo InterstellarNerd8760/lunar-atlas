@@ -799,6 +799,37 @@ a { color: var(--primary); }
   pointer-events: none;
 }
 
+.flight-touch {
+  position: absolute;
+  z-index: 3;
+  inset-inline: var(--edge);
+  bottom: var(--panel-bottom);
+  display: flex;
+  justify-content: space-between;
+  align-items: end;
+  pointer-events: none;
+}
+
+.flight-pad {
+  display: grid;
+  grid-template-columns: repeat(3, 44px);
+  gap: 4px;
+  padding: 4px;
+  pointer-events: auto;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+
+.flight-pad [data-flight-key="KeyW"] { grid-column: 2; }
+.flight-pad [data-flight-key="KeyA"] { grid-column: 1; }
+.flight-pad:last-child { grid-template-columns: 1fr; }
+.flight-pad .btn { min-height: 44px; }
+.flight-pad .btn:active { background: var(--surface-2); }
+.touch-flight-active > canvas { touch-action: none; }
+.touch-flight-active .flight-hint { bottom: calc(var(--panel-bottom) + 106px); }
+
 /* 1280-wide laptops: list collapses to a rail once a site is selected (handled in JS). */
 
 /* Tablet */
@@ -819,6 +850,7 @@ a { color: var(--primary); }
 @media (max-width: 767px) {
   :root { --edge: 8px; --timeline-h: 56px; }
   .topbar__views { display: none; }
+  .touch-flight-active .drawer { visibility: hidden; }
   .site-list, .site-list--rail { width: auto; right: var(--edge); }
 
   .drawer {
@@ -882,3 +914,34 @@ a { color: var(--primary); }
 @media (pointer: coarse) {
   .terrain-summary .btn { min-height: 44px; min-width: 40px; }
 }
+.flight-stick {
+  position: relative;
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  pointer-events: auto;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+.flight-stick::before, .flight-stick::after {
+  content: '';
+  position: absolute;
+  background: var(--border-strong);
+  pointer-events: none;
+}
+.flight-stick::before { left: 50%; top: 12px; bottom: 12px; width: 1px; }
+.flight-stick::after { top: 50%; left: 12px; right: 12px; height: 1px; }
+.flight-stick__knob {
+  position: absolute;
+  left: calc(50% - 22px);
+  top: calc(50% - 22px);
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--surface-2);
+  border: 2px solid var(--border-strong);
+  pointer-events: none;
+}
+.touch-flight-active .flight-hint { bottom: calc(var(--panel-bottom) + 130px); }

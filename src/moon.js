@@ -406,7 +406,8 @@ async function loadMoon(container, loadingStatus) {
     el('h1', { class: 'brand', text: 'Lunar Atlas' }),
     el('nav', { class: 'topbar__nav', 'aria-label': 'Camera' }, [
       sitesButton,
-      el('div', { class: 'topbar__nav topbar__views' }, [...viewButtons, flightButton]),
+      el('div', { class: 'topbar__nav topbar__views' }, viewButtons),
+      flightButton,
       compareButton,
       layersButton,
     ]),
@@ -508,7 +509,64 @@ async function loadMoon(container, loadingStatus) {
   });
 
   const flightHint = el('p', { class: 'flight-hint glass', hidden: true, text: 'Free flight: mouse / drag to look · W A S D move · Q / E turn · Space / C rise / descend · Shift boost · Esc exits' });
-  container.append(flightHint);
+  const touchInput = window.matchMedia('(pointer: coarse), (hover: none)');
+  const heldPointers = new Map();
+  function flightPad(label, directions) {
+    return el('div', { class: 'flight-pad glass', role: 'group', 'aria-label': label }, directions.map(([key, name, symbol]) => {
+      const button = el('button', { type: 'button', class: 'btn', 'aria-label': name, 'data-flight-key': key, text: symbol });
+      button.addEventListener('pointerdown', (event) => {
+        if (!freeFlight || event.button !== 0) return;
+        event.preventDefault();
+        button.setPointerCapture(event.pointerId);
+        heldPointers.set(event.pointerId, key);
+      });
+      for (const type of ['pointerup', 'pointercancel', 'lostpointercapture']) {
+        button.addEventListener(type, (event) => heldPointers.delete(event.pointerId));
+      }
+      return button;
+    }));
+  }
+  const joystickKnob = el('span', { class: 'flight-stick__knob' });
+  const joystick = el('div', { class: 'flight-stick glass', role: 'group', 'aria-label': 'Movement joystick. Drag to move.' }, [joystickKnob]);
+  let stickPointer = null;
+  const stick = { x: 0, y: 0 };
+  function resetStick() {
+    stickPointer = null;
+    stick.x = stick.y = 0;
+    joystickKnob.style.transform = '';
+  }
+  function moveStick(event) {
+    const bounds = joystick.getBoundingClientRect();
+    const radius = bounds.width / 2 - 24;
+    let x = (event.clientX - bounds.left - bounds.width / 2) / radius;
+    let y = (event.clientY - bounds.top - bounds.height / 2) / radius;
+    const length = Math.hypot(x, y);
+    if (length > 1) { x /= length; y /= length; }
+    joystickKnob.style.transform = `translate(${x * radius}px, ${y * radius}px)`;
+    const strength = Math.max(0, Math.min(length, 1) - 0.12) / 0.88;
+    stick.x = length > 0 ? x / Math.min(length, 1) * strength : 0;
+    stick.y = length > 0 ? y / Math.min(length, 1) * strength : 0;
+  }
+  joystick.addEventListener('pointerdown', (event) => {
+    if (!freeFlight || stickPointer !== null) return;
+    event.preventDefault();
+    stickPointer = event.pointerId;
+    joystick.setPointerCapture(event.pointerId);
+    moveStick(event);
+  });
+  joystick.addEventListener('pointermove', (event) => {
+    if (event.pointerId === stickPointer) moveStick(event);
+  });
+  for (const type of ['pointerup', 'pointercancel', 'lostpointercapture']) {
+    joystick.addEventListener(type, (event) => {
+      if (event.pointerId === stickPointer) resetStick();
+    });
+  }
+  const touchControls = el('div', { class: 'flight-touch', hidden: true }, [
+    joystick,
+    flightPad('Altitude', [['Space', 'Rise', 'Rise'], ['KeyC', 'Descend', 'Descend']]),
+  ]);
+  container.append(flightHint, touchControls);
 
   const narrowQuery = window.matchMedia('(max-width: 1023px)');
   const railQuery = window.matchMedia('(min-width: 1024px) and (max-width: 1439px)');
@@ -537,7 +595,7 @@ async function loadMoon(container, loadingStatus) {
 
   const keys = new Set();
   let freeFlight = false;
-  let dragPointerId = null;
+  let lookPointer = null;
   let previousFrame = performance.now();
   let fpsFrames = 0;
   let fpsStamp = previousFrame;
@@ -778,11 +836,32 @@ async function loadMoon(container, loadingStatus) {
     turnFlight(camera, -deltaX * 0.002, -deltaY * 0.002);
   }
 
+  function clearFlightInput() {
+    keys.clear();
+    heldPointers.clear();
+    resetStick();
+    lookPointer = null;
+  }
+
+  function showFlightControls() {
+    const showTouch = freeFlight && touchInput.matches;
+    touchControls.hidden = !showTouch;
+    container.classList.toggle('touch-flight-active', showTouch);
+    flightHint.hidden = !freeFlight;
+    flightHint.textContent = showTouch
+      ? 'Thumbstick to move · Drag to look · Rise / Descend'
+      : 'Free flight: mouse / drag to look · W A S D move · Q / E turn · Space / C rise / descend · Shift boost · Esc exits';
+  }
+
+  touchInput.addEventListener('change', () => {
+    clearFlightInput();
+    showFlightControls();
+  });
+
   function leaveFlight(releasePointer = true) {
     if (!freeFlight) return;
     freeFlight = false;
-    keys.clear();
-    dragPointerId = null;
+    clearFlightInput();
     // Preserve the view when leaving flight instead of snapping toward the ground.
     const position = camera.position.clone();
     camera.getWorldDirection(viewDirection);
@@ -794,7 +873,7 @@ async function loadMoon(container, loadingStatus) {
     controls.update();
     flightButton.textContent = 'Free flight';
     flightButton.setAttribute('aria-pressed', 'false');
-    flightHint.hidden = true;
+    showFlightControls();
     if (releasePointer && document.pointerLockElement === canvas) document.exitPointerLock();
   }
 
@@ -802,15 +881,15 @@ async function loadMoon(container, loadingStatus) {
     navigationRevision++;
     if (flight) finishFlight();
     freeFlight = true;
-    keys.clear();
+    clearFlightInput();
     controls.enabled = false;
     levelFlight(camera);
     flightButton.textContent = 'Exit flight';
     flightButton.setAttribute('aria-pressed', 'true');
-    flightHint.hidden = false;
+    showFlightControls();
     setViewPressed(null);
     canvas.focus({ preventScroll: true });
-    if (lockPointer && canvas.requestPointerLock) {
+    if (lockPointer && !touchInput.matches && canvas.requestPointerLock) {
       // Drag-to-look remains available if the browser denies pointer lock.
       try { canvas.requestPointerLock()?.catch(() => {}); } catch { /* drag fallback */ }
     }
@@ -858,18 +937,21 @@ async function loadMoon(container, loadingStatus) {
   });
   canvas.addEventListener('pointerdown', (event) => {
     if (flight) finishFlight();
-    if (!freeFlight || document.pointerLockElement === canvas) return;
-    dragPointerId = event.pointerId;
+    if (!freeFlight || lookPointer || event.button !== 0 || document.pointerLockElement === canvas) return;
+    lookPointer = { id: event.pointerId, x: event.clientX, y: event.clientY };
     canvas.setPointerCapture(event.pointerId);
   });
   canvas.addEventListener('pointermove', (event) => {
-    if (!freeFlight || document.pointerLockElement === canvas || event.pointerId !== dragPointerId) return;
-    updateFlightLook(event.movementX, event.movementY);
+    if (!freeFlight || event.pointerId !== lookPointer?.id || document.pointerLockElement === canvas) return;
+    updateFlightLook(event.clientX - lookPointer.x, event.clientY - lookPointer.y);
+    lookPointer.x = event.clientX;
+    lookPointer.y = event.clientY;
   });
-  canvas.addEventListener('pointerup', (event) => {
-    if (event.pointerId === dragPointerId) dragPointerId = null;
-  });
-  canvas.addEventListener('pointercancel', () => { dragPointerId = null; });
+  for (const type of ['pointerup', 'pointercancel', 'lostpointercapture']) {
+    canvas.addEventListener(type, (event) => {
+      if (event.pointerId === lookPointer?.id) lookPointer = null;
+    });
+  }
   document.addEventListener('pointerlockchange', () => {
     if (freeFlight && document.pointerLockElement !== canvas) leaveFlight(false);
   });
@@ -911,8 +993,8 @@ async function loadMoon(container, loadingStatus) {
     }
   });
   document.addEventListener('keyup', (event) => { keys.delete(event.code); });
-  window.addEventListener('blur', () => keys.clear());
-  document.addEventListener('visibilitychange', () => keys.clear());
+  window.addEventListener('blur', clearFlightInput);
+  document.addEventListener('visibilitychange', clearFlightInput);
   document.addEventListener('focusin', (event) => { if (isTextField(event.target)) keys.clear(); });
 
   function resize() {
@@ -976,25 +1058,26 @@ async function loadMoon(container, loadingStatus) {
     if (flight) {
       stepFlight(realDelta);
     } else if (freeFlight) {
-      const yawInput = Number(keys.has('KeyQ')) - Number(keys.has('KeyE'));
+      const activeKeys = heldPointers.size ? new Set([...keys, ...heldPointers.values()]) : keys;
+      const yawInput = Number(activeKeys.has('KeyQ')) - Number(activeKeys.has('KeyE'));
       if (yawInput) turnFlight(camera, yawInput * 1.2 * deltaSeconds, 0);
       camera.updateMatrixWorld();
       camera.getWorldDirection(viewDirection);
       rightDirection.setFromMatrixColumn(camera.matrixWorld, 0).normalize();
-      movement.set(0, 0, 0);
-      if (keys.has('KeyW')) movement.add(viewDirection);
-      if (keys.has('KeyS')) movement.sub(viewDirection);
-      if (keys.has('KeyD')) movement.add(rightDirection);
-      if (keys.has('KeyA')) movement.sub(rightDirection);
+      movement.copy(viewDirection).multiplyScalar(-stick.y).addScaledVector(rightDirection, stick.x);
+      if (activeKeys.has('KeyW')) movement.add(viewDirection);
+      if (activeKeys.has('KeyS')) movement.sub(viewDirection);
+      if (activeKeys.has('KeyD')) movement.add(rightDirection);
+      if (activeKeys.has('KeyA')) movement.sub(rightDirection);
       radialDirection.copy(camera.position).normalize();
-      if (keys.has('Space')) movement.add(radialDirection);
-      if (keys.has('KeyC')) movement.sub(radialDirection);
+      if (activeKeys.has('Space')) movement.add(radialDirection);
+      if (activeKeys.has('KeyC')) movement.sub(radialDirection);
       if (movement.lengthSq() > 0) {
-        movement.normalize();
+        if (movement.lengthSq() > 1) movement.normalize();
         const groundR = terrain.surfaceRadius(camera.position);
         const altitude = camera.position.length() - groundR;
         let speed = THREE.MathUtils.clamp(altitude * 0.28, 2 / MOON_RADIUS_METERS, 0.5);
-        if (keys.has('ShiftLeft') || keys.has('ShiftRight')) speed *= 4;
+        if (activeKeys.has('ShiftLeft') || activeKeys.has('ShiftRight')) speed *= 4;
         camera.position.addScaledVector(movement, speed * deltaSeconds);
         if (camera.position.length() > 18) camera.position.setLength(18);
         transportFlight(camera, radialDirection);
