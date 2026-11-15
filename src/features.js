@@ -80,7 +80,7 @@ export function createFeatureLabels(container, features, { onSelect } = {}) {
   });
   container.append(layer);
 
-  const items = features.map((feature) => {
+  function makeItem(feature) {
     const window = visibilityWindow(feature);
     return {
       feature,
@@ -92,7 +92,10 @@ export function createFeatureLabels(container, features, { onSelect } = {}) {
       radius: 1,
       rank: feature.status === 'proposed' ? 4.5 : (TYPE_RANK[feature.type] ?? 9),
     };
-  });
+  }
+  const items = features.map(makeItem);
+  let selected = null;
+  let locate;
 
   const world = new THREE.Vector3();
   const toCamera = new THREE.Vector3();
@@ -105,7 +108,13 @@ export function createFeatureLabels(container, features, { onSelect } = {}) {
 
   return {
     init(directionFromLatLon) {
+      locate = directionFromLatLon;
       for (const item of items) directionFromLatLon(item.feature.lat, item.feature.lon, item.direction);
+    },
+    setSelected(feature) {
+      selected = feature ? makeItem(feature) : null;
+      if (selected) locate(feature.lat, feature.lon, selected.direction);
+      refresh = Infinity;
     },
     setEnabled(value) {
       enabled = Boolean(value);
@@ -120,8 +129,9 @@ export function createFeatureLabels(container, features, { onSelect } = {}) {
 
       const altitudeKm = Math.max(0, camera.position.length() - 1) * MOON_RADIUS_KM;
       const candidates = [];
-      for (const item of items) {
-        const opacity = fadeAt(altitudeKm, item.window.minKm, item.window.maxKm);
+      for (const item of selected ? [selected, ...items] : items) {
+        if (selected && item !== selected && item.feature.name === selected.feature.name) continue;
+        const opacity = item === selected ? 1 : fadeAt(altitudeKm, item.window.minKm, item.window.maxKm);
         if (opacity <= 0.05) continue;
         if (refreshRadius) item.radius = surfaceRadius(item.direction);
         world.copy(item.direction).multiplyScalar(item.radius);
@@ -157,6 +167,7 @@ export function createFeatureLabels(container, features, { onSelect } = {}) {
       const cx = width / 2;
       const cy = height / 2;
       craters.sort((a, b) => ((a.x - cx) ** 2 + (a.y - cy) ** 2) - ((b.x - cx) ** 2 + (b.y - cy) ** 2));
+      add(candidates.filter((candidate) => candidate.item === selected));
       add(proposed);
       add(others, Math.max(4, MAX_LABELS - 6));
       add(craters);

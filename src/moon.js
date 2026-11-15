@@ -254,6 +254,21 @@ async function loadMoon(container, loadingStatus) {
     for (const [id, writeup] of Object.entries(writeups)) writeupsById.set(id, writeup);
   }
   const namedFeatures = featuresResponse.ok ? ((await featuresResponse.json()).features || []) : [];
+  const searchableFeatures = await fetch(new URL('lunar-names.json', dataDirectory))
+    .then((response) => {
+      if (!response.ok) throw new Error(`Lunar name catalog request failed (${response.status})`);
+      return response.json();
+    })
+    .then(({ types, features }) => features.map(([name, lat, lon, diameter_km, type, id]) => ({
+      name, lat, lon, diameter_km, type: types[type] === 'Satellite Feature' ? 'Satellite crater' : types[type],
+      source: `https://planetarynames.wr.usgs.gov/Feature/${id}`,
+    })))
+    .catch((error) => {
+      console.warn(error);
+      return [];
+    });
+  const catalogNames = new Set(searchableFeatures.map((feature) => feature.name.toLowerCase()));
+  const featureSearch = [...searchableFeatures, ...namedFeatures.filter((feature) => !catalogNames.has(feature.name.toLowerCase()))];
 
   const scene = new THREE.Scene();
   scene.background = new THREE.Color('#030509');
@@ -446,10 +461,17 @@ async function loadMoon(container, loadingStatus) {
 
   const featureNote = el('p', { class: 'feature-note glass text-xs', hidden: true, role: 'status' });
   container.append(featureNote);
-  function hideFeatureNote() { featureNote.hidden = true; featureNote.textContent = ''; }
+  function hideFeatureNote() {
+    featureNote.hidden = true;
+    featureNote.textContent = '';
+    featureLabels?.setSelected(null);
+  }
   function showFeatureNote(feature) {
-    if (!feature?.note) { hideFeatureNote(); return; }
-    featureNote.textContent = feature.note;
+    const details = [feature.name, feature.type, feature.diameter_km > 0 ? `${feature.diameter_km} km` : ''].filter(Boolean).join(' · ');
+    featureNote.textContent = feature.note || details;
+    if (feature.source) {
+      featureNote.append(' · ', el('a', { href: feature.source, target: '_blank', rel: 'noopener', text: 'Gazetteer' }));
+    }
     featureNote.hidden = false;
   }
 
@@ -465,6 +487,11 @@ async function loadMoon(container, loadingStatus) {
   const pins = createPins(container, places, { onSelect: (place) => focusPlace(place), scene });
   pins.init((lat, lon, target) => terrain.directionFromLatLon(lat, lon, target));
   const siteList = createSiteList(container, listedPlaces, {
+    features: featureSearch,
+    onFeatureSelect: (feature) => {
+      focusFeature(feature);
+      if (narrowQuery.matches) setListOpen(false);
+    },
     onSelect: (place) => {
       focusPlace(place);
       if (narrowQuery.matches) setListOpen(false);
@@ -653,9 +680,12 @@ async function loadMoon(container, loadingStatus) {
     const up = scratch.clone();
     const target = up.clone().multiplyScalar(terrain.surfaceRadius(up));
     const north = northAt(feature.lat, feature.lon);
-    const frameKm = Math.max(feature.diameter_km, feature.status === 'proposed' ? 120 : 20);
-    const fov = 42 * Math.PI / 180;
-    const alt = (frameKm * 500) / Math.tan(fov * 0.32);
+    const frameKm = feature.status === 'proposed'
+      ? Math.max(feature.diameter_km || 0, 120)
+      : feature.diameter_km > 0 ? Math.max(feature.diameter_km, 0.1) : 20;
+    const verticalHalfFov = 21 * Math.PI / 180;
+    const halfFov = Math.min(verticalHalfFov, Math.atan(Math.tan(verticalHalfFov) * camera.aspect));
+    const alt = (frameKm * 500) / Math.tan(halfFov * 0.65);
     const pos = target.clone().addScaledVector(up, alt / MOON_RADIUS_METERS).addScaledVector(north, -alt * 0.15 / MOON_RADIUS_METERS);
     return { pos, target, up: orbitUp(up, north), fov: 42, minDistance: 1.2 / MOON_RADIUS_METERS, maxPolarAngle: Math.PI };
   }
@@ -671,6 +701,7 @@ async function loadMoon(container, loadingStatus) {
     if (freeFlight) leaveFlight();
     clearSelection();
     showFeatureNote(feature);
+    featureLabels?.setSelected(feature);
     setViewPressed(null);
     flyTo(featureEye(feature), instant);
   }
