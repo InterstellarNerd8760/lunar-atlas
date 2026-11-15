@@ -3,6 +3,7 @@ import { OrbitControls } from 'https://cdn.jsdelivr.net/npm/three@0.180.0/exampl
 
 import { addSky } from './sky.js';
 import { aimAt, levelFlight, transportFlight, turnFlight } from './flight.js';
+import { createFeatureLabels } from './features.js';
 import { createDrawer, createPins, createSiteList } from './sites.js';
 import { bindPopover, closeOpenPopover, el, icons, isTextField, reducedMotion } from './ui.js';
 import { createTerrain } from './terrain.js';
@@ -229,13 +230,14 @@ export function mountMoonView(container) {
 async function loadMoon(container, loadingStatus) {
   const dataDirectory = new URL('../public/data/', import.meta.url);
   const params = new URLSearchParams(window.location.search);
-  const [demResponse, previewResponse, notesResponse, photosResponse, catalogResponse, writeupsResponse] = await Promise.all([
+  const [demResponse, previewResponse, notesResponse, photosResponse, catalogResponse, writeupsResponse, featuresResponse] = await Promise.all([
     fetch(new URL('site-dems/index.json', dataDirectory)),
     fetch(new URL('site-previews/index.json', dataDirectory)),
     fetch(new URL('site-notes.json', dataDirectory)),
     fetch(new URL('site-photos/index.json', dataDirectory)),
     fetch(new URL('landing-sites.csv', dataDirectory)),
     fetch(new URL('site-writeups.json', dataDirectory)),
+    fetch(new URL('features.json', dataDirectory)),
   ]);
   const demIndex = demResponse.ok ? await demResponse.json() : { sites: [] };
   const previewIndex = previewResponse.ok ? await previewResponse.json() : { sites: [] };
@@ -248,6 +250,7 @@ async function loadMoon(container, loadingStatus) {
     const writeups = await writeupsResponse.json();
     for (const [id, writeup] of Object.entries(writeups)) writeupsById.set(id, writeup);
   }
+  const namedFeatures = featuresResponse.ok ? ((await featuresResponse.json()).features || []) : [];
 
   const scene = new THREE.Scene();
   scene.background = new THREE.Color('#030509');
@@ -403,6 +406,9 @@ async function loadMoon(container, loadingStatus) {
     starsToggle.addEventListener('change', () => sky.setStars(starsToggle.checked));
     layerRows.push(el('div', { class: 'switch-row' }, [el('label', { for: 'layer-stars', text: 'Stars' }), starsToggle]));
   }
+  const namesToggle = el('input', { type: 'checkbox', id: 'layer-feature-names', checked: true });
+  namesToggle.addEventListener('change', () => featureLabels?.setEnabled(namesToggle.checked));
+  layerRows.push(el('div', { class: 'switch-row' }, [el('label', { for: 'layer-feature-names', text: 'Feature names' }), namesToggle]));
   const layersMenu = el('div', { class: 'popover layers-menu', role: 'dialog', 'aria-label': 'Layers' }, [
     el('div', { class: 'field' }, [el('h2', { text: 'Terrain relief' }), reliefControl]),
     ...layerRows,
@@ -412,6 +418,24 @@ async function loadMoon(container, loadingStatus) {
   const layersPopover = bindPopover(layersButton, layersMenu, {
     onOpen: () => reliefControl.querySelector('[aria-pressed="true"]').focus(),
   });
+
+  const featureNote = el('p', { class: 'feature-note glass text-xs', hidden: true, role: 'status' });
+  container.append(featureNote);
+  function hideFeatureNote() { featureNote.hidden = true; featureNote.textContent = ''; }
+  function showFeatureNote(feature) {
+    if (!feature?.note) { hideFeatureNote(); return; }
+    featureNote.textContent = feature.note;
+    featureNote.hidden = false;
+  }
+
+  let featureLabels = null;
+  if (namedFeatures.length) {
+    featureLabels = createFeatureLabels(container, namedFeatures, { onSelect: (feature) => focusFeature(feature) });
+    featureLabels.init((lat, lon, target) => terrain.directionFromLatLon(lat, lon, target));
+    featureLabels.setEnabled(namesToggle.checked);
+  } else {
+    namesToggle.closest('.switch-row').hidden = true;
+  }
 
   const pins = createPins(container, places, { onSelect: (place) => focusPlace(place), scene });
   pins.init((lat, lon, target) => terrain.directionFromLatLon(lat, lon, target));
@@ -599,9 +623,37 @@ async function loadMoon(container, loadingStatus) {
     return { pos, target, up: orbitUp(up, north), fov: 42, minDistance: 1.2 / MOON_RADIUS_METERS, maxPolarAngle: Math.PI / 2 };
   }
 
+  function featureEye(feature) {
+    terrain.directionFromLatLon(feature.lat, feature.lon, scratch);
+    const up = scratch.clone();
+    const target = up.clone().multiplyScalar(terrain.surfaceRadius(up));
+    const north = northAt(feature.lat, feature.lon);
+    const frameKm = Math.max(feature.diameter_km, feature.status === 'proposed' ? 120 : 20);
+    const fov = 42 * Math.PI / 180;
+    const alt = (frameKm * 500) / Math.tan(fov * 0.32);
+    const pos = target.clone().addScaledVector(up, alt / MOON_RADIUS_METERS).addScaledVector(north, -alt * 0.15 / MOON_RADIUS_METERS);
+    return { pos, target, up: orbitUp(up, north), fov: 42, minDistance: 1.2 / MOON_RADIUS_METERS, maxPolarAngle: Math.PI };
+  }
+
+  function findNamedFeature(key) {
+    const needle = normId(key);
+    return namedFeatures.find((feature) => normId(feature.name) === needle)
+      || namedFeatures.find((feature) => normId(feature.name).includes(needle));
+  }
+
+  function focusFeature(feature, { instant = false } = {}) {
+    if (!feature || !Number.isFinite(feature.lat) || !Number.isFinite(feature.lon)) return;
+    if (freeFlight) leaveFlight();
+    clearSelection();
+    showFeatureNote(feature);
+    setViewPressed(null);
+    flyTo(featureEye(feature), instant);
+  }
+
   function clearSelection() {
     currentPlace = null;
     drawer.hide();
+    hideFeatureNote();
     siteList.setSelected(null);
     pins.setSelected(null);
     railDismissed = false;
@@ -623,6 +675,7 @@ async function loadMoon(container, loadingStatus) {
     if (freeFlight) leaveFlight();
     const changed = currentPlace?.id !== place.id || currentPlace?.lat !== place.lat || currentPlace?.lon !== place.lon;
     currentPlace = place;
+    hideFeatureNote();
     siteList.setSelected(place.id);
     pins.setSelected(place.id);
     if (changed) {
@@ -830,7 +883,9 @@ async function loadMoon(container, loadingStatus) {
       const id = aliases[key] || key;
       const place = placesById.get(id)
         || places.find((entry) => normId(entry.id) === normId(id));
+      const feature = findNamedFeature(id);
       if (place) focusPlace(place, { surface: true, instant: true });
+      else if (feature) focusFeature(feature, { instant: true });
     }
   }
 
@@ -914,6 +969,7 @@ async function loadMoon(container, loadingStatus) {
     updateStatus();
     camera.updateMatrixWorld();
     pins.update(camera, (direction) => terrain.surfaceRadius(direction), container.clientWidth, container.clientHeight, realDelta);
+    featureLabels?.update(camera, (direction) => terrain.surfaceRadius(direction), container.clientWidth, container.clientHeight, realDelta);
     renderer.render(scene, camera);
   });
 }

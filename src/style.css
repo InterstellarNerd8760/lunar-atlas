@@ -615,6 +615,49 @@ a { color: var(--primary); }
 
 /* Pins */
 
+.feature-labels { position: absolute; inset: 0; z-index: 1; pointer-events: none; overflow: hidden; }
+.feature-label {
+  position: absolute;
+  top: 0;
+  left: 0;
+  margin: 0;
+  padding: 0 2px;
+  border: 0;
+  background: transparent;
+  color: var(--foreground);
+  line-height: 1.1;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  pointer-events: auto;
+  cursor: pointer;
+  transform: translate(-50%, -50%);
+  text-shadow: 0 0 5px rgb(8 10 16 / 0.95), 0 1px 2px rgb(8 10 16 / 0.9);
+}
+.feature-label--mare {
+  font-style: italic;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: none;
+}
+.feature-label--sea { font-style: italic; font-weight: 500; letter-spacing: 0.03em; }
+.feature-label--range, .feature-label--crater { font-style: normal; font-weight: 500; }
+.feature-label--proposed { color: #f0d58a; font-weight: 600; }
+.feature-label:hover, .feature-label:focus-visible { color: var(--primary); }
+
+.feature-note {
+  position: absolute;
+  z-index: 2;
+  left: 50%;
+  bottom: calc(var(--panel-bottom) + 8px);
+  width: min(36rem, calc(100% - 2rem));
+  margin: 0;
+  padding: 8px 12px;
+  transform: translateX(-50%);
+  text-align: center;
+}
+
+
 .pins { position: absolute; inset: 0; z-index: 1; pointer-events: none; overflow: hidden; }
 
 .pin {
