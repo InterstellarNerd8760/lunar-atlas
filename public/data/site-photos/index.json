@@ -1,0 +1,338 @@
+{
+  "photos": [
+    {
+      "id": "luna-9",
+      "file": "luna-9.jpg",
+      "title": "First photo from the lunar surface (Luna 9)",
+      "caption": "The first photograph from the lunar surface, taken by Luna 9 in Oceanus Procellarum on 3 February 1966.",
+      "credit": "National Space Science Data Center / Luna 9 (USSR), published by NASA",
+      "license": "Public domain (published by NASA; original Luna 9 automatic-camera image)",
+      "source_page_url": "https://science.nasa.gov/resource/first-photo-from-the-surface-of-the-moon/"
+    },
+    {
+      "id": "surveyor-1",
+      "file": "surveyor-1.jpg",
+      "title": "Surveyor 1 on Oceanus Procellarum",
+      "caption": "LROC NAC view of Surveyor 1 on Oceanus Procellarum, the first U.S. spacecraft to soft-land on the Moon (2 June 1966).",
+      "credit": "NASA/GSFC/Arizona State University",
+      "license": "Public domain (NASA/LROC); credit requested as NASA/GSFC/Arizona State University",
+      "source_page_url": "https://lroc.im-ldi.com/images/13"
+    },
+    {
+      "id": "luna-13",
+      "file": "luna-13.jpg",
+      "title": "Estimated Luna 13 landing area in Oceanus Procellarum",
+      "caption": "LROC WAC mosaic of the estimated Luna 13 landing area in Oceanus Procellarum. The lander itself is not visible, and the coordinates are a historical estimate, not LROC-confirmed.",
+      "credit": "NASA/GSFC/Arizona State University, LROC WAC",
+      "license": "Public domain (NASA/LROC); credit requested as NASA/GSFC/Arizona State University",
+      "source_page_url": "https://data.lroc.im-ldi.com/lroc/view_rdr/WAC_EMP"
+    },
+    {
+      "id": "surveyor-3",
+      "file": "surveyor-3.jpg",
+      "title": "Alan Bean with Surveyor 3 at the Apollo 12 site",
+      "caption": "Apollo 12 astronaut Alan Bean stands with Surveyor 3; the Apollo 12 Lunar Module Intrepid is on the horizon.",
+      "credit": "NASA/JSC",
+      "license": "Public domain (NASA media)",
+      "source_page_url": "https://images.nasa.gov/details/as12-48-7136"
+    },
+    {
+      "id": "surveyor-5",
+      "file": "surveyor-5.jpg",
+      "title": "Surveyor 5 in a small crater",
+      "caption": "LROC NAC view of Surveyor 5 sitting in a 10-meter-diameter crater (M106726943LE).",
+      "credit": "NASA/GSFC/Arizona State University",
+      "license": "Public domain (NASA/LROC); credit requested as NASA/GSFC/Arizona State University",
+      "source_page_url": "https://lroc.im-ldi.com/images/14"
+    },
+    {
+      "id": "surveyor-6",
+      "file": "surveyor-6.jpg",
+      "title": "Surveyor 6 on the plains of Sinus Medii",
+      "caption": "LROC NAC view of Surveyor 6 on Sinus Medii, casting an 18-meter shadow with the Sun 8° above the horizon.",
+      "credit": "NASA/GSFC/Arizona State University",
+      "license": "Public domain (NASA/LROC); credit requested as NASA/GSFC/Arizona State University",
+      "source_page_url": "https://lroc.im-ldi.com/images/7"
+    },
+    {
+      "id": "surveyor-7",
+      "file": "surveyor-7.jpg",
+      "title": "Surveyor 7 on the ejecta of Tycho",
+      "caption": "LROC NAC view of Surveyor 7 on the ejecta blanket of Tycho crater, the only Surveyor to land in the lunar highlands.",
+      "credit": "NASA/GSFC/Arizona State University",
+      "license": "Public domain (NASA/LROC); credit requested as NASA/GSFC/Arizona State University",
+      "source_page_url": "https://lroc.im-ldi.com/images/534"
+    },
+    {
+      "id": "apollo-11",
+      "file": "apollo-11.jpg",
+      "title": "Buzz Aldrin at Tranquility Base",
+      "caption": "Buzz Aldrin walks on the lunar surface near a landing-leg of the Lunar Module Eagle at Tranquility Base.",
+      "credit": "NASA/JSC",
+      "license": "Public domain (NASA media)",
+      "source_page_url": "https://images.nasa.gov/details/as11-40-5903"
+    },
+    {
+      "id": "apollo-12",
+      "file": "apollo-12.jpg",
+      "title": "Apollo 12 astronaut beside the flag",
+      "caption": "An Apollo 12 astronaut stands beside the U.S. flag after it was unfurled at the Oceanus Procellarum landing site.",
+      "credit": "NASA/JSC",
+      "license": "Public domain (NASA media)",
+      "source_page_url": "https://images.nasa.gov/details/as12-47-6897"
+    },
+    {
+      "id": "luna-16",
+      "file": "luna-16.jpg",
+      "title": "Luna 16 descent stage",
+      "caption": "LROC NAC view of the Luna 16 descent stage, the first successful robotic lunar sample-return spacecraft.",
+      "credit": "NASA/GSFC/Arizona State University",
+      "license": "Public domain (NASA/LROC); credit requested as NASA/GSFC/Arizona State University",
+      "source_page_url": "https://lroc.im-ldi.com/images/10"
+    },
+    {
+      "id": "luna-17",
+      "file": "luna-17.jpg",
+      "title": "Luna 17 landing site and rover tracks",
+      "caption": "LROC NAC view of the Luna 17 site on Mare Imbrium, with the spacecraft, rover tracks, and an enlargement of the vehicle (M175502049RE).",
+      "credit": "NASA/GSFC/Arizona State University",
+      "license": "Public domain (NASA/LROC); credit requested as NASA/GSFC/Arizona State University",
+      "source_page_url": "https://lroc.im-ldi.com/images/402"
+    },
+    {
+      "id": "apollo-14",
+      "file": "apollo-14.jpg",
+      "title": "Apollo 14 Lunar Module on the Moon",
+      "caption": "The Apollo 14 Lunar Module Antares on the Moon at the Fra Mauro landing site.",
+      "credit": "NASA/JSC",
+      "license": "Public domain (NASA media)",
+      "source_page_url": "https://images.nasa.gov/details/as14-66-9306"
+    },
+    {
+      "id": "apollo-15",
+      "file": "apollo-15.jpg",
+      "title": "James Irwin at the Lunar Roving Vehicle",
+      "caption": "James Irwin works at the Lunar Roving Vehicle during an Apollo 15 EVA at Hadley-Apennine, with the LM Falcon behind him.",
+      "credit": "NASA/JSC",
+      "license": "Public domain (NASA media)",
+      "source_page_url": "https://images.nasa.gov/details/as15-86-11603"
+    },
+    {
+      "id": "luna-20",
+      "file": "luna-20.jpg",
+      "title": "Luna 20 descent stage in the highlands",
+      "caption": "LROC NAC view of the Luna 20 descent stage in the rugged highlands between Mare Fecunditatis and Mare Crisium.",
+      "credit": "NASA/GSFC/Arizona State University",
+      "license": "Public domain (NASA/LROC); credit requested as NASA/GSFC/Arizona State University",
+      "source_page_url": "https://lroc.im-ldi.com/images/9"
+    },
+    {
+      "id": "apollo-16",
+      "file": "apollo-16.jpg",
+      "title": "John Young salutes the flag at Descartes",
+      "caption": "John Young leaps from the surface to salute the flag at the Descartes landing site, with the rover and LM Orion nearby.",
+      "credit": "NASA/JSC",
+      "license": "Public domain (NASA media)",
+      "source_page_url": "https://images.nasa.gov/details/as16-113-18339"
+    },
+    {
+      "id": "apollo-17",
+      "file": "apollo-17.jpg",
+      "title": "Harrison Schmitt beside the flag at Taurus-Littrow",
+      "caption": "Harrison Schmitt stands beside the deployed U.S. flag on the floor of the Taurus-Littrow valley.",
+      "credit": "NASA/JSC",
+      "license": "Public domain (NASA media)",
+      "source_page_url": "https://images.nasa.gov/details/AS17-134-20384"
+    },
+    {
+      "id": "luna-21",
+      "file": "luna-21.jpg",
+      "title": "Luna 21 lander and Lunokhod 2 tracks",
+      "caption": "LROC NAC view of the Luna 21 lander on the floor of Le Monnier crater, with Lunokhod 2 tracks around it.",
+      "credit": "NASA/GSFC/Arizona State University",
+      "license": "Public domain (NASA/LROC); credit requested as NASA/GSFC/Arizona State University",
+      "source_page_url": "https://lroc.im-ldi.com/images/15"
+    },
+    {
+      "id": "luna-23",
+      "file": "luna-23.jpg",
+      "title": "Luna 23 on its side in Mare Crisium",
+      "caption": "LROC NAC view of the entire Luna 23 vehicle on its side in Mare Crisium after a high-speed landing (M174868307R).",
+      "credit": "NASA/GSFC/Arizona State University",
+      "license": "Public domain (NASA/LROC); credit requested as NASA/GSFC/Arizona State University",
+      "source_page_url": "https://lroc.im-ldi.com/images/461"
+    },
+    {
+      "id": "luna-24",
+      "file": "luna-24.jpg",
+      "title": "Luna 24 in Mare Crisium",
+      "caption": "LROC NAC view of Luna 24 on the northwestern rim of a 64-meter crater in Mare Crisium, with an enlargement of the lander.",
+      "credit": "NASA/GSFC/Arizona State University",
+      "license": "Public domain (NASA/LROC); credit requested as NASA/GSFC/Arizona State University",
+      "source_page_url": "https://lroc.im-ldi.com/images/461"
+    },
+    {
+      "id": "change-3",
+      "file": "change-3.jpg",
+      "title": "Chang'e 3 lander and Yutu rover from above",
+      "caption": "LROC NAC view of the Chang'e 3 lander and Yutu rover just before sunset on their first day of lunar exploration.",
+      "credit": "NASA/GSFC/Arizona State University",
+      "license": "Public domain (NASA/LROC); credit requested as NASA/GSFC/Arizona State University",
+      "source_page_url": "https://lroc.im-ldi.com/images/637"
+    },
+    {
+      "id": "change-4",
+      "file": "change-4.jpg",
+      "title": "Chang'e 4 rover comes into view",
+      "caption": "LROC NAC view of the Chang'e 4 lander and Yutu-2 rover on the floor of Von Kármán crater on the lunar far side.",
+      "credit": "NASA/GSFC/Arizona State University",
+      "license": "Public domain (NASA/LROC); credit requested as NASA/GSFC/Arizona State University",
+      "source_page_url": "https://lroc.im-ldi.com/images/1091"
+    },
+    {
+      "id": "change-5",
+      "file": "change-5.jpg",
+      "title": "First look: Chang'e 5",
+      "caption": "First LROC NAC look at the Chang'e 5 lander on the basaltic plains of Oceanus Procellarum.",
+      "credit": "NASA/GSFC/Arizona State University",
+      "license": "Public domain (NASA/LROC); credit requested as NASA/GSFC/Arizona State University",
+      "source_page_url": "https://lroc.im-ldi.com/images/1172"
+    },
+    {
+      "id": "chandrayaan-3",
+      "file": "chandrayaan-3.jpg",
+      "title": "Chandrayaan-3 Vikram landing site",
+      "caption": "LROC NAC view of the Chandrayaan-3 Vikram lander at the center of a bright halo, with its dark shadow visible (M1447750764LR).",
+      "credit": "NASA/GSFC/Arizona State University",
+      "license": "Public domain (NASA/LROC); credit requested as NASA/GSFC/Arizona State University",
+      "source_page_url": "https://lroc.im-ldi.com/images/1314"
+    },
+    {
+      "id": "slim",
+      "file": "slim.jpg",
+      "title": "JAXA SLIM on the lunar surface",
+      "caption": "LROC NAC view of the JAXA SLIM lander on the lunar surface near Shioli crater (13.3160°S, 25.2510°E).",
+      "credit": "NASA/GSFC/Arizona State University",
+      "license": "Public domain (NASA/LROC); credit requested as NASA/GSFC/Arizona State University",
+      "source_page_url": "https://lroc.im-ldi.com/images/1358"
+    },
+    {
+      "id": "im-1",
+      "file": "im-1.jpg",
+      "title": "IM-1 Odysseus on the Moon",
+      "caption": "LROC NAC view of Intuitive Machines' IM-1 Nova-C lander Odysseus on the surface near Malapert A.",
+      "credit": "NASA/GSFC/Arizona State University",
+      "license": "Public domain (NASA/LROC); credit requested as NASA/GSFC/Arizona State University",
+      "source_page_url": "https://lroc.im-ldi.com/images/1360"
+    },
+    {
+      "id": "change-6",
+      "file": "change-6.jpg",
+      "title": "First look: Chang'e 6",
+      "caption": "LROC NAC view of Chang'e 6 in the Apollo basin on the lunar far side, seen as a small cluster of bright pixels at the center.",
+      "credit": "NASA/GSFC/Arizona State University",
+      "license": "Public domain (NASA/LROC); credit requested as NASA/GSFC/Arizona State University",
+      "source_page_url": "https://lroc.im-ldi.com/images/1374"
+    },
+    {
+      "id": "blue-ghost-1",
+      "file": "blue-ghost-1.jpg",
+      "title": "Blue Ghost in Mare Crisium",
+      "caption": "LROC NAC view of Firefly's Blue Ghost lander in Mare Crisium, with a volcanic depression and Mons Latreille nearby.",
+      "credit": "NASA/GSFC/Arizona State University",
+      "license": "Public domain (NASA/LROC); credit requested as NASA/GSFC/Arizona State University",
+      "source_page_url": "https://lroc.im-ldi.com/images/1407"
+    },
+    {
+      "id": "im-2",
+      "file": "im-2.jpg",
+      "title": "IM-2 Athena on Mons Mouton",
+      "caption": "Oblique LROC NAC view of the IM-2 Athena lander on Mons Mouton, acquired on 10 March 2025 (M1496181900LR).",
+      "credit": "NASA/GSFC/Arizona State University",
+      "license": "Public domain (NASA/LROC); credit requested as NASA/GSFC/Arizona State University",
+      "source_page_url": "https://lroc.im-ldi.com/images/1409"
+    },
+    {
+      "id": "artemis3-peak-near-cabeus-b",
+      "file": "artemis3-peak-near-cabeus-b.jpg",
+      "title": "Peak near Cabeus B NAC mosaic",
+      "caption": "LROC NAC low-Sun mosaic of the Peak near Cabeus B Artemis candidate landing region.",
+      "credit": "NASA/GSFC/Arizona State University",
+      "license": "Public domain (NASA/LROC); credit requested as NASA/GSFC/Arizona State University",
+      "source_page_url": "https://data.lroc.im-ldi.com/lroc/view_rdr/NAC_ROI_CABEUSPKLO2"
+    },
+    {
+      "id": "artemis3-haworth",
+      "file": "artemis3-haworth.jpg",
+      "title": "Haworth NAC mosaic",
+      "caption": "LROC NAC low-Sun mosaic of the Haworth Artemis candidate landing region near the lunar south pole.",
+      "credit": "NASA/GSFC/Arizona State University",
+      "license": "Public domain (NASA/LROC); credit requested as NASA/GSFC/Arizona State University",
+      "source_page_url": "https://data.lroc.im-ldi.com/lroc/view_rdr/NAC_ROI_HAWORTH_LO1"
+    },
+    {
+      "id": "artemis3-malapert-massif",
+      "file": "artemis3-malapert-massif.jpg",
+      "title": "Malapert Massif, oblique view",
+      "caption": "Oblique LROC NAC view of Malapert massif, an Artemis candidate landing region near the south pole (M1432398306LR).",
+      "credit": "NASA/GSFC/Arizona State University",
+      "license": "Public domain (NASA/LROC); credit requested as NASA/GSFC/Arizona State University",
+      "source_page_url": "https://lroc.im-ldi.com/images/1294"
+    },
+    {
+      "id": "artemis3-mons-mouton-plateau",
+      "file": "artemis3-mons-mouton-plateau.jpg",
+      "title": "Mons Mouton Plateau NAC mosaic",
+      "caption": "LROC NAC low-Sun mosaic of the Mons Mouton Plateau Artemis candidate landing region.",
+      "credit": "NASA/GSFC/Arizona State University",
+      "license": "Public domain (NASA/LROC); credit requested as NASA/GSFC/Arizona State University",
+      "source_page_url": "https://data.lroc.im-ldi.com/lroc/view_rdr/NAC_ROI_MOUTNPLTLO1"
+    },
+    {
+      "id": "artemis3-mons-mouton",
+      "file": "artemis3-mons-mouton.jpg",
+      "title": "Mons Mouton landing region",
+      "caption": "LROC NAC mosaic of Mons Mouton, an Artemis candidate landing region and the IM-2 landing area.",
+      "credit": "NASA/GSFC/Arizona State University",
+      "license": "Public domain (NASA/LROC); credit requested as NASA/GSFC/Arizona State University",
+      "source_page_url": "https://lroc.im-ldi.com/images/1401"
+    },
+    {
+      "id": "artemis3-nobile-rim-1",
+      "file": "artemis3-nobile-rim-1.jpg",
+      "title": "Nobile Rim 1 and Mons Mouton NAC mosaic",
+      "caption": "LROC NAC low-Sun mosaic covering the adjacent Nobile Rim 1 and Mons Mouton Artemis candidate landing regions.",
+      "credit": "NASA/GSFC/Arizona State University",
+      "license": "Public domain (NASA/LROC); credit requested as NASA/GSFC/Arizona State University",
+      "source_page_url": "https://data.lroc.im-ldi.com/lroc/view_rdr/NAC_ROI_MTMOUTONLO1"
+    },
+    {
+      "id": "artemis3-nobile-rim-2",
+      "file": "artemis3-nobile-rim-2.jpg",
+      "title": "Nobile Rim 2 NAC mosaic",
+      "caption": "LROC NAC low-Sun mosaic of the Nobile Rim 2 Artemis candidate landing region.",
+      "credit": "NASA/GSFC/Arizona State University",
+      "license": "Public domain (NASA/LROC); credit requested as NASA/GSFC/Arizona State University",
+      "source_page_url": "https://data.lroc.im-ldi.com/lroc/view_rdr/NAC_ROI_NOBILE02LO1"
+    },
+    {
+      "id": "artemis3-de-gerlache-rim-2",
+      "file": "artemis3-de-gerlache-rim-2.jpg",
+      "title": "de Gerlache Rim NAC mosaic",
+      "caption": "LROC NAC low-Sun mosaic of the de Gerlache Rim area, the official LROC product for this Artemis candidate landing region (published as de Gerlache Rim).",
+      "credit": "NASA/GSFC/Arizona State University",
+      "license": "Public domain (NASA/LROC); credit requested as NASA/GSFC/Arizona State University",
+      "source_page_url": "https://data.lroc.im-ldi.com/lroc/view_rdr/NAC_ROI_DEGERRIMLO1"
+    },
+    {
+      "id": "artemis3-slater-plain",
+      "file": "artemis3-slater-plain.jpg",
+      "title": "Artemis III candidate landing regions, including Slater Plain",
+      "caption": "NASA's official map of the nine Artemis III candidate landing regions, including Slater Plain, on an LRO WAC mosaic of the south polar terrain.",
+      "credit": "NASA (background: LRO WAC mosaic, NASA/GSFC/Arizona State University)",
+      "license": "Public domain (NASA media)",
+      "source_page_url": "https://www.nasa.gov/news-release/nasa-provides-update-on-artemis-iii-moon-landing-regions/"
+    }
+  ],
+  "note": "Site drawer photographs. Paths are relative to this directory. Credits are also listed in docs/CREDITS.md."
+}
