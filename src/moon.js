@@ -517,11 +517,44 @@ async function loadMoon(container, loadingStatus) {
       return button;
     }));
   }
+  const joystickKnob = el('span', { class: 'flight-stick__knob' });
+  const joystick = el('div', { class: 'flight-stick glass', role: 'group', 'aria-label': 'Movement joystick. Drag to move.' }, [joystickKnob]);
+  let stickPointer = null;
+  const stick = { x: 0, y: 0 };
+  function resetStick() {
+    stickPointer = null;
+    stick.x = stick.y = 0;
+    joystickKnob.style.transform = '';
+  }
+  function moveStick(event) {
+    const bounds = joystick.getBoundingClientRect();
+    const radius = bounds.width / 2 - 24;
+    let x = (event.clientX - bounds.left - bounds.width / 2) / radius;
+    let y = (event.clientY - bounds.top - bounds.height / 2) / radius;
+    const length = Math.hypot(x, y);
+    if (length > 1) { x /= length; y /= length; }
+    joystickKnob.style.transform = `translate(${x * radius}px, ${y * radius}px)`;
+    const strength = Math.max(0, Math.min(length, 1) - 0.12) / 0.88;
+    stick.x = length > 0 ? x / Math.min(length, 1) * strength : 0;
+    stick.y = length > 0 ? y / Math.min(length, 1) * strength : 0;
+  }
+  joystick.addEventListener('pointerdown', (event) => {
+    if (!freeFlight || stickPointer !== null) return;
+    event.preventDefault();
+    stickPointer = event.pointerId;
+    joystick.setPointerCapture(event.pointerId);
+    moveStick(event);
+  });
+  joystick.addEventListener('pointermove', (event) => {
+    if (event.pointerId === stickPointer) moveStick(event);
+  });
+  for (const type of ['pointerup', 'pointercancel', 'lostpointercapture']) {
+    joystick.addEventListener(type, (event) => {
+      if (event.pointerId === stickPointer) resetStick();
+    });
+  }
   const touchControls = el('div', { class: 'flight-touch', hidden: true }, [
-    flightPad('Move', [
-      ['KeyW', 'Move forward', '↑'], ['KeyA', 'Move left', '←'],
-      ['KeyS', 'Move backward', '↓'], ['KeyD', 'Move right', '→'],
-    ]),
+    joystick,
     flightPad('Altitude', [['Space', 'Rise', 'Rise'], ['KeyC', 'Descend', 'Descend']]),
   ]);
   container.append(flightHint, touchControls);
@@ -797,6 +830,7 @@ async function loadMoon(container, loadingStatus) {
   function clearFlightInput() {
     keys.clear();
     heldPointers.clear();
+    resetStick();
     lookPointer = null;
   }
 
@@ -806,7 +840,7 @@ async function loadMoon(container, loadingStatus) {
     container.classList.toggle('touch-flight-active', showTouch);
     flightHint.hidden = !freeFlight;
     flightHint.textContent = showTouch
-      ? 'Drag the Moon view to look around'
+      ? 'Thumbstick to move · Drag to look · Rise / Descend'
       : 'Free flight: mouse / drag to look · W A S D move · Q / E turn · Space / C rise / descend · Shift boost · Esc exits';
   }
 
@@ -1021,7 +1055,7 @@ async function loadMoon(container, loadingStatus) {
       camera.updateMatrixWorld();
       camera.getWorldDirection(viewDirection);
       rightDirection.setFromMatrixColumn(camera.matrixWorld, 0).normalize();
-      movement.set(0, 0, 0);
+      movement.copy(viewDirection).multiplyScalar(-stick.y).addScaledVector(rightDirection, stick.x);
       if (activeKeys.has('KeyW')) movement.add(viewDirection);
       if (activeKeys.has('KeyS')) movement.sub(viewDirection);
       if (activeKeys.has('KeyD')) movement.add(rightDirection);
@@ -1030,7 +1064,7 @@ async function loadMoon(container, loadingStatus) {
       if (activeKeys.has('Space')) movement.add(radialDirection);
       if (activeKeys.has('KeyC')) movement.sub(radialDirection);
       if (movement.lengthSq() > 0) {
-        movement.normalize();
+        if (movement.lengthSq() > 1) movement.normalize();
         const groundR = terrain.surfaceRadius(camera.position);
         const altitude = camera.position.length() - groundR;
         let speed = THREE.MathUtils.clamp(altitude * 0.28, 2 / MOON_RADIUS_METERS, 0.5);
