@@ -52,9 +52,11 @@ cp ~/Documents/lunar-atlas-local-backup/wac-texture.jpg public/data/wac-texture-
 
 Open [the legacy texture view](http://localhost:8000/?moonTexture=legacy). The regular URL uses the bundled map.
 
-## Add the site terrain assets
+## Explore landing sites
 
-From the repository root, extract the supplied archives into `public/data/`. Replace the paths in this example with the paths to your downloads.
+Choose **Explore a site** to open one of the six bundled Apollo landings or eight south-pole terrain sites. The viewer downloads the selected elevation grid when you open it.
+
+To add the earlier Luna, Surveyor, and other site layers, extract the optional archives into `public/data/` from the repository root. Replace the example paths with the paths to your downloads.
 
 ```sh
 unzip "/path/to/lola-sites(1).zip" -d public/data
@@ -81,7 +83,7 @@ body centers above a spherical horizon, sampled every six hours over the bundled
 not resolved. Longest darkness may be truncated by the window boundaries.
 Site notes cite the Notion-curated NASA, LROC and USGS sources.
 
-The site DEMs in `public/data/site-dems/` and the Apollo 11 and south-pole ZIPs in `data/processed/` are available for integration. The viewer currently loads the optional site terrain archives described above.
+The viewer loads site DEMs from `public/data/site-dems/` and the optional terrain archives described above. The Apollo 11 imagery and south-pole ZIP exports in `data/processed/` are available for future viewer integration.
 
 Validation: JavaScript syntax and whitespace checks passed. Browser acceptance
 is pending: the available Chromium process fails to launch in this environment

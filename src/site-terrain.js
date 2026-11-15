@@ -63,7 +63,7 @@ function axisCoordinates(axis, layers) {
 }
 
 function projectionFor(site, radius) {
-  if (!site.layers) {
+  if (!site.layers && site.group !== 'lroc-nac-dtm') {
     // Inverse south polar stereographic projection at true scale at the pole.
     return {
       project(x, y, target) {
@@ -77,8 +77,9 @@ function projectionFor(site, radius) {
     };
   }
   // Inverse azimuthal equidistant projection on the same lunar reference sphere.
-  const lat = THREE.MathUtils.degToRad(site.lat);
-  const lon = THREE.MathUtils.degToRad(site.lon);
+  const [latitude, longitude] = site.layers ? [site.lat, site.lon] : site.centerLatLon;
+  const lat = THREE.MathUtils.degToRad(latitude);
+  const lon = THREE.MathUtils.degToRad(longitude);
   const center = new THREE.Vector3(Math.cos(lat) * Math.cos(lon), Math.sin(lat), -Math.cos(lat) * Math.sin(lon));
   const east = new THREE.Vector3(-Math.sin(lon), 0, -Math.cos(lon));
   const north = new THREE.Vector3().crossVectors(center, east);
@@ -99,8 +100,14 @@ function projectionFor(site, radius) {
 
 export async function loadSiteTerrain(site, radius, relief, material, sampleGlobe, signal) {
   const { layers: mission } = site;
-  const directory = mission ? 'landing-sites' : 'lola-sites';
-  const files = mission ? [
+  const bundled = site.file && (site.group === 'lroc-nac-dtm' || site.group === 'pgda-lola-5m');
+  const directory = bundled ? 'site-dems' : mission ? 'landing-sites' : 'lola-sites';
+  const files = bundled ? [{
+    path: site.file,
+    // Bound the preview mesh size while sampling the original elevation grid.
+    spacing: Math.max(site.width, site.height) * site.resolutionM / 320,
+    blend: 250,
+  }] : mission ? [
     { path: mission.horizon.file, spacing: 1100, blend: 6500 },
     { path: mission.ground.file, spacing: 85, blend: 500 },
   ] : [
@@ -113,7 +120,7 @@ export async function loadSiteTerrain(site, radius, relief, material, sampleGlob
   })));
   const projection = projectionFor(site, radius);
   const extent = layers[0].extent;
-  const [west, south, east, north] = layers[1].extent;
+  const [west, south, east, north] = (layers[1] ?? layers[0]).extent;
   const xs = axisCoordinates(0, layers);
   const ys = axisCoordinates(1, layers);
   const positions = new Float32Array(xs.length * ys.length * 3);

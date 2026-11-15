@@ -392,6 +392,7 @@ async function loadMoon(container, status) {
   siteInfo.innerHTML = '<summary>About this site</summary><div></div>';
   siteInfo.hidden = true;
   container.append(siteInfo);
+  const isTerrainProxy = site => Boolean(site.artemisRegion || site.id?.startsWith('artemis3-'));
   function showSiteNotes(site, name) {
     const normalize = value => value.toLowerCase().replace(/[^a-z0-9]/g, '');
     const key = normalize(name);
@@ -399,9 +400,9 @@ async function loadMoon(container, status) {
     const body = siteInfo.lastElementChild;
     body.replaceChildren();
     const description = document.createElement('p');
-    description.textContent = note?.notes ?? `${name}. Terrain coordinates and layers come from the selected archive. Consult the dataset sources for mission context.`;
+    description.textContent = note?.notes ?? `${name}. Terrain coordinates and layers come from the selected dataset. Consult the dataset sources for mission context.`;
     body.append(description);
-    if (site.id?.startsWith('artemis3-')) {
+    if (isTerrainProxy(site)) {
       const proxy = document.createElement('p');
       proxy.textContent = 'Terrain proxy for a candidate region. This is not an official landing coordinate or a selected base.';
       body.append(proxy);
@@ -415,15 +416,22 @@ async function loadMoon(container, status) {
     ['landing-sites', 'Historical landing sites', (site) => !site.id.startsWith('artemis3-')],
     ['landing-sites', 'Artemis III terrain proxies', (site) => site.id.startsWith('artemis3-')],
     ['lola-sites', 'South pole LOLA surveys', () => true],
+    ['site-dems', 'Bundled Apollo terrain', site => site.group === 'lroc-nac-dtm'],
+    ['site-dems', 'Bundled south pole terrain', site => site.group === 'pgda-lola-5m'],
   ];
-  Promise.allSettled(['landing-sites', 'lola-sites'].map(async (directory) => [directory, await loadSiteIndex(directory)])).then((results) => {
+  const siteDirectories = [...new Set(siteGroups.map(([directory]) => directory))];
+  Promise.allSettled(siteDirectories.map(async (directory) => [directory, await loadSiteIndex(directory)])).then((results) => {
     const indexes = new Map(results.filter(({ status }) => status === 'fulfilled').map(({ value }) => value));
     const sites = new Map();
+    const listedIds = new Set();
     for (const [directory, label, include] of siteGroups) {
       const group = document.createElement('optgroup');
       group.label = label;
       for (const site of (indexes.get(directory) ?? []).filter(include)) {
         const id = site.id ?? site.siteId;
+        const key = id.toLowerCase();
+        if (listedIds.has(key) || listedIds.has(site.artemisRegion)) continue;
+        listedIds.add(key);
         sites.set(id, site);
         group.append(new Option(site.name ?? site.siteName, id));
       }
@@ -431,7 +439,7 @@ async function loadMoon(container, status) {
     }
     if (!sites.size) {
       siteStatus.hidden = false;
-      siteStatus.textContent = 'Extract landing-sites.zip and lola-sites.zip into public/data to explore detailed sites.';
+      siteStatus.textContent = 'Could not load the landing site catalog. Serve the repository root and check that public/data/site-dems/index.json is present.';
       return;
     }
     siteSelect.hidden = false;
@@ -485,7 +493,7 @@ async function loadMoon(container, status) {
         const coordinates = site.layers ? [site.lat, site.lon] : site.centerLatLon;
         const [latitude, longitude] = coordinates;
         const coordinateText = `${Math.abs(latitude).toFixed(4)}° ${latitude < 0 ? 'S' : 'N'} · ${Math.abs(longitude).toFixed(4)}° ${longitude < 0 ? 'W' : 'E'}`;
-        const details = [name, site.id?.startsWith('artemis3-') ? 'Terrain proxy' : site.year, site.country_or_company, coordinateText].filter(Boolean);
+        const details = [name, isTerrainProxy(site) ? 'Terrain proxy' : site.year, site.country_or_company, coordinateText].filter(Boolean);
         siteStatus.textContent = details.join(' · ');
       } catch (error) {
         if (request.signal.aborted) return;
