@@ -1,15 +1,15 @@
 [
   {
     "name": "Haworth",
-    "notes": "One of nine refined Artemis III candidate regions announced by NASA on Oct 28, 2024. Named for nearby Haworth crater, but NASA did not publish a region-center coordinate.",
+    "notes": "One of nine refined crewed south-pole landing candidate regions NASA announced on Oct 28, 2024 (originally for Artemis III; the first landing is now planned for Artemis IV). Named for nearby Haworth crater, but NASA did not publish a region-center coordinate.",
     "source": "https://www.nasa.gov/news-release/nasa-provides-update-on-artemis-iii-moon-landing-regions/",
-    "status": "NASA Artemis III candidate region"
+    "status": "NASA Artemis landing candidate region"
   },
   {
     "name": "Peak near Cabeus B",
-    "notes": "One of nine refined Artemis III candidate regions announced by NASA on Oct 28, 2024, in no priority order. Each region contains multiple potential landing sites. NASA published names and a map, not a single center coordinate. No later official replacement list was found as of Nov 11, 2026. In 2026 NASA redesignated Artemis III as a low-Earth-orbit test; this remains the last official public candidate set for the first south-pole crewed landing.",
+    "notes": "One of nine refined crewed south-pole landing candidate regions NASA announced on Oct 28, 2024 (originally for Artemis III; the first landing is now planned for Artemis IV), in no priority order. Each region contains multiple potential landing sites. NASA published names and a map, not a single center coordinate. No later official replacement list was found as of Nov 11, 2026. In 2026 NASA redesignated Artemis III as a low-Earth-orbit test; this remains the last official public candidate set for the first south-pole crewed landing.",
     "source": "https://www.nasa.gov/news-release/nasa-provides-update-on-artemis-iii-moon-landing-regions/",
-    "status": "NASA Artemis III candidate region"
+    "status": "NASA Artemis landing candidate region"
   },
   {
     "name": "Apollo 16",
@@ -37,7 +37,7 @@
   },
   {
     "name": "Malapert massif",
-    "notes": "IAU name Mons Malapert (Feature 16338), approved Aug 26, 2024; LOLA 2011 control network; diameter 67 km. This is the named mountain, not a published center of the Artemis III “Malapert Massif” region polygon.",
+    "notes": "IAU name Mons Malapert (Feature 16338), approved Aug 26, 2024; LOLA 2011 control network; diameter 67 km. This is the named mountain, not a published center of the Artemis “Malapert Massif” region polygon.",
     "source": "https://planetarynames.wr.usgs.gov/Feature/16338",
     "status": "Notable south-pole feature"
   },
@@ -55,51 +55,51 @@
   },
   {
     "name": "Malapert Massif",
-    "notes": "One of nine refined Artemis III candidate regions announced by NASA on Oct 28, 2024. Distinct from the IAU-named mountain Mons Malapert, whose gazetteer center is listed in the notable-features section. NASA did not publish a region-center coordinate.",
+    "notes": "One of nine refined crewed south-pole landing candidate regions NASA announced on Oct 28, 2024 (originally for Artemis III; the first landing is now planned for Artemis IV). Distinct from the IAU-named mountain Mons Malapert, whose gazetteer center is listed in the notable-features section. NASA did not publish a region-center coordinate.",
     "source": "https://www.nasa.gov/news-release/nasa-provides-update-on-artemis-iii-moon-landing-regions/",
-    "status": "NASA Artemis III candidate region"
+    "status": "NASA Artemis landing candidate region"
   },
   {
     "name": "de Gerlache rim",
-    "notes": "IAU crater-center coordinates from the USGS Gazetteer (Feature 1439, de Gerlache; planetographic, +East; diameter 32.71 km). No single official rim-point coordinate is published. Distinct from the Artemis III region “de Gerlache Rim 2,” which has no published center.",
+    "notes": "IAU crater-center coordinates from the USGS Gazetteer (Feature 1439, de Gerlache; planetographic, +East; diameter 32.71 km). No single official rim-point coordinate is published. Distinct from the Artemis region “de Gerlache Rim 2,” which has no published center.",
     "source": "https://planetarynames.wr.usgs.gov/Feature/1439",
     "status": "Notable south-pole feature"
   },
   {
     "name": "Mons Mouton Plateau",
-    "notes": "One of nine refined Artemis III candidate regions announced by NASA on Oct 28, 2024. Distinct from the Mons Mouton region and from the IAU-named Mons Mouton (gazetteer center 84.60°S, 31.00°E). NASA did not publish a region-center coordinate.",
+    "notes": "One of nine refined crewed south-pole landing candidate regions NASA announced on Oct 28, 2024 (originally for Artemis III; the first landing is now planned for Artemis IV). Distinct from the Mons Mouton region and from the IAU-named Mons Mouton (gazetteer center 84.60°S, 31.00°E). NASA did not publish a region-center coordinate.",
     "source": "https://www.nasa.gov/news-release/nasa-provides-update-on-artemis-iii-moon-landing-regions/",
-    "status": "NASA Artemis III candidate region"
+    "status": "NASA Artemis landing candidate region"
   },
   {
     "name": "Nobile Rim 2",
-    "notes": "One of nine refined Artemis III candidate regions announced by NASA on Oct 28, 2024. Named for the rim of Nobile crater. NASA did not publish a region-center coordinate.",
+    "notes": "One of nine refined crewed south-pole landing candidate regions NASA announced on Oct 28, 2024 (originally for Artemis III; the first landing is now planned for Artemis IV). Named for the rim of Nobile crater. NASA did not publish a region-center coordinate.",
     "source": "https://www.nasa.gov/news-release/nasa-provides-update-on-artemis-iii-moon-landing-regions/",
-    "status": "NASA Artemis III candidate region"
+    "status": "NASA Artemis landing candidate region"
   },
   {
     "name": "Mons Mouton",
-    "notes": "One of nine refined Artemis III candidate regions announced by NASA on Oct 28, 2024. The IAU feature Mons Mouton (Feature 16070) has a gazetteer center of 84.60°S, 31.00°E, but that is the named mountain, not a published center of this landing region.",
+    "notes": "One of nine refined crewed south-pole landing candidate regions NASA announced on Oct 28, 2024 (originally for Artemis III; the first landing is now planned for Artemis IV). The IAU feature Mons Mouton (Feature 16070) has a gazetteer center of 84.60°S, 31.00°E, but that is the named mountain, not a published center of this landing region.",
     "source": "https://www.nasa.gov/news-release/nasa-provides-update-on-artemis-iii-moon-landing-regions/",
-    "status": "NASA Artemis III candidate region"
+    "status": "NASA Artemis landing candidate region"
   },
   {
     "name": "de Gerlache Rim 2",
-    "notes": "One of nine refined Artemis III candidate regions announced by NASA on Oct 28, 2024. Kept from the original 2022 set of 13. Distinct from the IAU crater de Gerlache, whose center is listed in the notable-features section. NASA did not publish a region-center coordinate.",
+    "notes": "One of nine refined crewed south-pole landing candidate regions NASA announced on Oct 28, 2024 (originally for Artemis III; the first landing is now planned for Artemis IV). Kept from the original 2022 set of 13. Distinct from the IAU crater de Gerlache, whose center is listed in the notable-features section. NASA did not publish a region-center coordinate.",
     "source": "https://www.nasa.gov/news-release/nasa-provides-update-on-artemis-iii-moon-landing-regions/",
-    "status": "NASA Artemis III candidate region"
+    "status": "NASA Artemis landing candidate region"
   },
   {
     "name": "Nobile Rim 1",
-    "notes": "One of nine refined Artemis III candidate regions announced by NASA on Oct 28, 2024. Named for the rim of Nobile crater. NASA did not publish a region-center coordinate.",
+    "notes": "One of nine refined crewed south-pole landing candidate regions NASA announced on Oct 28, 2024 (originally for Artemis III; the first landing is now planned for Artemis IV). Named for the rim of Nobile crater. NASA did not publish a region-center coordinate.",
     "source": "https://www.nasa.gov/news-release/nasa-provides-update-on-artemis-iii-moon-landing-regions/",
-    "status": "NASA Artemis III candidate region"
+    "status": "NASA Artemis landing candidate region"
   },
   {
     "name": "Slater Plain",
-    "notes": "One of nine refined Artemis III candidate regions announced by NASA on Oct 28, 2024. Added in the 2024 downselection. NASA did not publish a region-center coordinate.",
+    "notes": "One of nine refined crewed south-pole landing candidate regions NASA announced on Oct 28, 2024 (originally for Artemis III; the first landing is now planned for Artemis IV). Added in the 2024 downselection. NASA did not publish a region-center coordinate.",
     "source": "https://www.nasa.gov/news-release/nasa-provides-update-on-artemis-iii-moon-landing-regions/",
-    "status": "NASA Artemis III candidate region"
+    "status": "NASA Artemis landing candidate region"
   },
   {
     "name": "Apollo 12",
