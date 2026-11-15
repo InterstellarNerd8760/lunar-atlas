@@ -606,6 +606,27 @@ export async function createTerrain({ scene, renderer, dataDirectory, demCatalog
     return h + microPart;
   }
 
+  // LOLA-only height (global 16 px/deg grid plus the 80S polar grid) with no
+  // procedural micro-relief and no streamed site DEMs, so horizon profiles do
+  // not depend on which tiles happen to be loaded.
+  function sampleBaseMeters(x, y, z) {
+    const lat = Math.asin(Math.max(-1, Math.min(1, y)));
+    const lon = Math.atan2(-z, x);
+    let h = sampleGrid(global, lon * 180 / Math.PI, lat * 180 / Math.PI);
+    if (h !== h) h = 0;
+    if (polar && y < -0.9) {
+      const [px, py] = stereoForward(x, y, z);
+      if (px >= polar.west && px <= polar.east && py >= polar.south && py <= polar.north) {
+        const hp = sampleGrid(polar, px, py);
+        if (hp === hp) {
+          const w = smoothstep(polar.outer, polar.inner, Math.hypot(px, py));
+          h += (hp - h) * w;
+        }
+      }
+    }
+    return h;
+  }
+
   // Micro-relief share and fade of the most recent sampleMeters call.
   let microPart = 0;
   let microWeight = 0;
@@ -1022,9 +1043,11 @@ export async function createTerrain({ scene, renderer, dataDirectory, demCatalog
 
   // Swap in the native 16 px/deg LOLA grid once it arrives; the 1024x512 grid
   // stays the startup copy. Every cached tile is rebuilt with the new heights.
-  loadRaster(new URL('global-height/global-height-hi', dataDirectory), false).then((hi) => {
+  let heightsHi = false;
+  const heightsReady = loadRaster(new URL('global-height/global-height-hi', dataDirectory), false).then((hi) => {
     if (!hi) return;
     Object.assign(global, hi);
+    heightsHi = true;
     for (const tile of tiles.values()) {
       if (tile.geometry) tile.evicted = true;
     }
@@ -1350,6 +1373,12 @@ export async function createTerrain({ scene, renderer, dataDirectory, demCatalog
       const len = direction.length() || 1;
       return sampleMeters(direction.x / len, direction.y / len, direction.z / len);
     },
+    sampleBaseMeters,
+    heightsReady: heightsReady.catch(() => {}),
+    get heightsLabel() {
+      return `${heightsHi ? 'LOLA 16 px/deg (~1.9 km)' : 'LOLA startup grid (~10 km)'}${polar ? ' + 80°S polar grid (~600 m)' : ''}`;
+    },
+    get heightsEpoch() { return heightsHi ? 2 : 1; },
     directionFromLatLon(lat, lon, target) {
       directionFromLatLon(lat, lon, scratch);
       target.set(scratch[0], scratch[1], scratch[2]);

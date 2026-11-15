@@ -515,6 +515,59 @@ a { color: var(--primary); }
 .vis canvas { width: 100%; height: auto; border-radius: var(--radius-control); border: 1px solid var(--border); }
 .vis details summary { cursor: pointer; min-height: 32px; display: flex; align-items: center; }
 
+.vis__metrics dd.vis__sphere { color: var(--subtle-foreground); font-size: 11px; line-height: 14px; }
+
+/* Compare */
+
+.compare {
+  top: calc(var(--edge) + var(--bar-h) + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  width: 640px;
+  max-width: calc(100vw - 2 * var(--edge));
+  max-height: calc(100dvh - var(--panel-top) - var(--panel-bottom));
+  overflow-y: auto;
+  display: grid;
+  gap: 12px;
+}
+.compare__head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.compare__head h2 { margin: 0; font-size: 14px; line-height: 20px; font-weight: 500; }
+.compare__head .btn { margin: -8px -8px -8px 0; }
+.compare__pickers { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.compare__pickers select {
+  min-height: 36px;
+  min-width: 0;
+  padding: 0 8px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-control);
+  background: var(--surface-2);
+}
+.compare__table { width: 100%; border-collapse: separate; border-spacing: 4px; table-layout: fixed; margin: -4px; width: calc(100% + 8px); }
+.compare__table th { font-weight: 500; text-align: left; font-size: 12px; line-height: 16px; color: var(--muted-foreground); }
+.compare__table thead th { color: var(--foreground); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.compare__table tbody th { width: 120px; }
+.compare__table td {
+  padding: 6px 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-control);
+  background: var(--surface-2);
+  vertical-align: top;
+}
+.compare__table td > span { display: block; }
+.compare__table td.compare__best { border-color: rgb(158 201 255 / 0.55); background: var(--accent); }
+.compare__sphere { color: var(--subtle-foreground); font-size: 11px; line-height: 14px; }
+.compare__strips { display: grid; gap: 6px; }
+.compare__row { display: grid; grid-template-columns: 120px 1fr; align-items: center; gap: 8px; }
+.compare__label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.compare__axis { margin-left: 128px; }
+
+@media (max-width: 767px) {
+  .compare__pickers { grid-template-columns: 1fr; }
+  .compare__table tbody th, .compare__row { width: auto; }
+  .compare__row { grid-template-columns: 84px 1fr; }
+  .compare__axis { margin-left: 92px; }
+}
+
 /* Timeline */
 
 .timeline {
@@ -746,6 +799,37 @@ a { color: var(--primary); }
   pointer-events: none;
 }
 
+.flight-touch {
+  position: absolute;
+  z-index: 3;
+  inset-inline: var(--edge);
+  bottom: var(--panel-bottom);
+  display: flex;
+  justify-content: space-between;
+  align-items: end;
+  pointer-events: none;
+}
+
+.flight-pad {
+  display: grid;
+  grid-template-columns: repeat(3, 44px);
+  gap: 4px;
+  padding: 4px;
+  pointer-events: auto;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+
+.flight-pad [data-flight-key="KeyW"] { grid-column: 2; }
+.flight-pad [data-flight-key="KeyA"] { grid-column: 1; }
+.flight-pad:last-child { grid-template-columns: 1fr; }
+.flight-pad .btn { min-height: 44px; }
+.flight-pad .btn:active { background: var(--surface-2); }
+.touch-flight-active > canvas { touch-action: none; }
+.touch-flight-active .flight-hint { bottom: calc(var(--panel-bottom) + 106px); }
+
 /* 1280-wide laptops: list collapses to a rail once a site is selected (handled in JS). */
 
 /* Tablet */
@@ -766,6 +850,7 @@ a { color: var(--primary); }
 @media (max-width: 767px) {
   :root { --edge: 8px; --timeline-h: 56px; }
   .topbar__views { display: none; }
+  .touch-flight-active .drawer { visibility: hidden; }
   .site-list, .site-list--rail { width: auto; right: var(--edge); }
 
   .drawer {
@@ -804,3 +889,35 @@ a { color: var(--primary); }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { transition: none !important; animation: none !important; }
 }
+
+.flight-stick {
+  position: relative;
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  pointer-events: auto;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+.flight-stick::before, .flight-stick::after {
+  content: '';
+  position: absolute;
+  background: var(--border-strong);
+  pointer-events: none;
+}
+.flight-stick::before { left: 50%; top: 12px; bottom: 12px; width: 1px; }
+.flight-stick::after { top: 50%; left: 12px; right: 12px; height: 1px; }
+.flight-stick__knob {
+  position: absolute;
+  left: calc(50% - 22px);
+  top: calc(50% - 22px);
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--surface-2);
+  border: 2px solid var(--border-strong);
+  pointer-events: none;
+}
+.touch-flight-active .flight-hint { bottom: calc(var(--panel-bottom) + 130px); }

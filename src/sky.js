@@ -27,7 +27,7 @@ function positionFromSample([azimuth, elevation, range]) {
   ).multiplyScalar(range * AU_KM / MOON_RADIUS_KM).add(new THREE.Vector3(1, 0, 0));
 }
 
-export async function addSky(scene, camera, sunlight, container, { visibilitySection, onVisibilityStatus } = {}) {
+export async function addSky(scene, camera, sunlight, container, { visibilitySection, onVisibilityStatus, horizon } = {}) {
   const response = await fetch(new URL('../public/data/lunar-ephemeris.json', import.meta.url));
   if (!response.ok) throw new Error('Sun and Earth data could not be loaded.');
   const { samples } = await response.json();
@@ -86,7 +86,7 @@ export async function addSky(scene, camera, sunlight, container, { visibilitySec
     updateStars();
   }).catch((error) => console.warn('Star map unavailable.', error));
 
-  const visibility = createVisibilityPanel(visibilitySection || document.createElement('section'), positions, { onStatus: onVisibilityStatus });
+  const visibility = createVisibilityPanel(visibilitySection || document.createElement('section'), positions, { onStatus: onVisibilityStatus, horizon });
   const timeline = createTimeline(container, positions);
 
   const sunPosition = new THREE.Vector3();
@@ -115,6 +115,7 @@ export async function addSky(scene, camera, sunlight, container, { visibilitySec
   return {
     earth,
     analyze: visibility.analyze,
+    positions,
     timeline,
     get starsOn() { return starsOn; },
     setStars(on) { starsOn = on; updateStars(); },

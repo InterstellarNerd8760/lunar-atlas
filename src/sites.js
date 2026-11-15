@@ -18,8 +18,11 @@ function metaLine(place) {
   return [place.year, place.country].filter(Boolean).join(' · ');
 }
 
-export function createSiteList(container, places, { onSelect }) {
-  const search = el('input', { type: 'search', placeholder: 'Search sites', 'aria-label': 'Search sites', 'aria-keyshortcuts': '/', autocomplete: 'off', spellcheck: 'false' });
+const searchKey = (value) => value.normalize('NFD').replace(/\p{M}/gu, '').trim().toLowerCase();
+const MAX_SEARCH_RESULTS = 40;
+
+export function createSiteList(container, places, { onSelect, features = [], onFeatureSelect }) {
+  const search = el('input', { type: 'search', placeholder: 'Search sites and features', 'aria-label': 'Search sites and features', 'aria-keyshortcuts': '/', autocomplete: 'off', spellcheck: 'false' });
   const destinations = places.filter((place) => !place.disabled);
   let selectedId = null;
   const randomButton = el('button', { type: 'button', class: 'btn', text: 'Random site' });
@@ -83,16 +86,59 @@ export function createSiteList(container, places, { onSelect }) {
     groupNodes.push({ group, node, count, members });
     body.append(node);
   }
-  body.append(empty);
+  const results = el('ul', { class: 'group__rows', 'aria-label': 'Search results', hidden: true });
+  const resultCount = el('p', { class: 'text-xs site-list__empty', role: 'status', hidden: true });
+  body.append(results, resultCount, empty);
+
+  const siteNames = new Set(places.filter((place) => place.group === 'feature').map((place) => searchKey(place.name)));
+  const searchEntries = [
+    ...places.map((place) => ({
+      name: place.name, group: place.group, disabled: place.disabled, meta: metaLine(place),
+      extra: [place.mission, place.country], select: () => onSelect(place),
+    })),
+    ...features.filter((feature) => !siteNames.has(searchKey(feature.name))).map((feature) => ({
+      name: feature.name, group: 'feature',
+      meta: [feature.type, feature.diameter_km > 0 ? `${feature.diameter_km} km` : ''].filter(Boolean).join(' · '),
+      extra: [feature.type], select: () => onFeatureSelect(feature),
+    })),
+  ].map((entry) => ({
+    ...entry, key: searchKey(entry.name),
+    haystack: searchKey([entry.name, ...entry.extra].filter(Boolean).join(' ')),
+  }));
+
+  function showSearchResults(query) {
+    const matches = searchEntries
+      .filter((entry) => (filter === 'all' || filter === entry.group) && entry.haystack.includes(query))
+      .map((entry) => ({ ...entry, rank: entry.key === query ? 0 : entry.key.startsWith(query) ? 1 : entry.key.includes(query) ? 2 : 3 }))
+      .sort((a, b) => a.rank - b.rank || a.name.localeCompare(b.name));
+    results.replaceChildren(...matches.slice(0, MAX_SEARCH_RESULTS).map((entry) => {
+      const row = el('button', { type: 'button', class: 'row', 'aria-disabled': entry.disabled ? 'true' : null }, [
+        el('span', { class: 'row__name', text: entry.name }),
+        el('span', { class: 'row__meta', text: entry.meta }),
+      ]);
+      row.addEventListener('click', entry.select);
+      return el('li', {}, [row]);
+    }));
+    results.hidden = matches.length === 0;
+    resultCount.hidden = matches.length <= MAX_SEARCH_RESULTS;
+    resultCount.textContent = `Showing ${MAX_SEARCH_RESULTS} of ${matches.length}. Refine your search for more specific results.`;
+    empty.hidden = matches.length > 0;
+  }
 
   function applyFilter() {
-    const query = search.value.trim().toLowerCase();
+    const query = searchKey(search.value);
+    if (query) {
+      for (const { node } of groupNodes) node.hidden = true;
+      showSearchResults(query);
+      return;
+    }
+    results.hidden = true;
+    resultCount.hidden = true;
     let total = 0;
     for (const { group, node, count, members } of groupNodes) {
       let shown = 0;
       for (const place of members) {
-        const haystack = [place.name, place.mission, place.country].filter(Boolean).join(' ').toLowerCase();
-        const visible = (filter === 'all' || filter === group.id) && (!query || haystack.includes(query));
+        const visible = filter === 'all' || filter === group.id;
         rows.get(place.id).item.hidden = !visible;
         if (visible) shown++;
       }
@@ -104,6 +150,11 @@ export function createSiteList(container, places, { onSelect }) {
   }
 
   search.addEventListener('input', applyFilter);
+  search.addEventListener('keydown', (event) => {
+    if (event.key !== 'Enter' || results.hidden) return;
+    event.preventDefault();
+    results.querySelector('button')?.click();
+  });
   chips.addEventListener('click', (event) => {
     const chip = event.target.closest('[data-filter]');
     if (!chip) return;
@@ -145,7 +196,7 @@ function sourceLabel(url, index, total) {
   }
 }
 
-export function createDrawer(container, { onClose, onFlyTo, onStand, onEarth }) {
+export function createDrawer(container, { onClose, onFlyTo, onStand, onEarth, onCompare }) {
   const title = el('h2', { class: 'drawer__title', id: 'drawer-title' });
   const statusChip = el('span', { class: 'status-chip' });
   const coordsText = el('span', { class: 'mono' });
@@ -177,6 +228,7 @@ export function createDrawer(container, { onClose, onFlyTo, onStand, onEarth }) 
     el('button', { type: 'button', class: 'btn btn--outline', text: 'View from above', onclick: () => onFlyTo() }),
     el('button', { type: 'button', class: 'btn btn--outline', text: 'Stand on surface', onclick: () => onStand() }),
     el('button', { type: 'button', class: 'btn btn--outline', text: 'Look at Earth', onclick: () => onEarth() }),
+    el('button', { type: 'button', class: 'btn btn--outline', text: 'Compare', title: 'Add this site to the side-by-side comparison', onclick: () => onCompare?.() }),
   ]);
 
   const drawer = el('aside', { class: 'drawer glass', 'aria-labelledby': 'drawer-title', hidden: true }, [

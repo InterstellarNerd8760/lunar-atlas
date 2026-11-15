@@ -20,3 +20,4 @@ NASA's [October 28, 2024 Artemis III update](https://www.nasa.gov/news-release/n
 ## Export provenance checklist
 
 For every processed raster or ephemeris export, capture the source product and URL, download date/version, original filename, coordinate reference/projection, spatial bounds, dimensions, resolution and units, no-data handling, scale/offset, resampling/compositing method, processing notebook/script and commit, output filename, checksum, and required credit/citation. Label inferred or visually exaggerated values.
+Lunar feature search uses the [USGS/IAU Moon center-point gazetteer](https://planetarynames.wr.usgs.gov/Page/MOON/target) in the LOLA 2011 control network. The bundled index contains the official name, feature type, center coordinates, diameter, and Gazetteer record ID for each adopted entry in the export. Refresh it with `python3 scripts/prepare-lunar-names.py MOON_nomenclature_center_pts.zip`.
