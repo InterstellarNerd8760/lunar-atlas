@@ -44,7 +44,7 @@ The checkout includes `public/data/global-height/global-height.f32` and its JSON
 The viewer also loads the included 4096 × 2048 normalized LROC WAC texture from `public/data/wac-texture.jpg`. Its source and processing details are in `public/data/wac-texture.json`. The globe uses grayscale terrain if the texture is unavailable.
 
 
-This reflectance map uses one wavelength and has missing samples near the poles, which appear black. To view your earlier WAC morphology mosaic, copy the backed-up image into the checkout and open the legacy view.
+This reflectance map uses one wavelength. Missing samples near the poles are filled with mid-gray. To view your earlier WAC morphology mosaic, copy the backed-up image into the checkout and open the legacy view.
 
 ```bash
 cp ~/Documents/lunar-atlas-local-backup/wac-texture.jpg public/data/wac-texture-legacy.jpg
@@ -54,9 +54,9 @@ Open [the legacy texture view](http://localhost:8000/?moonTexture=legacy). The r
 
 ## Explore landing sites
 
-**Explore a site** includes the original 33 landing and candidate-region entries and nine south-pole surveys, plus the Connecting Ridge extension. These include Luna, Surveyor, Apollo, Chang’e, Chandrayaan-3, SLIM, and commercial landers.
+**Explore a site** includes the original landing and candidate-region catalog, the south-pole surveys, and the bundled Apollo and south-pole DEMs. These include Luna, Surveyor, Apollo, Chang’e, Chandrayaan-3, SLIM, and commercial landers.
 
-The checkout includes smaller terrain grids derived from the original exports and uses the bundled high-resolution DEMs where available for the same site. For the original full-resolution layers, extract the optional archives into `public/data/` from the repository root. Replace the example paths with the paths to your downloads.
+The checkout includes smaller terrain grids derived from the original exports and uses the bundled high-resolution DEMs where available for the same site. For full-resolution layers at additional sites, extract the optional archives into `public/data/` from the repository root. Replace the example paths with the paths to your downloads.
 
 ```sh
 unzip "/path/to/lola-sites(1).zip" -d public/data

@@ -11,6 +11,13 @@ const MESH_HEIGHT_SEGMENTS = 256;
 const FLIGHT_CLEARANCE = 0.008;
 const MAX_FLIGHT_RADIUS = 18;
 
+function surfaceNorth(up) {
+  const north = new THREE.Vector3(0, 1, 0).addScaledVector(up, -up.y);
+  // At a pole the spin axis is radial. Use a fixed tangent there.
+  if (north.lengthSq() < 1e-12) north.set(1, 0, 0).addScaledVector(up, -up.x);
+  return north.normalize();
+}
+
 export function mountMoonView(container) {
   container.replaceChildren();
 
@@ -413,17 +420,16 @@ async function loadMoon(container, status) {
     siteInfo.hidden = false;
   }
   const siteGroups = [
-    ['landing-sites', 'Historical landing sites', (site) => !site.id.startsWith('artemis3-')],
-    ['landing-sites', 'Artemis III terrain proxies', (site) => site.id.startsWith('artemis3-')],
-    ['lola-sites', 'South pole LOLA surveys', () => true],
-    ['site-dems', 'Bundled Apollo terrain', site => site.group === 'lroc-nac-dtm'],
-    ['site-dems', 'Bundled south pole terrain', site => site.group === 'pgda-lola-5m'],
+    ['site-dems', 'Apollo landing sites', site => site.group === 'lroc-nac-dtm'],
+    ['site-dems', 'South pole terrain', site => site.group === 'pgda-lola-5m'],
+    ['landing-sites', 'Other historical landing sites', site => !site.id.startsWith('artemis3-')],
+    ['landing-sites', 'Artemis III terrain proxies', site => site.id.startsWith('artemis3-')],
+    ['lola-sites', 'Additional south pole LOLA surveys', () => true],
   ];
   const siteDirectories = [...new Set(siteGroups.map(([directory]) => directory))];
   Promise.allSettled([...siteDirectories, 'site-previews'].map(async (directory) => [directory, await loadSiteIndex(directory)])).then((results) => {
     const indexes = new Map(results.filter(({ status }) => status === 'fulfilled').map(({ value }) => value));
     const previews = indexes.get('site-previews') ?? [];
-    const bundled = new Map((indexes.get('site-dems') ?? []).map(site => [site.id, site]));
     for (const directory of ['landing-sites', 'lola-sites']) {
       const archiveSites = indexes.get(directory) ?? [];
       const archiveIds = new Set(archiveSites.map(site => (site.id ?? site.siteId).toLowerCase()));
@@ -432,6 +438,7 @@ async function loadMoon(container, status) {
       );
       indexes.set(directory, [...archiveSites, ...missingSites]);
     }
+    const missionDetails = new Map(indexes.get('landing-sites').map(site => [site.id, site]));
     const sites = new Map();
     const listedIds = new Set();
     for (const [directory, label, include] of siteGroups) {
@@ -440,18 +447,18 @@ async function loadMoon(container, status) {
       for (const site of (indexes.get(directory) ?? []).filter(include)) {
         const id = site.id ?? site.siteId;
         const key = id.toLowerCase();
-        if (listedIds.has(key) || listedIds.has(site.artemisRegion)) continue;
+        if (listedIds.has(key)) continue;
         listedIds.add(key);
         const name = site.name ?? site.siteName;
-        const detailed = site.preview ? bundled.get(key) : null;
-        sites.set(id, detailed ? { ...detailed, id, name, year: site.year, country_or_company: site.country_or_company } : site);
+        const mission = directory === 'site-dems' ? missionDetails.get(key) : null;
+        sites.set(id, mission ? { ...site, year: mission.year, country_or_company: mission.country_or_company } : site);
         group.append(new Option(name, id));
       }
       if (group.childElementCount) siteSelect.append(group);
     }
     if (!sites.size) {
       siteStatus.hidden = false;
-      siteStatus.textContent = 'Could not load the landing site catalog. Serve the repository root and check that public/data/site-previews/index.json is present.';
+      siteStatus.textContent = 'Could not load the site catalog. Start the server from the repository root.';
       return;
     }
     siteSelect.hidden = false;
@@ -488,7 +495,7 @@ async function loadMoon(container, status) {
         scene.add(terrain.mesh);
         terrain.mesh.updateMatrixWorld(true);
         const up = terrain.center.clone().normalize();
-        const north = new THREE.Vector3(0, 1, 0).addScaledVector(up, -up.y).normalize();
+        const north = surfaceNorth(up);
         createOrbitControls(up);
         const distance = 120 / MOON_RADIUS_METERS;
         camera.fov = 65;
@@ -536,7 +543,7 @@ async function loadMoon(container, status) {
     if (!activeSite) return;
     if (freeFlight) leaveFlight();
     const up = activeSite.center.clone().normalize();
-    const north = new THREE.Vector3(0, 1, 0).addScaledVector(up, -up.y).normalize();
+    const north = surfaceNorth(up);
     const ray = new THREE.Raycaster(up.clone().multiplyScalar(2), up.clone().negate());
     activeSite.mesh.updateMatrixWorld(true);
     const point = surfaceHit(ray)?.point ?? activeSite.center;
