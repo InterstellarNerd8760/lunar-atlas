@@ -177,6 +177,27 @@ function findPhoto(place, photosById) {
   return null;
 }
 
+function findWriteup(place, writeupsById) {
+  if (writeupsById.has(place.id)) return writeupsById.get(place.id);
+  const keys = new Set([photoKey(place.id), photoKey(place.name)].filter(Boolean));
+  for (const writeup of writeupsById.values()) {
+    if (keys.has(photoKey(writeup.id)) || keys.has(photoKey(writeup.name))) return writeup;
+  }
+  return null;
+}
+
+function attachWriteup(note, place, writeupsById) {
+  const writeup = findWriteup(place, writeupsById);
+  if (!writeup) return note;
+  return {
+    ...(note || {}),
+    about: writeup.about,
+    facts: writeup.facts,
+    sources: writeup.sources,
+    take: String(writeup.westonsTake || '').trim(),
+  };
+}
+
 function attachPhoto(note, place, photosById, dataDirectory) {
   const photo = findPhoto(place, photosById);
   if (!photo) return note;
@@ -208,12 +229,13 @@ export function mountMoonView(container) {
 async function loadMoon(container, loadingStatus) {
   const dataDirectory = new URL('../public/data/', import.meta.url);
   const params = new URLSearchParams(window.location.search);
-  const [demResponse, previewResponse, notesResponse, photosResponse, catalogResponse] = await Promise.all([
+  const [demResponse, previewResponse, notesResponse, photosResponse, catalogResponse, writeupsResponse] = await Promise.all([
     fetch(new URL('site-dems/index.json', dataDirectory)),
     fetch(new URL('site-previews/index.json', dataDirectory)),
     fetch(new URL('site-notes.json', dataDirectory)),
     fetch(new URL('site-photos/index.json', dataDirectory)),
     fetch(new URL('landing-sites.csv', dataDirectory)),
+    fetch(new URL('site-writeups.json', dataDirectory)),
   ]);
   const demIndex = demResponse.ok ? await demResponse.json() : { sites: [] };
   const previewIndex = previewResponse.ok ? await previewResponse.json() : { sites: [] };
@@ -221,6 +243,11 @@ async function loadMoon(container, loadingStatus) {
   const photoIndex = photosResponse.ok ? await photosResponse.json() : { photos: [] };
   const photosById = new Map((photoIndex.photos || []).map((photo) => [photo.id, photo]));
   const catalog = catalogResponse.ok ? landingCatalog(await catalogResponse.text()) : new Map();
+  const writeupsById = new Map();
+  if (writeupsResponse.ok) {
+    const writeups = await writeupsResponse.json();
+    for (const [id, writeup] of Object.entries(writeups)) writeupsById.set(id, writeup);
+  }
 
   const scene = new THREE.Scene();
   scene.background = new THREE.Color('#030509');
@@ -600,7 +627,7 @@ async function loadMoon(container, loadingStatus) {
     pins.setSelected(place.id);
     if (changed) {
       railDismissed = false;
-      const note = place.group === 'point' ? null : attachPhoto(findNote(place), place, photosById, dataDirectory);
+      const note = place.group === 'point' ? null : attachPhoto(attachWriteup(findNote(place), place, writeupsById), place, photosById, dataDirectory);
       drawer.show(place, note);
       if (Number.isFinite(place.lat) && Number.isFinite(place.lon)) analyzePlace(place);
     }

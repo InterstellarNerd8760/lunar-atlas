@@ -426,6 +426,25 @@ a { color: var(--primary); }
 .drawer section { display: grid; gap: 8px; padding-top: 12px; border-top: 1px solid var(--border); }
 .drawer section p { margin: 0; }
 
+.facts {
+  margin: 0;
+  padding-left: 1.15em;
+  display: grid;
+  gap: 4px;
+}
+.facts li { padding-left: 0.1em; }
+
+.sources {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 2px;
+}
+.sources a { overflow-wrap: anywhere; }
+
+.data-notes h3 { color: var(--muted-foreground); font-weight: 500; }
+
 .take {
   margin: 0;
   padding: 8px 12px;
