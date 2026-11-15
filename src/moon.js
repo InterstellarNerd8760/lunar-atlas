@@ -150,13 +150,25 @@ async function loadMoon(container, status) {
   sunlight.position.set(-3, 1.5, 4);
   scene.add(sunlight);
 
-  const useLegacyTexture = params.get('moonTexture') === 'legacy';
-  const texturePromise = new THREE.TextureLoader().loadAsync(
-    new URL(useLegacyTexture ? 'wac-texture-legacy.jpg' : 'wac-texture.jpg', dataDirectory).href,
-  ).catch((error) => {
-    console.warn('WAC texture unavailable.', error);
-    return null;
-  });
+  const textureLoader = new THREE.TextureLoader();
+  async function loadWacTexture() {
+    if (params.get('moonTexture') === 'legacy') {
+      try {
+        const texture = await textureLoader.loadAsync(new URL('wac-texture-legacy.jpg', dataDirectory).href);
+        return { texture, label: 'WAC morphology texture' };
+      } catch (error) {
+        console.warn('Legacy WAC texture unavailable. Loading bundled WAC instead.', error);
+      }
+    }
+    try {
+      const texture = await textureLoader.loadAsync(new URL('wac-texture.jpg', dataDirectory).href);
+      return { texture, label: 'WAC reflectance texture' };
+    } catch (error) {
+      console.warn('Bundled WAC texture unavailable: public/data/wac-texture.jpg', error);
+      return { texture: null, label: 'WAC image unavailable' };
+    }
+  }
+  const texturePromise = loadWacTexture();
 
   const terrain = await createTerrain({
     scene,
@@ -164,7 +176,7 @@ async function loadMoon(container, status) {
     dataDirectory,
     demCatalog: demIndex.sites || [],
   });
-  const texture = await texturePromise;
+  const { texture, label: textureLabel } = await texturePromise;
   if (texture) terrain.setAlbedo(texture);
   if (params.get('wire') === '1') terrain.setWireframe(true);
 
@@ -209,10 +221,25 @@ async function loadMoon(container, status) {
   const reliefControl = document.createElement('select');
   reliefControl.setAttribute('aria-label', 'Terrain relief');
   reliefControl.add(new Option('Auto relief', 'auto'));
-  reliefControl.add(new Option('True scale ×1', 'true'));
+  for (let scale = 1; scale <= 4; scale++) {
+    reliefControl.add(new Option(scale === 1 ? '×1 (true scale)' : `×${scale}`, String(scale)));
+  }
   let reliefMode = 'auto';
   reliefControl.addEventListener('change', () => { reliefMode = reliefControl.value; });
   cameraToolbar.append(reliefControl);
+  if (texture) {
+    const imageryButton = document.createElement('button');
+    imageryButton.type = 'button';
+    imageryButton.textContent = 'WAC imagery';
+    imageryButton.title = 'Show the WAC image without Sun and Earth lighting';
+    imageryButton.setAttribute('aria-pressed', 'false');
+    imageryButton.addEventListener('click', () => {
+      const on = imageryButton.getAttribute('aria-pressed') !== 'true';
+      terrain.setImageryOnly(on);
+      imageryButton.setAttribute('aria-pressed', String(on));
+    });
+    cameraToolbar.append(imageryButton);
+  }
   container.append(cameraToolbar);
 
   const siteStatus = document.createElement('p');
@@ -249,16 +276,23 @@ async function loadMoon(container, status) {
   const scratch = new THREE.Vector3();
 
   function desiredRelief() {
-    if (reliefMode === 'true') return 1;
+    if (reliefMode !== 'auto') return Number(reliefMode);
     const altitude = Math.max(0, camera.position.length() - 1);
-    return Math.round((1 + 2 * THREE.MathUtils.smoothstep(altitude, 0.08, 2)) * 10) / 10;
+    return Math.round((1 + 3 * THREE.MathUtils.smoothstep(altitude, 0.08, 2)) * 10) / 10;
   }
 
   function applyRelief() {
     const next = desiredRelief();
     if (next === relief) return;
+    const oldSurface = terrain.surfaceRadius(camera.position);
     relief = next;
     terrain.setRelief(relief);
+    if (camera.position.length() - oldSurface < 0.08) {
+      const delta = terrain.surfaceRadius(camera.position) - oldSurface;
+      radialDirection.copy(camera.position).normalize().multiplyScalar(delta);
+      camera.position.add(radialDirection);
+      if (!freeFlight && controls.target.lengthSq() >= 0.04) controls.target.add(radialDirection);
+    }
   }
 
   function describeRelief() {
@@ -287,9 +321,8 @@ async function loadMoon(container, status) {
 
   function placeEye(lat, lon) {
     terrain.directionFromLatLon(lat, lon, scratch);
-    const height = terrain.sampleMeters(scratch);
     const up = scratch.clone();
-    const radius = 1 + (Number.isFinite(height) ? height : 0) / MOON_RADIUS_METERS;
+    const radius = terrain.surfaceRadius(up);
     const north = northAt(lat, lon);
     const sunHoriz = sunlight.position.clone().addScaledVector(up, -sunlight.position.dot(up));
     const ahead = sunHoriz.lengthSq() > 1e-8 ? sunHoriz.normalize() : north;
@@ -363,8 +396,8 @@ async function loadMoon(container, status) {
     if (freeFlight) leaveFlight();
     currentPlace = place;
     siteSelect.value = place.id;
-    relief = 1;
-    terrain.setRelief(1);
+    relief = reliefMode === 'auto' ? 1 : Number(reliefMode);
+    terrain.setRelief(relief);
     placeEye(place.lat, place.lon);
     if (!announce) return;
     sky?.analyze(scratch.clone().multiplyScalar(1 + (terrain.sampleMeters(scratch) || 0) / MOON_RADIUS_METERS), place.name);
@@ -523,9 +556,6 @@ async function loadMoon(container, status) {
   resizeObserver.observe(container);
   resize();
 
-  const textureLabel = texture
-    ? (useLegacyTexture ? 'WAC morphology texture' : 'WAC reflectance texture')
-    : 'grayscale relief';
   status.textContent = `LOLA terrain + ${textureLabel} · ${describeRelief()} · ${skyStatus}`;
   status.classList.add('moon-status--loaded');
 
@@ -593,6 +623,7 @@ async function loadMoon(container, status) {
       }
     }
 
+    applyRelief();
     radialDirection.copy(camera.position);
     const radiusNow = radialDirection.length();
     if (radiusNow > 1e-4) {
@@ -601,7 +632,6 @@ async function loadMoon(container, status) {
       camera.position.copy(radialDirection);
     }
 
-    applyRelief();
     if (sky?.earth) {
       lighting.sun.copy(sunlight.position);
       lighting.earth.copy(sky.earth.position);

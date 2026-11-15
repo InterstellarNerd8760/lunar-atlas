@@ -39,9 +39,9 @@ Open [http://localhost:8000](http://localhost:8000) in your browser. Keep the te
 
 ## Show the global LOLA terrain
 
-The checkout includes `public/data/global-height/global-height.f32` and its JSON metadata. Start the local server from the repository root. The viewer builds a reduced mesh from the elevation grid and uses Auto relief (up to ×3 at globe distance, ×1 near the surface and at detailed sites), with a True scale lock.
+The checkout includes `public/data/global-height/global-height.f32` and its JSON metadata. Start the local server from the repository root. The viewer builds a reduced mesh from the elevation grid and uses Auto relief (up to ×4 at globe distance and ×1 near the surface) or fixed ×1, ×2, ×3, and ×4.
 
-The viewer also loads the included 4096 × 2048 normalized LROC WAC texture from `public/data/wac-texture.jpg`. Its source and processing details are in `public/data/wac-texture.json`. The globe uses grayscale terrain if the texture is unavailable.
+The viewer also loads the included 4096 × 2048 normalized LROC WAC texture from `public/data/wac-texture.jpg`. Its source and processing details are in `public/data/wac-texture.json`. Choose **WAC imagery** to inspect the map without the Sun and Earth lighting. The viewer reports when the bundled image is unavailable.
 
 
 This reflectance map uses one wavelength. Missing samples near the poles are filled with mid-gray. To view your earlier WAC morphology mosaic, copy the backed-up image into the checkout and open the legacy view.
@@ -50,7 +50,7 @@ This reflectance map uses one wavelength. Missing samples near the poles are fil
 cp ~/Documents/lunar-atlas-local-backup/wac-texture.jpg public/data/wac-texture-legacy.jpg
 ```
 
-Open [the legacy texture view](http://localhost:8000/?moonTexture=legacy). The regular URL uses the bundled map.
+Open [the legacy texture view](http://localhost:8000/?moonTexture=legacy). The viewer uses the bundled map if the legacy image is missing.
 
 ## Explore landing sites
 
@@ -64,7 +64,7 @@ The checkout includes the 2048 px Blue Marble Earth texture and 4096 px NASA SVS
 ## Viewer and visibility
 
 The viewer opens on the globe,
-uses Auto relief with a true-scale lock, and adds Look at Earth and Stand on
+offers Auto relief and fixed ×1–×4 scales, and adds Look at Earth and Stand on
 surface. Earth keeps its physical radius and ephemeris range. Detail mesh
 vertices use a local center to improve close-range precision.
 

@@ -92,6 +92,7 @@ uniform sampler2D uAlbedo;
 uniform sampler2D uPolarS;
 uniform sampler2D uPolarN;
 uniform float uHasAlbedo;
+uniform float uImageryOnly;
 uniform float uHasPolar;
 uniform vec3 uOriginWrap;
 
@@ -175,7 +176,7 @@ void main() {
         vec3 polar = polarColor(dir, 1.0);
         if (polar.r >= 0.0) {
           polar = sRGBTransferEOTF(vec4(polar, 1.0)).rgb;
-          albedo = mix(equirect, polar, smoothstep(-78.0, -83.0, lat));
+          albedo = mix(equirect, polar, smoothstep(78.0, 83.0, -lat));
         }
       } else if (lat > 78.0) {
         vec3 polar = polarColor(dir, 0.0);
@@ -185,6 +186,12 @@ void main() {
         }
       }
     }
+  }
+
+  if (uImageryOnly > 0.5 && uHasAlbedo > 0.5) {
+    gl_FragColor = vec4(albedo, 1.0);
+    #include <colorspace_fragment>
+    return;
   }
 
   float distM = length(vView) * uRadius;
@@ -533,6 +540,7 @@ export async function createTerrain({ scene, renderer, dataDirectory, demCatalog
     uPolarS: { value: fallback },
     uPolarN: { value: fallback },
     uHasAlbedo: { value: 0 },
+    uImageryOnly: { value: 0 },
     uHasPolar: { value: 0 },
     uOriginWrap: { value: new THREE.Vector3() },
   };
@@ -1286,6 +1294,7 @@ export async function createTerrain({ scene, renderer, dataDirectory, demCatalog
     update,
     setRelief,
     setAlbedo,
+    setImageryOnly(on) { uniforms.uImageryOnly.value = on ? 1 : 0; },
     preloadSite,
     setWireframe(on) { material.wireframe = Boolean(on); },
     surfaceRadius,
