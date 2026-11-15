@@ -1,0 +1,602 @@
+{
+  "luna-9": {
+    "id": "luna-9",
+    "name": "Luna 9",
+    "about": "The Soviet Union's Luna 9 made the first soft landing on the Moon on February 3, 1966, in Oceanus Procellarum. Earlier soft-landing attempts had all failed. After landing, the capsule opened and sent back the first photos taken on the lunar surface. They showed solid, rocky ground, not a deep layer of dust. That was useful for crewed landing plans, because it meant a lander could sit on the surface without sinking.",
+    "facts": [
+      "Launched January 31, 1966; landed February 3, 1966, at 18:44:52 UT in Oceanus Procellarum.",
+      "First successful soft landing on the Moon.",
+      "First photographs returned from the lunar surface."
+    ],
+    "sources": [
+      "https://nssdc.gsfc.nasa.gov/planetary/lunar/lunarussr.html",
+      "https://science.nasa.gov/moon/missions/"
+    ],
+    "westonsTake": ""
+  },
+  "surveyor-1": {
+    "id": "surveyor-1",
+    "name": "Surveyor 1",
+    "about": "Surveyor 1 was the first U.S. spacecraft to soft-land on the Moon. NASA's Jet Propulsion Laboratory landed it on June 2, 1966, inside Flamsteed P in southwest Oceanus Procellarum, a site being looked at for Apollo. It returned 11,240 TV pictures plus data on how much weight the ground could bear, temperatures, and radar reflectivity. That data helped show the mare could support a crewed lander. The main mission ended July 14, 1966, and engineers kept checking in on it until January 1967.",
+    "facts": [
+      "Launched May 30, 1966; landed June 2, 1966, at 06:17:37 UT in Flamsteed P, Oceanus Procellarum.",
+      "First U.S. soft landing, and the first U.S. photographs from the lunar surface.",
+      "Returned 11,240 television pictures.",
+      "Primary mission ended July 14, 1966; engineering contacts continued into January 1967."
+    ],
+    "sources": [
+      "https://nssdc.gsfc.nasa.gov/planetary/lunar/surveyor.html",
+      "https://www.lpi.usra.edu/lunar/missions/surveyor/",
+      "https://science.nasa.gov/moon/missions/"
+    ],
+    "westonsTake": ""
+  },
+  "luna-13": {
+    "id": "luna-13",
+    "name": "Luna 13",
+    "about": "Luna 13 was the Soviet Union's second successful soft landing. It came down in Oceanus Procellarum on December 24, 1966, about ten months after Luna 9, and sent back close-up photos of the surface. NSSDCA says the point of these lander photos was to study the surface and check whether crewed landings were feasible. There's less public detail on this site than on the Surveyor and Apollo sites, but the landing date and place are well documented.",
+    "facts": [
+      "Launched December 21, 1966; landed December 24, 1966, at 18:01:00 UT in Oceanus Procellarum.",
+      "Second successful Soviet soft landing, after Luna 9.",
+      "Returned close-up photographs of the lunar surface."
+    ],
+    "sources": [
+      "https://nssdc.gsfc.nasa.gov/planetary/lunar/lunarussr.html",
+      "https://nssdc.gsfc.nasa.gov/planetary/lunar/lunarussrdata.html",
+      "https://science.nasa.gov/moon/missions/"
+    ],
+    "westonsTake": ""
+  },
+  "surveyor-3": {
+    "id": "surveyor-3",
+    "name": "Surveyor 3",
+    "about": "Surveyor 3 landed in Oceanus Procellarum on April 20, 1967. Its engines didn't shut off when they were supposed to, so it touched down three times before it settled inside a crater about 200 meters across. It used a scoop to dig trenches and test the soil down to 17.5 centimeters, and it sent back 6,326 pictures before operations ended on May 4, 1967. Two and a half years later, Apollo 12 landed nearby, and Pete Conrad and Alan Bean walked over and brought parts of it home.",
+    "facts": [
+      "Launched April 17, 1967; landed April 20, 1967, at 00:04:53 UT in Oceanus Procellarum.",
+      "Touched down three times before coming to rest, moving about 20 meters, then 11 meters, then 30 centimeters.",
+      "Returned 6,326 pictures. Its surface sampler ran for 18 hours and tested soil to a depth of 17.5 centimeters.",
+      "Apollo 12 landed nearby in November 1969, and the crew visited the spacecraft."
+    ],
+    "sources": [
+      "https://www.lpi.usra.edu/lunar/missions/surveyor/",
+      "https://nssdc.gsfc.nasa.gov/planetary/lunar/surveyor.html",
+      "https://science.nasa.gov/moon/missions/"
+    ],
+    "westonsTake": ""
+  },
+  "surveyor-5": {
+    "id": "surveyor-5",
+    "name": "Surveyor 5",
+    "about": "Surveyor 5 landed in southwest Mare Tranquillitatis on September 11, 1967, not far from where Apollo 11 would land two years later. A helium leak forced controllers to rework the descent, but it still landed softly in a small rimless crater. It carried an alpha-scattering instrument instead of a scoop. Surveyors 5, 6, and 7 together gave the first chemical analysis of lunar surface material, and the soil here looked basaltic. It also returned thousands of TV pictures and woke back up after its first lunar night.",
+    "facts": [
+      "Launched September 8, 1967; landed September 11, 1967, at 00:46:44 UT in Mare Tranquillitatis.",
+      "Returned 18,006 television pictures on its first lunar day, then 1,048 more after surviving the first lunar night.",
+      "Its alpha-scattering instrument, also flown on Surveyor 6 and 7, provided the first chemical analysis of lunar surface material.",
+      "Landed in a 9-by-12-meter rimless crater."
+    ],
+    "sources": [
+      "https://www.lpi.usra.edu/lunar/missions/surveyor/",
+      "https://nssdc.gsfc.nasa.gov/planetary/lunar/surveyor.html"
+    ],
+    "westonsTake": ""
+  },
+  "surveyor-6": {
+    "id": "surveyor-6",
+    "name": "Surveyor 6",
+    "about": "Surveyor 6 landed in Sinus Medii on November 10, 1967, near the center of the Moon's near side. It was the last of the four Surveyors sent to mare sites being considered for Apollo. Until a few hours after sunset on November 24, it sent back 29,952 TV pictures and about 30 hours of chemical data. On November 17 it fired its engines and hopped about 2.5 meters. That gave engineers a look at its original landing marks and at how a rocket plume disturbs the soil.",
+    "facts": [
+      "Launched November 7, 1967; landed November 10, 1967, at 01:01:06 UT in Sinus Medii.",
+      "Returned 29,952 television pictures, and its alpha-scattering instrument collected 30 hours of composition data.",
+      "On November 17, 1967, it hopped about 2.5 meters from its original landing point.",
+      "Placed in hibernation for the lunar night on November 26; brief contact resumed on December 14, 1967."
+    ],
+    "sources": [
+      "https://www.lpi.usra.edu/lunar/missions/surveyor/",
+      "https://nssdc.gsfc.nasa.gov/planetary/lunar/surveyor.html"
+    ],
+    "westonsTake": ""
+  },
+  "surveyor-7": {
+    "id": "surveyor-7",
+    "name": "Surveyor 7",
+    "about": "Surveyor 7 was the last Surveyor and the only one sent mainly for science instead of to check out an Apollo site. It landed on January 10, 1968, on a rocky ejecta blanket about 18 miles north of the rim of Tycho, in the southern highlands. It returned 20,993 pictures on its first lunar day and 45 on its second. When its chemistry instrument didn't deploy on its own, the scoop pushed it down to the surface. It also picked up laser beams fired from Earth. Its highland chemistry gave a contrast to the earlier mare sites.",
+    "facts": [
+      "Launched January 7, 1968; landed January 10, 1968, at 01:05:36 UT, north of Tycho.",
+      "Only Surveyor landing in the highlands. It came down less than 1.5 miles from the center of its target circle, about 18 miles north of Tycho's rim.",
+      "Returned 20,993 television pictures on the first lunar day and 45 on the second.",
+      "Reactivated for a second lunar day on February 12, 1968, and operated until February 21, 1968."
+    ],
+    "sources": [
+      "https://www.lpi.usra.edu/lunar/missions/surveyor/",
+      "https://nssdc.gsfc.nasa.gov/planetary/lunar/surveyor.html"
+    ],
+    "westonsTake": ""
+  },
+  "apollo-11": {
+    "id": "apollo-11",
+    "name": "Apollo 11 (Tranquility Base)",
+    "about": "Apollo 11 made the first crewed landing on the Moon on July 20, 1969, in Mare Tranquillitatis. Neil Armstrong and Buzz Aldrin landed at Tranquility Base while Michael Collins stayed in orbit in the command module. They spent 2.53 hours outside, covered about 250 meters, set up a seismometer and a laser reflector, and collected 21.55 kilograms of rock and soil. The samples showed the site is old basaltic mare. The crew got home safely on July 24.",
+    "facts": [
+      "Launched July 16, 1969; landed July 20, 1969, at 20:17:40 UT; returned to Earth July 24, 1969.",
+      "Crew: Neil Armstrong, commander; Michael Collins, command module pilot; Edwin (Buzz) Aldrin, lunar module pilot.",
+      "EVA time 2.53 hours; surface traverse 0.25 km; 21.55 kg of samples returned.",
+      "First humans to land on the Moon."
+    ],
+    "sources": [
+      "https://nssdc.gsfc.nasa.gov/planetary/lunar/apolloland.html",
+      "https://nssdc.gsfc.nasa.gov/planetary/lunar/apollo11info.html",
+      "https://science.nasa.gov/moon/missions/"
+    ],
+    "westonsTake": ""
+  },
+  "apollo-12": {
+    "id": "apollo-12",
+    "name": "Apollo 12",
+    "about": "Apollo 12 landed in Oceanus Procellarum on November 19, 1969. The landing was accurate enough that Pete Conrad and Alan Bean could walk to Surveyor 3, which had been sitting there since April 1967. Richard Gordon stayed in orbit. The crew spent 7.75 hours outside, covered about 1.35 kilometers, and brought back 34.35 kilograms of samples, plus parts of the Surveyor. Those parts let engineers see how hardware held up after two and a half years on the Moon. The mission also showed NASA could land at a specific spot.",
+    "facts": [
+      "Launched November 14, 1969; landed November 19, 1969, at 06:54:35 UT; returned November 24, 1969.",
+      "Crew: Charles Conrad, commander; Richard Gordon, command module pilot; Alan Bean, lunar module pilot.",
+      "EVA time 7.75 hours; surface traverse 1.35 km; 34.35 kg of samples returned.",
+      "The crew visited Surveyor 3, which had landed nearby in April 1967."
+    ],
+    "sources": [
+      "https://nssdc.gsfc.nasa.gov/planetary/lunar/apolloland.html",
+      "https://nssdc.gsfc.nasa.gov/planetary/lunar/apollo12info.html",
+      "https://science.nasa.gov/moon/missions/"
+    ],
+    "westonsTake": ""
+  },
+  "luna-16": {
+    "id": "luna-16",
+    "name": "Luna 16",
+    "about": "Luna 16 was the first robotic mission to land on the Moon, collect a sample, and bring it back to Earth. The Soviet lander touched down in Mare Fecunditatis on September 20, 1970, after local sunset, drilled into the soil, and launched a return capsule the next day. About 101 grams reached Earth on September 24. That's tiny next to Apollo's samples, but it came from a mare no astronaut visited, and it showed robotic sample return could work.",
+    "facts": [
+      "Launched September 12, 1970; landed September 20, 1970, at 05:18:00 UT in Mare Fecunditatis.",
+      "First successful robotic sample return from beyond Earth.",
+      "Returned about 101 grams of lunar material to Earth on September 24, 1970.",
+      "Sampling was done after local sunset."
+    ],
+    "sources": [
+      "https://nssdc.gsfc.nasa.gov/planetary/lunar/lunarussr.html",
+      "https://news.asu.edu/20201228-lro-camera-snaps-images-soviet-robotic-samplers",
+      "https://science.nasa.gov/moon/missions/"
+    ],
+    "westonsTake": ""
+  },
+  "luna-17": {
+    "id": "luna-17",
+    "name": "Luna 17 (Lunokhod 1 lander)",
+    "about": "Luna 17 landed in Mare Imbrium on November 17, 1970, and rolled out Lunokhod 1, the first rover to drive on the Moon. Controllers on Earth drove it about 10.5 kilometers over 11 lunar day-night cycles, using cameras, a penetrometer, and an X-ray spectrometer to study the soil. It also carried a French-built laser reflector that was lost track of for decades and found again with help from LRO images. Contact ended in September 1971, and the mission was officially closed on October 4, 1971.",
+    "facts": [
+      "Launched November 10, 1970; landed November 17, 1970, at 03:47:00 UT in Mare Imbrium.",
+      "Delivered Lunokhod 1, the first successful planetary rover.",
+      "Lunokhod 1 traveled about 10.5 km.",
+      "The mission was formally ended on October 4, 1971, after 11 lunar day-night cycles (322 Earth days)."
+    ],
+    "sources": [
+      "https://nssdc.gsfc.nasa.gov/planetary/lunar/lunarussr.html",
+      "https://lroc.im-ldi.com/images/402",
+      "https://science.nasa.gov/moon/missions/"
+    ],
+    "westonsTake": ""
+  },
+  "apollo-14": {
+    "id": "apollo-14",
+    "name": "Apollo 14",
+    "about": "Apollo 14 landed at Fra Mauro on February 5, 1971. Alan Shepard and Edgar Mitchell worked on the surface while Stuart Roosa stayed in orbit. They spent 9.38 hours outside, covered about 3.45 kilometers, and brought back 42.28 kilograms of samples. Fra Mauro isn't a smooth mare plain like the Apollo 11 and 12 sites, and the longer walks and bigger sample haul made this more of a geology mission than those first two landings.",
+    "facts": [
+      "Launched January 31, 1971; landed February 5, 1971, at 09:18:11 UT at Fra Mauro; returned February 9, 1971.",
+      "Crew: Alan Shepard, commander; Stuart Roosa, command module pilot; Edgar Mitchell, lunar module pilot.",
+      "EVA time 9.38 hours; surface traverse 3.45 km; 42.28 kg of samples returned."
+    ],
+    "sources": [
+      "https://nssdc.gsfc.nasa.gov/planetary/lunar/apolloland.html",
+      "https://nssdc.gsfc.nasa.gov/planetary/lunar/apollo14info.html"
+    ],
+    "westonsTake": ""
+  },
+  "apollo-15": {
+    "id": "apollo-15",
+    "name": "Apollo 15",
+    "about": "Apollo 15 landed at Hadley-Apennine on July 30, 1971, at the edge of Mare Imbrium between Hadley Rille and the Apennine Mountains. David Scott and James Irwin were the first crew to use the Lunar Roving Vehicle, and they covered 27.9 kilometers during 19.13 hours of surface activity. Alfred Worden flew the command module. They brought back 77.31 kilograms of samples, including rocks from the mountain front and material from the rille. It was a much longer and more geology-focused visit than the earlier landings.",
+    "facts": [
+      "Launched July 26, 1971; landed July 30, 1971, at 22:16:29 UT at Hadley Rille and the Apennines; returned August 7, 1971.",
+      "Crew: David Scott, commander; Alfred Worden, command module pilot; James Irwin, lunar module pilot.",
+      "EVA time 19.13 hours; rover traverse 27.9 km; 77.31 kg of samples returned.",
+      "First Apollo mission to use the Lunar Roving Vehicle."
+    ],
+    "sources": [
+      "https://nssdc.gsfc.nasa.gov/planetary/lunar/apolloland.html",
+      "https://nssdc.gsfc.nasa.gov/planetary/lunar/apollo15info.html"
+    ],
+    "westonsTake": ""
+  },
+  "luna-20": {
+    "id": "luna-20",
+    "name": "Luna 20",
+    "about": "Luna 20 landed on February 21, 1972, in the highlands about 120 kilometers north of Luna 16, in the Apollonius region between Mare Fecunditatis and Mare Crisium. It was the second successful Soviet sample return. The lander collected about 55 grams of highland soil, and the capsule reached Earth on February 25. That gave scientists highland material from a spot no Apollo crew visited. LRO later found the descent stage, so the samples can be tied to an exact location.",
+    "facts": [
+      "Launched February 14, 1972; landed February 21, 1972, at 19:19:00 UT; sample reached Earth on February 25, 1972.",
+      "Landed in the highlands about 120 km north of the Luna 16 site.",
+      "Returned about 55 grams of lunar material.",
+      "Second successful Soviet sample-return mission."
+    ],
+    "sources": [
+      "https://nssdc.gsfc.nasa.gov/planetary/lunar/lunarussr.html",
+      "https://news.asu.edu/20201228-lro-camera-snaps-images-soviet-robotic-samplers",
+      "https://airandspace.si.edu/stories/editorial/revisiting-soviet-lunar-sample-return-missions"
+    ],
+    "westonsTake": ""
+  },
+  "apollo-16": {
+    "id": "apollo-16",
+    "name": "Apollo 16",
+    "about": "Apollo 16 landed in the Descartes highlands on April 21, 1972, UT (the evening of April 20 in U.S. Eastern time). John Young and Charles Duke spent 20.23 hours outside and drove 27 kilometers in the rover, while Thomas Mattingly stayed in orbit. They brought back 95.71 kilograms of samples from a highland site, which was a contrast to the mare plains most earlier landings visited.",
+    "facts": [
+      "Launched April 16, 1972; landed April 21, 1972, at 02:23:35 UT at Descartes; returned April 27, 1972.",
+      "Crew: John Young, commander; Thomas Mattingly, command module pilot; Charles Duke, lunar module pilot.",
+      "EVA time 20.23 hours; rover traverse 27 km; 95.71 kg of samples returned.",
+      "Landed in the Descartes highlands, a highland site rather than a mare plain."
+    ],
+    "sources": [
+      "https://nssdc.gsfc.nasa.gov/planetary/lunar/apolloland.html",
+      "https://nssdc.gsfc.nasa.gov/planetary/lunar/apollo16info.html"
+    ],
+    "westonsTake": ""
+  },
+  "apollo-17": {
+    "id": "apollo-17",
+    "name": "Apollo 17",
+    "about": "Apollo 17 was the last crewed Moon landing so far. Eugene Cernan and geologist Harrison Schmitt landed in the Taurus-Littrow valley on December 11, 1972, while Ronald Evans stayed in orbit. They spent 22.07 hours outside, drove 35 kilometers, and brought back 110.52 kilograms of samples, the most of any Apollo mission. Schmitt was the first scientist to walk on the Moon. The valley had both highland mountains and basalt on the valley floor, so the crew could sample both kinds of terrain.",
+    "facts": [
+      "Launched December 7, 1972; landed December 11, 1972, at 19:54:57 UT at Taurus-Littrow; returned December 19, 1972.",
+      "Crew: Eugene Cernan, commander; Ronald Evans, command module pilot; Harrison Schmitt, lunar module pilot.",
+      "EVA time 22.07 hours; rover traverse 35 km; 110.52 kg of samples returned.",
+      "Final Apollo landing, and the first time a scientist walked on the Moon."
+    ],
+    "sources": [
+      "https://nssdc.gsfc.nasa.gov/planetary/lunar/apolloland.html",
+      "https://nssdc.gsfc.nasa.gov/planetary/lunar/apollo17info.html",
+      "https://science.nasa.gov/moon/missions/"
+    ],
+    "westonsTake": ""
+  },
+  "luna-21": {
+    "id": "luna-21",
+    "name": "Luna 21 (Lunokhod 2 lander)",
+    "about": "Luna 21 landed on January 15, 1973, on the lava-flooded floor of Le Monnier crater, on the eastern edge of Mare Serenitatis, and deployed Lunokhod 2. The rover drove south toward the highlands, then east across the crater floor to a rille called Fossa Recta, covering about 37 kilometers. That's a lot farther than Lunokhod 1 went. The mission officially ended on June 4, 1973, after soil stuck to the rover's lid got dumped onto its radiators and it overheated.",
+    "facts": [
+      "Launched January 8, 1973 (NSSDCA), or January 11, 1973, in the LROC account; landed January 15, 1973, at 23:35:00 UT in Le Monnier crater.",
+      "Delivered the Lunokhod 2 rover.",
+      "Lunokhod 2 traveled about 37 km, a much longer traverse than Lunokhod 1.",
+      "The mission officially ended on June 4, 1973, after the rover overheated."
+    ],
+    "sources": [
+      "https://nssdc.gsfc.nasa.gov/planetary/lunar/lunarussr.html",
+      "https://lroc.im-ldi.com/images/699",
+      "https://science.nasa.gov/moon/missions/"
+    ],
+    "westonsTake": ""
+  },
+  "luna-23": {
+    "id": "luna-23",
+    "name": "Luna 23",
+    "about": "Luna 23 was a Soviet attempt to bring back a sample from Mare Crisium. It reached the surface on November 6, 1974, and talked to Earth, but it couldn't collect a sample, so no capsule came home. NASA lists it as a partial success. Two years later, Luna 24 landed about 2.4 kilometers away and got the sample. LRO later photographed the whole Luna 23 spacecraft still sitting on a fairly featureless patch of the mare.",
+    "facts": [
+      "Launched October 28, 1974; arrived November 6, 1974, in Mare Crisium.",
+      "Landed and communicated with Earth, but was unable to retrieve a sample.",
+      "NASA lists the outcome as a partial success.",
+      "Luna 24 later landed about 2.4 km away and completed a sample return from the same mare."
+    ],
+    "sources": [
+      "https://science.nasa.gov/moon/missions/",
+      "https://news.asu.edu/20201228-lro-camera-snaps-images-soviet-robotic-samplers",
+      "https://airandspace.si.edu/stories/editorial/revisiting-soviet-lunar-sample-return-missions"
+    ],
+    "westonsTake": ""
+  },
+  "luna-24": {
+    "id": "luna-24",
+    "name": "Luna 24",
+    "about": "Luna 24 landed in Mare Crisium on August 18, 1976, about 2.4 kilometers from Luna 23. It drilled deeper than the earlier Soviet samplers, and its capsule reached Earth on August 22 with about 170 grams of soil. It was the last Soviet Moon mission, and nobody returned lunar samples again until Chang'e 5 in 2020. LRO later showed the lander sits on the outer rim of a 64-meter crater, which helps explain why the samples didn't match what remote measurements predicted for typical Crisium soil.",
+    "facts": [
+      "Launched August 9, 1976, according to NASA Science and LROC (NSSDCA lists August 14); landed August 18, 1976, at 02:00:00 UT in Mare Crisium.",
+      "Returned about 170 grams of lunar material to Earth on August 22, 1976.",
+      "Last Soviet mission to the Moon, and the last sample return until Chang'e 5 in 2020.",
+      "Landed about 2.4 km from Luna 23, on the outer rim of a 64-meter crater."
+    ],
+    "sources": [
+      "https://nssdc.gsfc.nasa.gov/planetary/lunar/lunarussr.html",
+      "https://news.asu.edu/20201228-lro-camera-snaps-images-soviet-robotic-samplers",
+      "https://science.nasa.gov/moon/missions/"
+    ],
+    "westonsTake": ""
+  },
+  "change-3": {
+    "id": "change-3",
+    "name": "Chang'e 3",
+    "about": "China's Chang'e 3 landed in northern Mare Imbrium on December 14, 2013. It was China's first Moon landing and the first soft landing on the Moon by anyone since Luna 24 in 1976. The lander deployed the Yutu rover, the first robotic rover on the Moon since the Soviet Lunokhods. The two took pictures and ran instruments on the local basalt. Chang'e 3 kicked off China's series of landers that later reached the far side and brought samples home.",
+    "facts": [
+      "Launched December 6, 2013; landed December 14, 2013, in Mare Imbrium.",
+      "First Chinese soft landing on the Moon, and the first soft landing since Luna 24 in 1976.",
+      "Deployed the Yutu rover, the first robotic rover on the Moon since the Soviet Lunokhods."
+    ],
+    "sources": [
+      "https://science.nasa.gov/moon/missions/",
+      "https://airandspace.si.edu/stories/editorial/revisiting-soviet-lunar-sample-return-missions"
+    ],
+    "westonsTake": ""
+  },
+  "change-4": {
+    "id": "change-4",
+    "name": "Chang'e 4 (far side)",
+    "about": "Chang'e 4 made the first soft landing on the far side of the Moon on January 3, 2019, on the floor of Von Kármán crater, inside the huge South Pole-Aitken basin. The lander deployed the Yutu-2 rover to explore ground no earlier lander had reached. The far side never faces Earth, so the mission had to send its data through a relay satellite instead of talking to Earth directly. LRO later photographed the lander on the crater floor, with Von Kármán's west wall rising more than 3,000 meters behind it.",
+    "facts": [
+      "Launched December 7, 2018; landed January 3, 2019, in Von Kármán crater on the far side.",
+      "First soft landing on the lunar far side.",
+      "Deployed the Yutu-2 rover.",
+      "Von Kármán is about 186 km across. LRO imaged the lander on January 30, 2019."
+    ],
+    "sources": [
+      "https://science.nasa.gov/moon/missions/",
+      "https://www.nasa.gov/solar-system/first-look-change-lunar-landing-site/"
+    ],
+    "westonsTake": ""
+  },
+  "change-5": {
+    "id": "change-5",
+    "name": "Chang'e 5",
+    "about": "Chang'e 5 landed in northern Oceanus Procellarum on December 1, 2020. It was China's first sample-return mission and the first to bring Moon samples home since Luna 24 in 1976. The lander sat on young mare basalt near Mons Rümker, an older volcanic feature. The return capsule landed in Inner Mongolia on December 17 with about 1,731 grams of material. Research on the samples found basalt about two billion years old, younger than the Apollo mare basalts, which means the Moon stayed volcanically active longer than scientists had thought.",
+    "facts": [
+      "Launched November 24, 2020, according to CNSA (NASA Science lists November 23); landed December 1, 2020, at 15:11 UTC.",
+      "LROC placed the lander at 43.0576°N, 308.0839°E, on the basaltic plains of Oceanus Procellarum.",
+      "Returned about 1,731 grams of samples. The return capsule landed in Inner Mongolia on December 17, 2020.",
+      "Sample research identified basalt about two billion years old, younger than the Apollo mare basalts."
+    ],
+    "sources": [
+      "https://www.lroc.im-ldi.com/images/1172",
+      "https://www.cnsa.gov.cn/english/n6465652/n6465653/c6810963/content.html",
+      "https://english.news.cn/20240628/65f7d354ed2f4a64b45f4aaafbb6b7c5/c.html"
+    ],
+    "westonsTake": ""
+  },
+  "chandrayaan-3": {
+    "id": "chandrayaan-3",
+    "name": "Chandrayaan-3 (Vikram)",
+    "about": "India's Chandrayaan-3 landed its Vikram lander near the south pole on August 23, 2023. ISRO calls it the first soft landing near the south pole. The Pragyan rover drove down the ramp the next day. Instruments confirmed sulphur in the soil, measured temperatures just below the surface, and recorded ground vibrations. After about 10 Earth days, Vikram fired its engines on September 2, 2023, and hopped about 50 centimeters, a test ISRO linked to future sample-return missions. Then the lander and rover were put to sleep for the lunar night.",
+    "facts": [
+      "Launched July 14, 2023; soft-landed August 23, 2023, near the lunar south pole.",
+      "First spacecraft to soft-land near the south pole. The Pragyan rover ramped down on August 24, 2023.",
+      "LIBS on the rover confirmed sulphur in the surface material.",
+      "On September 2, 2023, Vikram hopped about 50 cm to a new location after roughly 10 Earth days of surface work."
+    ],
+    "sources": [
+      "https://www.isro.gov.in/Chandrayaan3.html",
+      "https://www.isro.gov.in/Chandrayaan_3Hop_Experiment_Reveals.html",
+      "https://science.nasa.gov/moon/missions/"
+    ],
+    "westonsTake": ""
+  },
+  "slim": {
+    "id": "slim",
+    "name": "SLIM",
+    "about": "Japan's SLIM (Smart Lander for Investigating Moon) landed near Shioli crater on January 20, 2024, at 0:20 a.m. JST (January 19, 15:20 UTC). JAXA built it to show it could land precisely. One of its two main engines lost thrust late in the descent, but it still came down about 55 meters east of its target, so JAXA counted the 100-meter accuracy goal as met. It ended up tipped off its planned attitude with its solar cells facing west, so it couldn't make power at first and was shut down. Two small probes, LEV-1 and LEV-2, were released just before touchdown.",
+    "facts": [
+      "Launched September 6, 2023; landed January 20, 2024, at 0:20 a.m. JST (January 19, 15:20 UTC).",
+      "Came to rest about 55 m east of the target site. JAXA judged the pinpoint-landing demonstration (within 100 m) a success.",
+      "It landed off the planned attitude, with solar cells facing west, and could not generate power at first. The spacecraft was shut down by ground command at 2:57 a.m. JST.",
+      "The small LEV-1 and LEV-2 probes were successfully separated just before landing."
+    ],
+    "sources": [
+      "https://global.jaxa.jp/press/2024/01/20240125-1_e.html",
+      "https://science.nasa.gov/moon/missions/"
+    ],
+    "westonsTake": ""
+  },
+  "im-1": {
+    "id": "im-1",
+    "name": "IM-1 Odysseus",
+    "about": "Intuitive Machines' Odysseus landed near Malapert A, in the south polar region, on February 22, 2024, at 5:24 p.m. CST. It flew under NASA's CLPS program and was the first commercial soft landing on the Moon, and the first U.S. soft landing since Apollo 17. LRO later found it at 80.13°S, 1.44°E, inside a worn-down crater about 1 kilometer wide, on a 12-degree slope. The lander tipped over, which hurt communications, but it still sent back data from NASA instruments. Surface operations were expected to run through February 29.",
+    "facts": [
+      "Launched February 15, 2024; landed February 22, 2024, at 5:24 p.m. CST near Malapert A.",
+      "First commercial soft lunar landing, and the first U.S. soft landing since Apollo 17.",
+      "LRO located it at 80.13°S, 1.44°E, elevation 2,579 m, in a degraded 1 km crater sloped at 12 degrees.",
+      "The lander tipped over, which interfered with communications, but NASA payloads still returned data. Surface operations were expected through February 29, 2024."
+    ],
+    "sources": [
+      "https://www.nasa.gov/news-release/nasa-tech-contributes-to-soft-moon-landing-agency-science-underway/",
+      "https://www.nasa.gov/missions/lro/nasas-lro-images-intuitive-machines-odysseus-lander/",
+      "https://science.nasa.gov/moon/missions/"
+    ],
+    "westonsTake": ""
+  },
+  "change-6": {
+    "id": "change-6",
+    "name": "Chang'e 6 (far side)",
+    "about": "Chang'e 6 landed on June 1, 2024, in the Apollo basin on the far side, toward the southern edge of that 492-kilometer basin, which sits inside South Pole-Aitken. It was the first mission to bring samples back from the far side. LRO later photographed the lander on the rim of a worn-down crater about 50 meters across. The return capsule landed in Inner Mongolia on June 25, and CNSA said it collected 1,935.3 grams. NASA says the lava flow at the landing area erupted about 3.1 billion years ago.",
+    "facts": [
+      "Launched May 3, 2024; landed June 1, 2024, in the Apollo basin on the far side.",
+      "First sample return from the lunar far side. The return capsule landed in Inner Mongolia on June 25, 2024.",
+      "CNSA announced that the mission collected 1,935.3 grams of samples.",
+      "LRO imaged the lander on June 7, 2024, on the rim of an eroded crater about 50 m across, at roughly 42°S, 206°E."
+    ],
+    "sources": [
+      "https://science.nasa.gov/moon/missions/",
+      "https://www.nasa.gov/centers-and-facilities/goddard/nasas-lro-spots-chinas-change-6-spacecraft-on-lunar-far-side/",
+      "https://english.news.cn/20240628/65f7d354ed2f4a64b45f4aaafbb6b7c5/c.html"
+    ],
+    "westonsTake": ""
+  },
+  "blue-ghost-1": {
+    "id": "blue-ghost-1",
+    "name": "Blue Ghost Mission 1",
+    "about": "Firefly Aerospace's Blue Ghost Mission 1 landed at 3:34 a.m. EST on March 2, 2025, near Mons Latreille, a volcanic feature in Mare Crisium, a basin more than 300 miles wide on the near side. NASA said the lander was upright and stable. It carried 10 NASA science and technology instruments under the CLPS program, including tests of drilling, dust, radiation-tolerant computing, and navigation. They were planned to run for about one lunar day, around 14 Earth days. NASA Science lists the mission as concluded on March 16, 2025.",
+    "facts": [
+      "Launched January 15, 2025, from Kennedy Space Center; landed March 2, 2025, at 3:34 a.m. EST near Mons Latreille in Mare Crisium.",
+      "Landed in an upright and stable configuration, carrying 10 NASA instruments.",
+      "Surface operations were planned for about one lunar day, or roughly 14 Earth days.",
+      "NASA Science lists the mission as concluded on March 16, 2025."
+    ],
+    "sources": [
+      "https://www.nasa.gov/news-release/touchdown-carrying-nasa-science-fireflys-blue-ghost-lands-on-moon/",
+      "https://science.nasa.gov/moon/missions/"
+    ],
+    "westonsTake": ""
+  },
+  "im-2": {
+    "id": "im-2",
+    "name": "IM-2 Athena",
+    "about": "Intuitive Machines' Athena lander (the IM-2 mission) was aimed at Mons Mouton near the south pole. It touched down around 11:30 a.m. on March 6, 2025, more than 400 meters from the planned site, inside a crater. Images later showed it was on its side, so the PRIME-1 ice-mining drill and other instruments couldn't fully operate before the batteries ran out. NASA said it landed closer to the south pole than any lander before it and returned some data. The mission ended early, at 12:15 a.m. CST on March 7.",
+    "facts": [
+      "Launched February 26, 2025, at 6:16 p.m. from Kennedy Space Center (NASA Science lists February 27); landed about 11:30 a.m. on March 6, 2025.",
+      "Came down more than 1,300 feet (400 meters) from the intended Mons Mouton site, inside a crater, and ended up on its side.",
+      "NASA said it landed closer to the south pole than any previous lander.",
+      "The company called an early end of mission at 12:15 a.m. CST on March 7, 2025, after returning some data, including a checkout of the PRIME-1 drill's range of motion."
+    ],
+    "sources": [
+      "https://www.nasa.gov/news-release/nasa-receives-some-data-before-intuitive-machines-ends-lunar-mission/",
+      "https://science.nasa.gov/moon/missions/"
+    ],
+    "westonsTake": ""
+  },
+  "artemis3-peak-near-cabeus-b": {
+    "id": "artemis3-peak-near-cabeus-b",
+    "name": "Artemis region: Peak near Cabeus B",
+    "about": "Peak near Cabeus B is one of nine candidate regions NASA announced Oct 28, 2024, for the first crewed Artemis landing near the lunar south pole (then planned as Artemis III). It is a candidate region, not a chosen landing site. NASA hasn't published a center coordinate for it. The peak is near Cabeus crater, where NASA's LCROSS mission crashed into the permanently shadowed floor on October 9, 2009, and NASA later confirmed water ice there. A high spot like this can get sunlight and a view of Earth while staying close to those cold, shadowed areas.",
+    "facts": [
+      "One of nine refined candidate regions NASA announced on October 28, 2024 for the first crewed Artemis south-pole landing (then planned as Artemis III), listed with no priority order.",
+      "These are candidate regions, not selected landing sites. NASA will pick sites inside the regions after it sets target launch dates.",
+      "Nearby Cabeus crater was the LCROSS impact site on October 9, 2009. NASA later confirmed water ice in that permanently shadowed floor.",
+      "NASA did not publish a region-center coordinate."
+    ],
+    "sources": [
+      "https://www.nasa.gov/news-release/nasa-provides-update-on-artemis-iii-moon-landing-regions/",
+      "https://science.nasa.gov/mission/lcross/",
+      "https://nssdc.gsfc.nasa.gov/planetary/ice/ice_moon.html"
+    ],
+    "westonsTake": ""
+  },
+  "artemis3-haworth": {
+    "id": "artemis3-haworth",
+    "name": "Artemis region: Haworth",
+    "about": "Haworth is one of nine candidate regions NASA announced Oct 28, 2024, for the first crewed Artemis landing near the lunar south pole (then planned as Artemis III). It is a candidate region, not a chosen landing site. It's named for Haworth crater, close to the pole, where long shadows and permanently shaded areas are common. NASA weighed things like science value, lighting, communication with Earth, terrain, and trajectory access when it picked the nine regions. Like the other candidates, Haworth is interesting because of possible water ice in nearby shadowed ground.",
+    "facts": [
+      "One of nine refined candidate regions NASA announced on October 28, 2024 for the first crewed Artemis south-pole landing (then planned as Artemis III), listed with no priority order.",
+      "These are candidate regions, not selected landing sites. NASA will pick sites inside the regions after it sets target launch dates.",
+      "Selection factors included science potential, lighting, communications with Earth, terrain, and trajectory access.",
+      "The atlas point is a terrain proxy from a NASA PGDA 5 m DEM of Haworth, not an official region-center coordinate."
+    ],
+    "sources": [
+      "https://www.nasa.gov/news-release/nasa-provides-update-on-artemis-iii-moon-landing-regions/",
+      "https://nssdc.gsfc.nasa.gov/planetary/ice/ice_moon.html"
+    ],
+    "westonsTake": ""
+  },
+  "artemis3-malapert-massif": {
+    "id": "artemis3-malapert-massif",
+    "name": "Artemis region: Malapert Massif",
+    "about": "Malapert Massif is one of nine candidate regions NASA announced Oct 28, 2024, for the first crewed Artemis landing near the lunar south pole (then planned as Artemis III). It is a candidate region, not a chosen landing site. The massif is a big mountain near the pole. High ground like this can stay sunlit for long stretches and keep a clear line of sight to Earth, while low spots nearby stay permanently shadowed and may hold water ice. Intuitive Machines' Odysseus (IM-1) landed near Malapert A in February 2024 and tipped over, which shows how rough the terrain around here is.",
+    "facts": [
+      "One of nine refined candidate regions NASA announced on October 28, 2024 for the first crewed Artemis south-pole landing (then planned as Artemis III), listed with no priority order.",
+      "These are candidate regions, not selected landing sites. NASA will pick sites inside the regions after it sets target launch dates.",
+      "The lunar south pole has never been visited by a crewed mission and includes permanently shadowed areas that can preserve resources, including water.",
+      "Intuitive Machines' Odysseus landed near Malapert A, in this same south-polar neighborhood, on February 22, 2024."
+    ],
+    "sources": [
+      "https://www.nasa.gov/news-release/nasa-provides-update-on-artemis-iii-moon-landing-regions/",
+      "https://www.nasa.gov/missions/lro/nasas-lro-images-intuitive-machines-odysseus-lander/"
+    ],
+    "westonsTake": ""
+  },
+  "artemis3-mons-mouton-plateau": {
+    "id": "artemis3-mons-mouton-plateau",
+    "name": "Artemis region: Mons Mouton Plateau",
+    "about": "Mons Mouton Plateau is one of nine candidate regions NASA announced Oct 28, 2024, for the first crewed Artemis landing near the lunar south pole (then planned as Artemis III). It is a candidate region, not a chosen landing site. NASA hasn't published a center coordinate. NASA lists Mons Mouton Plateau and Mons Mouton as two separate regions, so they're neighboring candidates, not the same area. Like the other polar regions, high ground here can get longer sunlight and a view of Earth, while nearby crater floors stay in shadow and may hold water ice.",
+    "facts": [
+      "One of nine refined candidate regions NASA announced on October 28, 2024 for the first crewed Artemis south-pole landing (then planned as Artemis III), listed with no priority order.",
+      "These are candidate regions, not selected landing sites. NASA will pick sites inside the regions after it sets target launch dates.",
+      "NASA listed Mons Mouton Plateau and Mons Mouton as two separate regions.",
+      "NASA did not publish a region-center coordinate."
+    ],
+    "sources": [
+      "https://www.nasa.gov/news-release/nasa-provides-update-on-artemis-iii-moon-landing-regions/"
+    ],
+    "westonsTake": ""
+  },
+  "artemis3-mons-mouton": {
+    "id": "artemis3-mons-mouton",
+    "name": "Artemis region: Mons Mouton",
+    "about": "Mons Mouton is one of nine candidate regions NASA announced Oct 28, 2024, for the first crewed Artemis landing near the lunar south pole (then planned as Artemis III). It is a candidate region, not a chosen landing site. Mons Mouton is a large mountain in the south polar highlands, with permanently shadowed ground nearby that may hold water ice. Intuitive Machines aimed its IM-2 Athena lander here in March 2025. Athena came down in a crater more than 400 meters from the planned spot and ended up on its side, which shows how hard this terrain is to land on.",
+    "facts": [
+      "One of nine refined candidate regions NASA announced on October 28, 2024 for the first crewed Artemis south-pole landing (then planned as Artemis III), listed with no priority order.",
+      "These are candidate regions, not selected landing sites. NASA will pick sites inside the regions after it sets target launch dates.",
+      "IM-2 Athena was targeted at Mons Mouton and landed on March 6, 2025, more than 400 meters from the planned site, in a crater, and on its side.",
+      "The atlas point is a terrain proxy from a NASA PGDA 5 m DEM (Site20, formerly Leibnitz beta plateau), not an official region-center coordinate."
+    ],
+    "sources": [
+      "https://www.nasa.gov/news-release/nasa-provides-update-on-artemis-iii-moon-landing-regions/",
+      "https://www.nasa.gov/news-release/nasa-receives-some-data-before-intuitive-machines-ends-lunar-mission/"
+    ],
+    "westonsTake": ""
+  },
+  "artemis3-nobile-rim-1": {
+    "id": "artemis3-nobile-rim-1",
+    "name": "Artemis region: Nobile Rim 1",
+    "about": "Nobile Rim 1 is one of nine candidate regions NASA announced Oct 28, 2024, for the first crewed Artemis landing near the lunar south pole (then planned as Artemis III). It is a candidate region, not a chosen landing site. It's named for part of the rim of Nobile crater. A crater rim can get sunlight and a view of Earth right next to a crater floor that stays in shadow and may hold water ice. NASA listed two separate Nobile rim regions, so this is one stretch of the rim, not the whole thing.",
+    "facts": [
+      "One of nine refined candidate regions NASA announced on October 28, 2024 for the first crewed Artemis south-pole landing (then planned as Artemis III), listed with no priority order.",
+      "These are candidate regions, not selected landing sites. NASA will pick sites inside the regions after it sets target launch dates.",
+      "Named for the rim of Nobile crater. NASA listed Nobile Rim 1 and Nobile Rim 2 as separate regions.",
+      "The atlas point is a terrain proxy from a NASA PGDA 5 m DEM (Site06), not an official region-center coordinate."
+    ],
+    "sources": [
+      "https://www.nasa.gov/news-release/nasa-provides-update-on-artemis-iii-moon-landing-regions/"
+    ],
+    "westonsTake": ""
+  },
+  "artemis3-nobile-rim-2": {
+    "id": "artemis3-nobile-rim-2",
+    "name": "Artemis region: Nobile Rim 2",
+    "about": "Nobile Rim 2 is one of nine candidate regions NASA announced Oct 28, 2024, for the first crewed Artemis landing near the lunar south pole (then planned as Artemis III). It is a candidate region, not a chosen landing site. Like Nobile Rim 1, it's on the rim of Nobile crater, just a different stretch of it. The draw is sunlit rim ground with a view of Earth, next to permanently shadowed ground in and around Nobile where water ice may be preserved. NASA hasn't published a center coordinate for the region.",
+    "facts": [
+      "One of nine refined candidate regions NASA announced on October 28, 2024 for the first crewed Artemis south-pole landing (then planned as Artemis III), listed with no priority order.",
+      "These are candidate regions, not selected landing sites. NASA will pick sites inside the regions after it sets target launch dates.",
+      "Named for a second stretch of the rim of Nobile crater, listed separately from Nobile Rim 1.",
+      "The atlas point is a terrain proxy from a NASA PGDA 5 m DEM (DM2), not an official region-center coordinate."
+    ],
+    "sources": [
+      "https://www.nasa.gov/news-release/nasa-provides-update-on-artemis-iii-moon-landing-regions/"
+    ],
+    "westonsTake": ""
+  },
+  "artemis3-de-gerlache-rim-2": {
+    "id": "artemis3-de-gerlache-rim-2",
+    "name": "Artemis region: de Gerlache Rim 2",
+    "about": "de Gerlache Rim 2 is one of nine candidate regions NASA announced Oct 28, 2024, for the first crewed Artemis landing near the lunar south pole (then planned as Artemis III). It is a candidate region, not a chosen landing site. NASA hasn't published a center coordinate. The region is on the rim of de Gerlache crater, close to the pole. Rim ground here can get stretches of sunlight and a view of Earth, with permanently shadowed ground nearby that may hold water ice. NASA listed this one rim segment, not the whole crater.",
+    "facts": [
+      "One of nine refined candidate regions NASA announced on October 28, 2024 for the first crewed Artemis south-pole landing (then planned as Artemis III), listed with no priority order.",
+      "These are candidate regions, not selected landing sites. NASA will pick sites inside the regions after it sets target launch dates.",
+      "Named for a rim segment of de Gerlache crater near the south pole.",
+      "NASA did not publish a region-center coordinate."
+    ],
+    "sources": [
+      "https://www.nasa.gov/news-release/nasa-provides-update-on-artemis-iii-moon-landing-regions/"
+    ],
+    "westonsTake": ""
+  },
+  "artemis3-slater-plain": {
+    "id": "artemis3-slater-plain",
+    "name": "Artemis region: Slater Plain",
+    "about": "Slater Plain is one of nine candidate regions NASA announced Oct 28, 2024, for the first crewed Artemis landing near the lunar south pole (then planned as Artemis III). It is a candidate region, not a chosen landing site. It made the cut when NASA narrowed down an earlier, longer list, and NASA hasn't published a center coordinate. Like the other eight regions, it was judged on things like science value, lighting, communication with Earth, and terrain, near permanently shadowed ground that may hold water ice.",
+    "facts": [
+      "One of nine refined candidate regions NASA announced on October 28, 2024 for the first crewed Artemis south-pole landing (then planned as Artemis III), listed with no priority order.",
+      "These are candidate regions, not selected landing sites. NASA will pick sites inside the regions after it sets target launch dates.",
+      "NASA did not publish a region-center coordinate.",
+      "The lunar south pole has never been visited by a crewed mission and includes permanently shadowed areas that can preserve resources, including water."
+    ],
+    "sources": [
+      "https://www.nasa.gov/news-release/nasa-provides-update-on-artemis-iii-moon-landing-regions/"
+    ],
+    "westonsTake": ""
+  }
+}

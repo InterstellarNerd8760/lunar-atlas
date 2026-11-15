@@ -121,6 +121,19 @@ export function createSiteList(container, places, { onSelect }) {
   };
 }
 
+function sourceLabel(url, index, total) {
+  try {
+    const parsed = new URL(url);
+    const host = parsed.hostname.replace(/^www\./, '');
+    const leaf = (parsed.pathname.split('/').filter(Boolean).pop() || '')
+      .replace(/\.(html?|php)$/i, '');
+    if (leaf && leaf.length <= 24) return `${host} · ${leaf}`;
+    return host;
+  } catch {
+    return total > 1 ? `Source ${index + 1}` : 'Source';
+  }
+}
+
 export function createDrawer(container, { onClose, onFlyTo, onStand, onEarth }) {
   const title = el('h2', { class: 'drawer__title', id: 'drawer-title' });
   const statusChip = el('span', { class: 'status-chip' });
@@ -135,10 +148,16 @@ export function createDrawer(container, { onClose, onFlyTo, onStand, onEarth }) 
   const imageSlot = el('figure', { class: 'image-slot' }, [imageFrame, imageCaption]);
 
   const aboutText = el('p');
+  const factsList = el('ul', { class: 'facts' });
   const proxyText = el('p', { class: 'text-xs', text: 'Terrain proxy for a candidate region. This is not an official landing coordinate or a selected base.' });
-  const sourceLink = el('a', { target: '_blank', rel: 'noopener', text: 'Source' });
+  const sourcesList = el('ul', { class: 'sources text-xs' });
   const about = el('section', { 'aria-labelledby': 'about-title' }, [
-    el('h3', { id: 'about-title', text: 'About this site' }), aboutText, proxyText, el('p', { class: 'text-xs' }, [sourceLink]),
+    el('h3', { id: 'about-title', text: 'About this site' }), aboutText, factsList, proxyText, sourcesList,
+  ]);
+  const dataNotesText = el('p', { class: 'text-xs' });
+  const dataNotesSource = el('p', { class: 'text-xs' });
+  const dataNotes = el('section', { class: 'data-notes', 'aria-labelledby': 'data-notes-title' }, [
+    el('h3', { id: 'data-notes-title', class: 'text-xs', text: 'Data notes' }), dataNotesText, dataNotesSource,
   ]);
   const visSection = el('section');
   const takeQuote = el('blockquote', { class: 'take' });
@@ -157,7 +176,7 @@ export function createDrawer(container, { onClose, onFlyTo, onStand, onEarth }) 
         el('div', { class: 'drawer__meta' }, [statusChip, el('span', { class: 'coords' }, [coordsText, copyButton])]),
         peek,
       ]),
-      imageSlot, about, visSection, take, actions,
+      imageSlot, about, dataNotes, visSection, take, actions,
     ]),
   ]);
   container.append(drawer);
@@ -214,9 +233,26 @@ export function createDrawer(container, { onClose, onFlyTo, onStand, onEarth }) 
       }
       imageCaption.hidden = !imageCaption.textContent;
       about.hidden = isPoint;
-      aboutText.textContent = note?.notes ?? `${place.name}. Coordinates come from the bundled landing catalog. Consult the dataset sources for mission context.`;
+      const hasWriteup = Boolean(note?.about);
+      aboutText.textContent = note?.about || note?.notes || `${place.name}. Coordinates come from the bundled landing catalog. Consult the dataset sources for mission context.`;
+      const facts = Array.isArray(note?.facts) ? note.facts.filter(Boolean) : [];
+      factsList.replaceChildren(...facts.map((fact) => el('li', { text: fact })));
+      factsList.hidden = facts.length === 0;
       proxyText.hidden = !place.proxy;
-      sourceLink.href = note?.source ?? 'https://data.lroc.im-ldi.com/';
+      const sources = Array.isArray(note?.sources) && note.sources.length
+        ? note.sources
+        : (!hasWriteup && note?.source ? [note.source] : []);
+      sourcesList.replaceChildren(...sources.map((href, index) => el('li', {}, [
+        el('a', { href, target: '_blank', rel: 'noopener', text: sourceLabel(href, index, sources.length) }),
+      ])));
+      sourcesList.hidden = sources.length === 0;
+      const dataText = hasWriteup ? note?.notes : '';
+      dataNotesText.textContent = [note?.status && hasWriteup ? note.status : '', dataText].filter(Boolean).join(' — ');
+      dataNotesSource.replaceChildren();
+      if (hasWriteup && note?.source) {
+        dataNotesSource.append(el('a', { href: note.source, target: '_blank', rel: 'noopener', text: 'Source' }));
+      }
+      dataNotes.hidden = isPoint || !(dataNotesText.textContent || dataNotesSource.childNodes.length);
       takeQuote.textContent = note?.take ?? '';
       take.hidden = !note?.take;
       if (drawer.hidden) drawer.dataset.sheet = 'peek';
@@ -226,48 +262,129 @@ export function createDrawer(container, { onClose, onFlyTo, onStand, onEarth }) 
   };
 }
 
-export function createPins(container, places, { onSelect }) {
+export function isLanderPlace(place) {
+  return place.group === 'apollo' || place.group === 'lander';
+}
+
+const MOON_RADIUS_METERS = 1_737_400;
+const NEAR_ALTITUDE = 0.004; // about 7 km; below this the old globe pins hid
+
+function closeLabel(place) {
+  return place.approximate ? 'Approximate location' : 'Lander location';
+}
+
+function createGroundMarker(place) {
+  const units = (meters) => meters / MOON_RADIUS_METERS;
+  const color = place.approximate ? 0xe2b657 : 0xf5f6fa;
+  const material = new THREE.MeshBasicMaterial({
+    color,
+    side: THREE.DoubleSide,
+    transparent: true,
+    opacity: 0.95,
+    depthWrite: false,
+    depthTest: true,
+    polygonOffset: true,
+    polygonOffsetFactor: -4,
+    polygonOffsetUnits: -4,
+  });
+  const root = new THREE.Group();
+  root.name = `lander-marker-${place.id}`;
+  root.renderOrder = 2;
+  const radius = units(place.approximate ? 1.1 : 0.85);
+  const ground = new THREE.Mesh(
+    place.approximate
+      ? new THREE.RingGeometry(radius * 0.55, radius, 28)
+      : new THREE.CircleGeometry(radius, 28),
+    material,
+  );
+  ground.rotation.x = -Math.PI / 2;
+  ground.position.y = units(0.12);
+  const height = units(1.8);
+  const stalk = new THREE.Mesh(new THREE.CylinderGeometry(units(0.05), units(0.05), height, 8), material);
+  stalk.position.y = height / 2;
+  root.add(ground, stalk);
+  if (!place.approximate) {
+    const cap = new THREE.Mesh(new THREE.SphereGeometry(units(0.12), 12, 8), material);
+    cap.position.y = height;
+    root.add(cap);
+  }
+  return root;
+}
+
+export function createPins(container, places, { onSelect, scene } = {}) {
   const layer = el('div', { class: 'pins' });
+  const markers = scene ? new THREE.Group() : null;
+  if (markers) {
+    markers.name = 'lander-location-markers';
+    scene.add(markers);
+  }
   const pins = places.map((place) => {
+    const lander = isLanderPlace(place);
+    const classes = ['pin'];
+    if (place.group === 'artemis') classes.push('pin--proxy');
+    if (place.approximate) classes.push('pin--approx');
+    const labelText = place.name;
     const button = el('button', {
       type: 'button',
-      class: `pin${place.group === 'artemis' ? ' pin--proxy' : ''}`,
+      class: classes.join(' '),
       tabindex: '-1',
-      'aria-label': place.name,
-    }, [el('span', { class: 'pin__dot' }), el('span', { class: 'pin__label', text: place.name })]);
+      'aria-label': place.approximate ? `${place.name}, approximate location` : place.name,
+    }, [el('span', { class: 'pin__dot' }), el('span', { class: 'pin__label', text: labelText })]);
     button.addEventListener('click', () => onSelect(place));
     layer.append(button);
-    return { place, button, direction: new THREE.Vector3(), radius: 1, shown: true };
+    const marker = (markers && lander && Number.isFinite(place.lat) && Number.isFinite(place.lon))
+      ? createGroundMarker(place)
+      : null;
+    if (marker) markers.add(marker);
+    return { place, button, label: button.querySelector('.pin__label'), direction: new THREE.Vector3(), radius: 1, shown: true, marker };
   });
   container.append(layer);
 
   const world = new THREE.Vector3();
   const toCamera = new THREE.Vector3();
+  const up = new THREE.Vector3(0, 1, 0);
   let refresh = Infinity;
+
+  function seatMarker(pin) {
+    if (!pin.marker) return;
+    pin.marker.position.copy(pin.direction).multiplyScalar(pin.radius);
+    pin.marker.quaternion.setFromUnitVectors(up, pin.direction);
+  }
 
   return {
     init(directionFromLatLon) {
-      for (const pin of pins) directionFromLatLon(pin.place.lat, pin.place.lon, pin.direction);
+      for (const pin of pins) {
+        if (!Number.isFinite(pin.place.lat) || !Number.isFinite(pin.place.lon)) continue;
+        directionFromLatLon(pin.place.lat, pin.place.lon, pin.direction);
+        seatMarker(pin);
+      }
     },
     setSelected(id) {
       for (const pin of pins) pin.button.classList.toggle('pin--selected', pin.place.id === id);
     },
     update(camera, surfaceRadius, width, height, dt) {
-      const hideAll = camera.position.length() - 1 < 0.004;
-      layer.hidden = hideAll;
-      if (hideAll) return;
+      const near = camera.position.length() - 1 < NEAR_ALTITUDE;
       refresh += dt;
       const refreshRadius = refresh > 0.5;
       if (refreshRadius) refresh = 0;
+      // Keep the layer visible close up so landed spacecraft still have a marker.
+      layer.hidden = false;
       for (const pin of pins) {
-        if (refreshRadius) pin.radius = surfaceRadius(pin.direction);
-        world.copy(pin.direction).multiplyScalar(pin.radius);
+        const lander = isLanderPlace(pin.place);
+        if (refreshRadius) {
+          pin.radius = surfaceRadius(pin.direction);
+          seatMarker(pin);
+        }
+        // When close, pin the HTML chip at the top of the short stalk so it stays readable.
+        const tip = (lander && near) ? pin.radius + 1.9 / MOON_RADIUS_METERS : pin.radius;
+        world.copy(pin.direction).multiplyScalar(tip);
         toCamera.copy(camera.position).sub(world);
         let visible = toCamera.dot(pin.direction) > 0;
         if (visible) {
           world.project(camera);
           visible = world.z > -1 && world.z < 1 && Math.abs(world.x) < 1.05 && Math.abs(world.y) < 1.05;
         }
+        if (near && !lander) visible = false;
         if (visible !== pin.shown) {
           pin.shown = visible;
           pin.button.hidden = !visible;
@@ -276,6 +393,14 @@ export function createPins(container, places, { onSelect }) {
           const x = (world.x + 1) / 2 * width;
           const y = (1 - world.y) / 2 * height;
           pin.button.style.transform = `translate3d(${x.toFixed(1)}px, ${y.toFixed(1)}px, 0)`;
+        }
+        if (lander && near) {
+          pin.button.classList.add('pin--near');
+          const text = closeLabel(pin.place);
+          if (pin.label.textContent !== text) pin.label.textContent = text;
+        } else if (pin.button.classList.contains('pin--near') || (pin.label && pin.label.textContent !== pin.place.name)) {
+          pin.button.classList.remove('pin--near');
+          pin.label.textContent = pin.place.name;
         }
       }
     },

@@ -3,6 +3,7 @@ import { OrbitControls } from 'https://cdn.jsdelivr.net/npm/three@0.180.0/exampl
 
 import { addSky } from './sky.js';
 import { aimAt, levelFlight, transportFlight, turnFlight } from './flight.js';
+import { createFeatureLabels } from './features.js';
 import { createDrawer, createPins, createSiteList } from './sites.js';
 import { bindPopover, closeOpenPopover, el, icons, isTextField, reducedMotion } from './ui.js';
 import { createTerrain } from './terrain.js';
@@ -46,8 +47,49 @@ function normId(value) {
   return String(value || '').toLowerCase().replace(/[^a-z0-9]/g, '');
 }
 
-function collectPlaces(demSites, previewSites) {
+function isApproximateSource(source) {
+  return /not LROC-confirmed/i.test(source || '');
+}
+
+function parseCsvRow(line) {
+  const cells = [];
+  let cell = '';
+  let quoted = false;
+  for (let i = 0; i < line.length; i++) {
+    const ch = line[i];
+    if (ch === '"') {
+      if (quoted && line[i + 1] === '"') { cell += '"'; i++; }
+      else quoted = !quoted;
+    } else if (ch === ',' && !quoted) {
+      cells.push(cell);
+      cell = '';
+    } else cell += ch;
+  }
+  cells.push(cell);
+  return cells;
+}
+
+function landingCatalog(text) {
+  const lines = text.trim().split(/\r?\n/).filter(Boolean);
+  const header = parseCsvRow(lines.shift());
+  const index = Object.fromEntries(header.map((name, i) => [name, i]));
+  const catalog = new Map();
+  for (const line of lines) {
+    const cells = parseCsvRow(line);
+    const id = cells[index.id];
+    if (!id) continue;
+    catalog.set(id, { approximate: isApproximateSource(cells[index.coord_source] || '') });
+  }
+  return catalog;
+}
+
+function collectPlaces(demSites, previewSites, catalog = new Map()) {
   const places = [];
+  function decorate(place) {
+    const row = catalog.get(place.id);
+    if (row) place.approximate = row.approximate;
+    return place;
+  }
   function duplicateOf(place) {
     const id = normId(place.id);
     return places.find((other) => {
@@ -64,10 +106,11 @@ function collectPlaces(demSites, previewSites) {
     if (!Number.isFinite(place.lat) || !Number.isFinite(place.lon)) return;
     const existing = duplicateOf(place);
     if (existing) {
-      for (const key of ['year', 'country', 'mission']) existing[key] ??= place[key];
+      for (const key of ['year', 'country', 'mission', 'approximate']) existing[key] ??= place[key];
+      decorate(existing);
       return;
     }
-    places.push(place);
+    places.push(decorate(place));
   }
   for (const site of demSites || []) {
     const [lat, lon] = site.centerLatLon || [];
@@ -135,6 +178,27 @@ function findPhoto(place, photosById) {
   return null;
 }
 
+function findWriteup(place, writeupsById) {
+  if (writeupsById.has(place.id)) return writeupsById.get(place.id);
+  const keys = new Set([photoKey(place.id), photoKey(place.name)].filter(Boolean));
+  for (const writeup of writeupsById.values()) {
+    if (keys.has(photoKey(writeup.id)) || keys.has(photoKey(writeup.name))) return writeup;
+  }
+  return null;
+}
+
+function attachWriteup(note, place, writeupsById) {
+  const writeup = findWriteup(place, writeupsById);
+  if (!writeup) return note;
+  return {
+    ...(note || {}),
+    about: writeup.about,
+    facts: writeup.facts,
+    sources: writeup.sources,
+    take: String(writeup.westonsTake || '').trim(),
+  };
+}
+
 function attachPhoto(note, place, photosById, dataDirectory) {
   const photo = findPhoto(place, photosById);
   if (!photo) return note;
@@ -166,17 +230,27 @@ export function mountMoonView(container) {
 async function loadMoon(container, loadingStatus) {
   const dataDirectory = new URL('../public/data/', import.meta.url);
   const params = new URLSearchParams(window.location.search);
-  const [demResponse, previewResponse, notesResponse, photosResponse] = await Promise.all([
+  const [demResponse, previewResponse, notesResponse, photosResponse, catalogResponse, writeupsResponse, featuresResponse] = await Promise.all([
     fetch(new URL('site-dems/index.json', dataDirectory)),
     fetch(new URL('site-previews/index.json', dataDirectory)),
     fetch(new URL('site-notes.json', dataDirectory)),
     fetch(new URL('site-photos/index.json', dataDirectory)),
+    fetch(new URL('landing-sites.csv', dataDirectory)),
+    fetch(new URL('site-writeups.json', dataDirectory)),
+    fetch(new URL('features.json', dataDirectory)),
   ]);
   const demIndex = demResponse.ok ? await demResponse.json() : { sites: [] };
   const previewIndex = previewResponse.ok ? await previewResponse.json() : { sites: [] };
   const siteNotes = notesResponse.ok ? await notesResponse.json() : [];
   const photoIndex = photosResponse.ok ? await photosResponse.json() : { photos: [] };
   const photosById = new Map((photoIndex.photos || []).map((photo) => [photo.id, photo]));
+  const catalog = catalogResponse.ok ? landingCatalog(await catalogResponse.text()) : new Map();
+  const writeupsById = new Map();
+  if (writeupsResponse.ok) {
+    const writeups = await writeupsResponse.json();
+    for (const [id, writeup] of Object.entries(writeups)) writeupsById.set(id, writeup);
+  }
+  const namedFeatures = featuresResponse.ok ? ((await featuresResponse.json()).features || []) : [];
 
   const scene = new THREE.Scene();
   scene.background = new THREE.Color('#030509');
@@ -231,7 +305,7 @@ async function loadMoon(container, loadingStatus) {
   if (texture) terrain.setAlbedo(texture);
   if (params.get('wire') === '1') terrain.setWireframe(true);
 
-  const places = collectPlaces(demIndex.sites, previewIndex.sites);
+  const places = collectPlaces(demIndex.sites, previewIndex.sites, catalog);
   const findNote = noteFinder(siteNotes);
   const matchedArtemis = new Set(places.filter((place) => place.group === 'artemis').map(findNote).filter(Boolean));
   const listedPlaces = [...places];
@@ -332,6 +406,9 @@ async function loadMoon(container, loadingStatus) {
     starsToggle.addEventListener('change', () => sky.setStars(starsToggle.checked));
     layerRows.push(el('div', { class: 'switch-row' }, [el('label', { for: 'layer-stars', text: 'Stars' }), starsToggle]));
   }
+  const namesToggle = el('input', { type: 'checkbox', id: 'layer-feature-names', checked: true });
+  namesToggle.addEventListener('change', () => featureLabels?.setEnabled(namesToggle.checked));
+  layerRows.push(el('div', { class: 'switch-row' }, [el('label', { for: 'layer-feature-names', text: 'Feature names' }), namesToggle]));
   const layersMenu = el('div', { class: 'popover layers-menu', role: 'dialog', 'aria-label': 'Layers' }, [
     el('div', { class: 'field' }, [el('h2', { text: 'Terrain relief' }), reliefControl]),
     ...layerRows,
@@ -342,7 +419,25 @@ async function loadMoon(container, loadingStatus) {
     onOpen: () => reliefControl.querySelector('[aria-pressed="true"]').focus(),
   });
 
-  const pins = createPins(container, places, { onSelect: (place) => focusPlace(place) });
+  const featureNote = el('p', { class: 'feature-note glass text-xs', hidden: true, role: 'status' });
+  container.append(featureNote);
+  function hideFeatureNote() { featureNote.hidden = true; featureNote.textContent = ''; }
+  function showFeatureNote(feature) {
+    if (!feature?.note) { hideFeatureNote(); return; }
+    featureNote.textContent = feature.note;
+    featureNote.hidden = false;
+  }
+
+  let featureLabels = null;
+  if (namedFeatures.length) {
+    featureLabels = createFeatureLabels(container, namedFeatures, { onSelect: (feature) => focusFeature(feature) });
+    featureLabels.init((lat, lon, target) => terrain.directionFromLatLon(lat, lon, target));
+    featureLabels.setEnabled(namesToggle.checked);
+  } else {
+    namesToggle.closest('.switch-row').hidden = true;
+  }
+
+  const pins = createPins(container, places, { onSelect: (place) => focusPlace(place), scene });
   pins.init((lat, lon, target) => terrain.directionFromLatLon(lat, lon, target));
   const siteList = createSiteList(container, listedPlaces, {
     onSelect: (place) => {
@@ -489,7 +584,7 @@ async function loadMoon(container, loadingStatus) {
     setViewPressed(view);
   }
 
-  function surfaceEye(lat, lon) {
+  function surfaceEye(lat, lon, place) {
     terrain.directionFromLatLon(lat, lon, scratch);
     const up = scratch.clone();
     const radius = terrain.surfaceRadius(up);
@@ -497,13 +592,24 @@ async function loadMoon(container, loadingStatus) {
     const sunHoriz = sunlight.position.clone().addScaledVector(up, -sunlight.position.dot(up));
     const ahead = sunHoriz.lengthSq() > 1e-8 ? sunHoriz.normalize() : north;
     const pos = up.clone().multiplyScalar(radius + EYE_METERS / MOON_RADIUS_METERS);
+    let target = pos.clone().addScaledVector(ahead, 600 / MOON_RADIUS_METERS);
+    // Stand a short way back from landed spacecraft so the exact point stays in frame,
+    // and look at the marker. Seat the camera on the terrain under that offset so a
+    // crater floor or coarse DEM wave cannot drop the point out of view.
+    if (place && (place.group === 'apollo' || place.group === 'lander')) {
+      pos.addScaledVector(ahead, -20 / MOON_RADIUS_METERS);
+      const camUp = pos.clone().normalize();
+      pos.copy(camUp).multiplyScalar(terrain.surfaceRadius(camUp) + EYE_METERS / MOON_RADIUS_METERS);
+      target = up.clone().multiplyScalar(radius + 1.6 / MOON_RADIUS_METERS);
+    }
     return {
       pos,
-      target: pos.clone().addScaledVector(ahead, 600 / MOON_RADIUS_METERS),
+      target,
       up: orbitUp(up, ahead),
       fov: 58,
       minDistance: 1.2 / MOON_RADIUS_METERS,
-      maxPolarAngle: Math.PI / 2,
+      // Allow a slight downward look so a crater-floor site stays in frame.
+      maxPolarAngle: (place && (place.group === 'apollo' || place.group === 'lander')) ? Math.PI * 0.65 : Math.PI / 2,
     };
   }
 
@@ -517,9 +623,37 @@ async function loadMoon(container, loadingStatus) {
     return { pos, target, up: orbitUp(up, north), fov: 42, minDistance: 1.2 / MOON_RADIUS_METERS, maxPolarAngle: Math.PI / 2 };
   }
 
+  function featureEye(feature) {
+    terrain.directionFromLatLon(feature.lat, feature.lon, scratch);
+    const up = scratch.clone();
+    const target = up.clone().multiplyScalar(terrain.surfaceRadius(up));
+    const north = northAt(feature.lat, feature.lon);
+    const frameKm = Math.max(feature.diameter_km, feature.status === 'proposed' ? 120 : 20);
+    const fov = 42 * Math.PI / 180;
+    const alt = (frameKm * 500) / Math.tan(fov * 0.32);
+    const pos = target.clone().addScaledVector(up, alt / MOON_RADIUS_METERS).addScaledVector(north, -alt * 0.15 / MOON_RADIUS_METERS);
+    return { pos, target, up: orbitUp(up, north), fov: 42, minDistance: 1.2 / MOON_RADIUS_METERS, maxPolarAngle: Math.PI };
+  }
+
+  function findNamedFeature(key) {
+    const needle = normId(key);
+    return namedFeatures.find((feature) => normId(feature.name) === needle)
+      || namedFeatures.find((feature) => normId(feature.name).includes(needle));
+  }
+
+  function focusFeature(feature, { instant = false } = {}) {
+    if (!feature || !Number.isFinite(feature.lat) || !Number.isFinite(feature.lon)) return;
+    if (freeFlight) leaveFlight();
+    clearSelection();
+    showFeatureNote(feature);
+    setViewPressed(null);
+    flyTo(featureEye(feature), instant);
+  }
+
   function clearSelection() {
     currentPlace = null;
     drawer.hide();
+    hideFeatureNote();
     siteList.setSelected(null);
     pins.setSelected(null);
     railDismissed = false;
@@ -541,11 +675,12 @@ async function loadMoon(container, loadingStatus) {
     if (freeFlight) leaveFlight();
     const changed = currentPlace?.id !== place.id || currentPlace?.lat !== place.lat || currentPlace?.lon !== place.lon;
     currentPlace = place;
+    hideFeatureNote();
     siteList.setSelected(place.id);
     pins.setSelected(place.id);
     if (changed) {
       railDismissed = false;
-      const note = place.group === 'point' ? null : attachPhoto(findNote(place), place, photosById, dataDirectory);
+      const note = place.group === 'point' ? null : attachPhoto(attachWriteup(findNote(place), place, writeupsById), place, photosById, dataDirectory);
       drawer.show(place, note);
       if (Number.isFinite(place.lat) && Number.isFinite(place.lon)) analyzePlace(place);
     }
@@ -556,11 +691,11 @@ async function loadMoon(container, loadingStatus) {
       relief = 1;
       terrain.setRelief(relief);
     }
-    flyTo(surface ? surfaceEye(place.lat, place.lon) : overviewEye(place.lat, place.lon), instant);
+    flyTo(surface ? surfaceEye(place.lat, place.lon, place) : overviewEye(place.lat, place.lon), instant);
     if (!place.id) return;
     terrain.preloadSite(place.id).then((loaded) => {
       if (currentPlace !== place || !loaded || !surface || freeFlight || navigationRevision !== revision) return;
-      const eye = surfaceEye(place.lat, place.lon);
+      const eye = surfaceEye(place.lat, place.lon, place);
       if (flight) Object.assign(flight, { toPos: eye.pos, toTarget: eye.target });
       else flyTo(eye, true);
     });
@@ -748,7 +883,9 @@ async function loadMoon(container, loadingStatus) {
       const id = aliases[key] || key;
       const place = placesById.get(id)
         || places.find((entry) => normId(entry.id) === normId(id));
+      const feature = findNamedFeature(id);
       if (place) focusPlace(place, { surface: true, instant: true });
+      else if (feature) focusFeature(feature, { instant: true });
     }
   }
 
@@ -832,6 +969,7 @@ async function loadMoon(container, loadingStatus) {
     updateStatus();
     camera.updateMatrixWorld();
     pins.update(camera, (direction) => terrain.surfaceRadius(direction), container.clientWidth, container.clientHeight, realDelta);
+    featureLabels?.update(camera, (direction) => terrain.surfaceRadius(direction), container.clientWidth, container.clientHeight, realDelta);
     renderer.render(scene, camera);
   });
 }

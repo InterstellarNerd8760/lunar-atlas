@@ -36,3 +36,9 @@ Featured-image pages are on [lroc.im-ldi.com](https://lroc.im-ldi.com/images). R
 | `artemis3-slater-plain.jpg` | Official map of the nine Artemis III candidate landing regions, including Slater Plain, on an LRO WAC mosaic | NASA (background: LRO WAC mosaic, NASA/GSFC/Arizona State University) | Public domain (NASA media) |
 
 Sources: [First Photo from the Surface of the Moon](https://science.nasa.gov/resource/first-photo-from-the-surface-of-the-moon/) and [NASA Provides Update on Artemis III Moon Landing Regions](https://www.nasa.gov/news-release/nasa-provides-update-on-artemis-iii-moon-landing-regions/).
+
+## Named lunar features
+
+Names and coordinates in `public/data/features.json` come from the IAU Working Group for Planetary System Nomenclature, as published in the [USGS Gazetteer of Planetary Nomenclature](https://planetarynames.wr.usgs.gov/). The gazetteer is public domain. This copy was trimmed from the Moon center-point shapefile (LOLA 2011 control network) at [planetarynames.wr.usgs.gov/GIS_Downloads](https://planetarynames.wr.usgs.gov/GIS_Downloads).
+
+Carroll is a proposed name from the Artemis II crew, not an official IAU name. Its location (18.633° N, 86.533° W) and 6 km diameter are from NASA SVS, [How to See the Proposed Carroll Crater](https://svs.gsfc.nasa.gov/5646). NASA also reported the proposal, still to be submitted to the IAU, in [NASA’s Artemis II Crew Eclipses Record for Farthest Human Spaceflight](https://www.nasa.gov/news-release/nasas-artemis-ii-crew-eclipses-record-for-farthest-human-spaceflight/).
