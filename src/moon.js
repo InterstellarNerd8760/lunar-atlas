@@ -432,7 +432,7 @@ async function loadMoon(container, loadingStatus) {
     reliefMode = button.dataset.relief;
     for (const other of reliefControl.children) other.setAttribute('aria-pressed', String(other === button));
   });
-  const layersStatus = el('p', { class: 'text-xs layers-menu__status', role: 'status' });
+  const layersStatus = el('p', { class: 'terrain-summary__status', role: 'status' });
   const layerRows = [];
   if (texture) {
     const imageryButton = el('input', { type: 'checkbox', id: 'layer-wac', 'aria-describedby': 'layer-wac-desc' });
@@ -451,13 +451,11 @@ async function loadMoon(container, loadingStatus) {
   namesToggle.addEventListener('change', () => featureLabels?.setEnabled(namesToggle.checked));
   layerRows.push(el('div', { class: 'switch-row' }, [el('label', { for: 'layer-feature-names', text: 'Feature names' }), namesToggle]));
   const layersMenu = el('div', { class: 'popover layers-menu', role: 'dialog', 'aria-label': 'Layers' }, [
+    el('div', { class: 'field' }, [el('h2', { text: 'Terrain relief' }), reliefControl]),
     ...layerRows,
   ]);
   container.append(layersMenu);
-  const terrainSummary = el('aside', { class: 'terrain-summary glass', 'aria-label': 'Terrain relief and sources' }, [
-    el('div', { class: 'terrain-summary__controls' }, [
-      el('span', { text: 'Relief' }), reliefControl,
-    ]),
+  const terrainSummary = el('aside', { class: 'terrain-summary', 'aria-label': 'Terrain relief and sources' }, [
     layersStatus,
     el('a', {
       href: 'https://github.com/InterstellarNerd8760/lunar-atlas/blob/main/docs/data-sources.md',
@@ -466,7 +464,7 @@ async function loadMoon(container, loadingStatus) {
   ]);
   container.append(terrainSummary);
   const layersPopover = bindPopover(layersButton, layersMenu, {
-    onOpen: () => layersMenu.querySelector('input')?.focus(),
+    onOpen: () => reliefControl.querySelector('[aria-pressed="true"]').focus(),
   });
 
   const featureNote = el('p', { class: 'feature-note glass text-xs', hidden: true, role: 'status' });
