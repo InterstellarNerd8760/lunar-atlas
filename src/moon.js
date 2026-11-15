@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { OrbitControls } from 'https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/controls/OrbitControls.js';
 
 import { addSky } from './sky.js';
+import { aimAt, levelFlight, transportFlight, turnFlight } from './flight.js';
 import { createDrawer, createPins, createSiteList } from './sites.js';
 import { bindPopover, closeOpenPopover, el, icons, isTextField, reducedMotion } from './ui.js';
 import { createTerrain } from './terrain.js';
@@ -236,7 +237,12 @@ async function loadMoon(container, loadingStatus) {
   function createOrbitControls(up) {
     controls?.dispose();
     camera.up.copy(up);
+    // OrbitControls updates immediately in its constructor; keep the observer fixed.
+    const position = camera.position.clone();
+    const orientation = camera.quaternion.clone();
     controls = new OrbitControls(camera, canvas);
+    camera.position.copy(position);
+    camera.quaternion.copy(orientation);
     controls.enablePan = false;
     controls.enableDamping = true;
     controls.dampingFactor = 0.06;
@@ -317,7 +323,7 @@ async function loadMoon(container, loadingStatus) {
     },
   });
 
-  const flightHint = el('p', { class: 'flight-hint glass', hidden: true, text: 'Free flight: mouse to look · W A S D to move · Space / C up or down · Shift to boost · Esc exits' });
+  const flightHint = el('p', { class: 'flight-hint glass', hidden: true, text: 'Free flight: mouse / drag to look · W A S D move · Q / E turn · Space / C rise / descend · Shift boost · Esc exits' });
   container.append(flightHint);
 
   const narrowQuery = window.matchMedia('(max-width: 1023px)');
@@ -347,8 +353,6 @@ async function loadMoon(container, loadingStatus) {
 
   const keys = new Set();
   let freeFlight = false;
-  let yaw = 0;
-  let pitch = 0;
   let dragPointerId = null;
   let previousFrame = performance.now();
   let fpsFrames = 0;
@@ -499,7 +503,9 @@ async function loadMoon(container, loadingStatus) {
     sky?.analyze(scratch.clone().multiplyScalar(1 + (terrain.sampleMeters(scratch) || 0) / MOON_RADIUS_METERS), place.name);
   }
 
+  let navigationRevision = 0;
   function focusPlace(place, { surface = true, instant = false } = {}) {
+    const revision = ++navigationRevision;
     if (!place) {
       setView('globe');
       return;
@@ -523,7 +529,7 @@ async function loadMoon(container, loadingStatus) {
     flyTo(surface ? surfaceEye(place.lat, place.lon) : overviewEye(place.lat, place.lon), instant);
     if (!place.id) return;
     terrain.preloadSite(place.id).then((loaded) => {
-      if (currentPlace !== place || !loaded || !surface) return;
+      if (currentPlace !== place || !loaded || !surface || freeFlight || navigationRevision !== revision) return;
       const eye = surfaceEye(place.lat, place.lon);
       if (flight) Object.assign(flight, { toPos: eye.pos, toTarget: eye.target });
       else flyTo(eye, true);
@@ -532,19 +538,14 @@ async function loadMoon(container, loadingStatus) {
 
   function lookAtEarth() {
     if (!sky) return;
-    if (freeFlight) leaveFlight();
-    if (flight) finishFlight();
-    controls.target.copy(camera.position).add(sky.earth.position.clone().sub(camera.position).normalize().multiplyScalar(0.001));
-    camera.lookAt(controls.target);
-    controls.update();
+    // Orbit constraints are inappropriate for looking out from a fixed observer.
+    // Do not request pointer lock: the drawer and timeline remain usable.
+    if (!freeFlight) enterFlight(false);
+    aimAt(camera, sky.earth.position);
   }
 
   function updateFlightLook(deltaX, deltaY) {
-    const sensitivity = 0.002;
-    yaw -= deltaX * sensitivity;
-    pitch = THREE.MathUtils.clamp(pitch - deltaY * sensitivity, -1.52, 1.52);
-    camera.rotation.order = 'YXZ';
-    camera.rotation.set(pitch, yaw, 0);
+    turnFlight(camera, -deltaX * 0.002, -deltaY * 0.002);
   }
 
   function leaveFlight(releasePointer = true) {
@@ -552,16 +553,14 @@ async function loadMoon(container, loadingStatus) {
     freeFlight = false;
     keys.clear();
     dragPointerId = null;
-    const up = camera.position.clone().normalize();
-    const nearGround = camera.position.length() < 1.25;
-    const [lat, lon] = terrain.latLonFromDirection(up.x, up.y, up.z);
-    const north = northAt(lat, lon);
-    createOrbitControls(nearGround ? orbitUp(up, north) : new THREE.Vector3(0, 1, 0));
-    controls.target.copy(nearGround ? up.clone().multiplyScalar(up.dot(camera.position) * 0.999) : origin);
-    if (!nearGround && controls.target.lengthSq() < 0.01) controls.target.set(0, 0, 0);
-    controls.minDistance = nearGround ? 1.2 / MOON_RADIUS_METERS : 1.012;
-    if (nearGround) controls.maxPolarAngle = Math.PI / 2;
-    camera.lookAt(controls.target);
+    // Preserve the view when leaving flight instead of snapping toward the ground.
+    const position = camera.position.clone();
+    camera.getWorldDirection(viewDirection);
+    const up = position.clone().normalize();
+    createOrbitControls(up);
+    controls.target.copy(position).addScaledVector(viewDirection, 600 / MOON_RADIUS_METERS);
+    controls.minDistance = 1.2 / MOON_RADIUS_METERS;
+    controls.maxPolarAngle = Math.PI;
     controls.update();
     flightButton.textContent = 'Free flight';
     flightButton.setAttribute('aria-pressed', 'false');
@@ -569,23 +568,22 @@ async function loadMoon(container, loadingStatus) {
     if (releasePointer && document.pointerLockElement === canvas) document.exitPointerLock();
   }
 
-  function enterFlight() {
+  function enterFlight(lockPointer = true) {
+    navigationRevision++;
     if (flight) finishFlight();
     freeFlight = true;
     keys.clear();
     controls.enabled = false;
-    camera.up.set(0, 1, 0);
-    camera.getWorldDirection(viewDirection);
-    yaw = Math.atan2(-viewDirection.x, -viewDirection.z);
-    pitch = Math.asin(THREE.MathUtils.clamp(viewDirection.y, -1, 1));
-    camera.rotation.order = 'YXZ';
-    camera.rotation.set(pitch, yaw, 0);
+    levelFlight(camera);
     flightButton.textContent = 'Exit flight';
     flightButton.setAttribute('aria-pressed', 'true');
     flightHint.hidden = false;
     setViewPressed(null);
     canvas.focus({ preventScroll: true });
-    if (canvas.requestPointerLock) canvas.requestPointerLock();
+    if (lockPointer && canvas.requestPointerLock) {
+      // Drag-to-look remains available if the browser denies pointer lock.
+      try { canvas.requestPointerLock()?.catch(() => {}); } catch { /* drag fallback */ }
+    }
   }
 
   for (const button of viewButtons) {
@@ -646,11 +644,11 @@ async function loadMoon(container, loadingStatus) {
     if (freeFlight && document.pointerLockElement !== canvas) leaveFlight(false);
   });
 
-  const movementKeys = new Set(['KeyW', 'KeyA', 'KeyS', 'KeyD', 'Space', 'KeyC', 'ShiftLeft', 'ShiftRight']);
+  const movementKeys = new Set(['KeyW', 'KeyA', 'KeyS', 'KeyD', 'KeyQ', 'KeyE', 'Space', 'KeyC', 'ShiftLeft', 'ShiftRight']);
   document.addEventListener('keydown', (event) => {
     if (freeFlight) {
       if (event.code === 'Escape') leaveFlight();
-      else if (movementKeys.has(event.code)) {
+      else if (!isTextField(event.target) && !event.metaKey && !event.ctrlKey && !event.altKey && movementKeys.has(event.code)) {
         event.preventDefault();
         keys.add(event.code);
       }
@@ -684,6 +682,8 @@ async function loadMoon(container, loadingStatus) {
   });
   document.addEventListener('keyup', (event) => { keys.delete(event.code); });
   window.addEventListener('blur', () => keys.clear());
+  document.addEventListener('visibilitychange', () => keys.clear());
+  document.addEventListener('focusin', (event) => { if (isTextField(event.target)) keys.clear(); });
 
   function resize() {
     const width = container.clientWidth;
@@ -744,6 +744,8 @@ async function loadMoon(container, loadingStatus) {
     if (flight) {
       stepFlight(realDelta);
     } else if (freeFlight) {
+      const yawInput = Number(keys.has('KeyQ')) - Number(keys.has('KeyE'));
+      if (yawInput) turnFlight(camera, yawInput * 1.2 * deltaSeconds, 0);
       camera.updateMatrixWorld();
       camera.getWorldDirection(viewDirection);
       rightDirection.setFromMatrixColumn(camera.matrixWorld, 0).normalize();
@@ -759,11 +761,11 @@ async function loadMoon(container, loadingStatus) {
         movement.normalize();
         const groundR = terrain.surfaceRadius(camera.position);
         const altitude = camera.position.length() - groundR;
-        const near = altitude < 0.02;
-        let speed = THREE.MathUtils.clamp(altitude * 0.28, near ? 2 / MOON_RADIUS_METERS : 0.01, 0.5);
+        let speed = THREE.MathUtils.clamp(altitude * 0.28, 2 / MOON_RADIUS_METERS, 0.5);
         if (keys.has('ShiftLeft') || keys.has('ShiftRight')) speed *= 4;
         camera.position.addScaledVector(movement, speed * deltaSeconds);
         if (camera.position.length() > 18) camera.position.setLength(18);
+        transportFlight(camera, radialDirection);
       }
     } else {
       controls.update();
