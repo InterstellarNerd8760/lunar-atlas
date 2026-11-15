@@ -432,7 +432,7 @@ async function loadMoon(container, loadingStatus) {
     }
   });
   const compareButton = el('button', { type: 'button', class: 'btn', 'aria-haspopup': 'dialog', title: 'Compare sites side by side', text: 'Compare', hidden: !compare, onclick: () => compare?.toggle(currentPlace) });
-  const layersButton = el('button', { type: 'button', class: 'btn', 'aria-haspopup': 'dialog', 'aria-keyshortcuts': 'L', title: 'Layers (L)', html: `${icons.layers}<span>Layers</span>` });
+  const layersButton = el('button', { type: 'button', class: 'btn topbar__layers', 'aria-label': 'Layers', 'aria-haspopup': 'dialog', 'aria-keyshortcuts': 'L', title: 'Layers (L)', html: `${icons.layers}<span>Layers</span>` });
   const topbar = el('header', { class: 'topbar glass' }, [
     el('h1', { class: 'brand', text: 'Lunar Atlas' }),
     el('nav', { class: 'topbar__nav', 'aria-label': 'Camera' }, [
@@ -539,10 +539,7 @@ async function loadMoon(container, loadingStatus) {
   });
 
   const flightHint = el('p', { class: 'flight-hint glass', hidden: true, text: 'Free flight: mouse / drag to look · W A S D move · Q / E turn · Space / C rise / descend · Shift boost · Esc exits' });
-  const touchInput = window.matchMedia('(pointer: coarse), (hover: none)');
-  const syncWalkAvailability = () => { walkButton.hidden = touchInput.matches; if (touchInput.matches && walking) leaveFlight(); };
-  syncWalkAvailability();
-  touchInput.addEventListener?.('change', syncWalkAvailability);
+  const touchInput = window.matchMedia('(any-pointer: coarse), (hover: none)');
   const heldPointers = new Map();
   function flightPad(label, directions) {
     return el('div', { class: 'flight-pad glass', role: 'group', 'aria-label': label }, directions.map(([key, name, symbol]) => {
@@ -581,7 +578,7 @@ async function loadMoon(container, loadingStatus) {
     stick.y = length > 0 ? y / Math.min(length, 1) * strength : 0;
   }
   joystick.addEventListener('pointerdown', (event) => {
-    if (!freeFlight || stickPointer !== null) return;
+    if (!freeFlight || stickPointer !== null || event.button !== 0) return;
     event.preventDefault();
     stickPointer = event.pointerId;
     joystick.setPointerCapture(event.pointerId);
@@ -595,10 +592,21 @@ async function loadMoon(container, loadingStatus) {
       if (event.pointerId === stickPointer) resetStick();
     });
   }
-  const touchControls = el('div', { class: 'flight-touch', hidden: true }, [
-    joystick,
-    flightPad('Altitude', [['Space', 'Rise', 'Rise'], ['KeyC', 'Descend', 'Descend']]),
+  const altitudePad = flightPad('Altitude', [['Space', 'Rise', 'Rise'], ['KeyC', 'Descend', 'Descend']]);
+  let touchRunning = false;
+  const runButton = el('button', { type: 'button', class: 'btn', text: 'Run', 'aria-pressed': 'false', onclick: () => setTouchRun(!touchRunning) });
+  function setTouchRun(active) {
+    touchRunning = active;
+    runButton.setAttribute('aria-pressed', String(active));
+  }
+  function jump() {
+    if (walking && jumpHeight === 0 && jumpVelocity === 0) jumpVelocity = 2.6;
+  }
+  const walkPad = el('div', { class: 'flight-pad glass', role: 'group', 'aria-label': 'Walk actions', hidden: true }, [
+    runButton,
+    el('button', { type: 'button', class: 'btn', text: 'Jump', onclick: jump }),
   ]);
+  const touchControls = el('div', { class: 'flight-touch', hidden: true }, [joystick, altitudePad, walkPad]);
   container.append(flightHint, touchControls);
 
   const narrowQuery = window.matchMedia('(max-width: 1023px)');
@@ -873,17 +881,25 @@ async function loadMoon(container, loadingStatus) {
     keys.clear();
     heldPointers.clear();
     resetStick();
+    setTouchRun(false);
     lookPointer = null;
   }
 
   function showFlightControls() {
-    const showTouch = freeFlight && !walking && touchInput.matches;
+    const showTouch = freeFlight && touchInput.matches;
     touchControls.hidden = !showTouch;
+    altitudePad.hidden = walking;
+    walkPad.hidden = !walking;
     container.classList.toggle('touch-flight-active', showTouch);
+    container.classList.toggle('touch-walk-active', showTouch && walking);
     flightHint.hidden = !freeFlight;
-    flightHint.textContent = walking ? 'Walk: W A S D / arrows move · Drag to look · Shift run · Space jump · Esc exits' : showTouch
-      ? 'Thumbstick to move · Drag to look · Rise / Descend'
-      : 'Free flight: mouse / drag to look · W A S D move · Q / E turn · Space / C rise / descend · Shift boost · Esc exits';
+    if (showTouch) {
+      flightHint.textContent = walking ? 'Thumbstick to walk · Drag the Moon to look' : 'Thumbstick to move · Drag to look · Rise / Descend';
+    } else {
+      flightHint.textContent = walking
+        ? 'Walk: W A S D / arrows move · Drag to look · Shift run · Space jump · Esc exits'
+        : 'Free flight: mouse / drag to look · W A S D move · Q / E turn · Space / C rise / descend · Shift boost · Esc exits';
+    }
   }
 
   touchInput.addEventListener('change', () => {
@@ -977,6 +993,7 @@ async function loadMoon(container, loadingStatus) {
   canvas.addEventListener('pointerdown', (event) => {
     if (flight) finishFlight();
     if (!freeFlight || lookPointer || event.button !== 0 || document.pointerLockElement === canvas) return;
+    if (event.pointerType === 'touch') event.preventDefault();
     lookPointer = { id: event.pointerId, x: event.clientX, y: event.clientY };
     canvas.setPointerCapture(event.pointerId);
   });
@@ -1001,7 +1018,7 @@ async function loadMoon(container, loadingStatus) {
       if (event.code === 'Escape') leaveFlight();
       else if (!isTextField(event.target) && !event.metaKey && !event.ctrlKey && !event.altKey && movementKeys.has(event.code)) {
         event.preventDefault();
-        if (walking && event.code === 'Space' && !event.repeat && jumpHeight === 0) jumpVelocity = 2.6;
+        if (event.code === 'Space' && !event.repeat) jump();
         keys.add(event.code);
       }
       return;
@@ -1102,14 +1119,15 @@ async function loadMoon(container, loadingStatus) {
       radialDirection.copy(camera.position).normalize();
       camera.getWorldDirection(viewDirection).projectOnPlane(radialDirection).normalize();
       rightDirection.crossVectors(viewDirection, radialDirection).normalize();
-      movement.set(0, 0, 0);
+      movement.copy(viewDirection).multiplyScalar(-stick.y).addScaledVector(rightDirection, stick.x);
       if (keys.has('KeyW') || keys.has('ArrowUp')) movement.add(viewDirection);
       if (keys.has('KeyS') || keys.has('ArrowDown')) movement.sub(viewDirection);
       if (keys.has('KeyD') || keys.has('ArrowRight')) movement.add(rightDirection);
       if (keys.has('KeyA') || keys.has('ArrowLeft')) movement.sub(rightDirection);
       if (movement.lengthSq() > 0) {
-        const speed = keys.has('ShiftLeft') || keys.has('ShiftRight') ? 4 : 1.5;
-        camera.position.addScaledVector(movement.normalize(), speed * deltaSeconds / MOON_RADIUS_METERS);
+        if (movement.lengthSq() > 1) movement.normalize();
+        const speed = touchRunning || keys.has('ShiftLeft') || keys.has('ShiftRight') ? 4 : 1.5;
+        camera.position.addScaledVector(movement, speed * deltaSeconds / MOON_RADIUS_METERS);
         walkUp.copy(camera.position).normalize();
         walkRotation.setFromUnitVectors(radialDirection, walkUp);
         camera.quaternion.premultiply(walkRotation);

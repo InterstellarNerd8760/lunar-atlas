@@ -803,6 +803,8 @@ a { color: var(--primary); }
   position: absolute;
   z-index: 3;
   inset-inline: var(--edge);
+  left: max(var(--edge), env(safe-area-inset-left));
+  right: max(var(--edge), env(safe-area-inset-right));
   bottom: var(--panel-bottom);
   display: flex;
   justify-content: space-between;
@@ -812,7 +814,7 @@ a { color: var(--primary); }
 
 .flight-pad {
   display: grid;
-  grid-template-columns: repeat(3, 44px);
+  grid-template-columns: 1fr;
   gap: 4px;
   padding: 4px;
   pointer-events: auto;
@@ -822,13 +824,10 @@ a { color: var(--primary); }
   -webkit-touch-callout: none;
 }
 
-.flight-pad [data-flight-key="KeyW"] { grid-column: 2; }
-.flight-pad [data-flight-key="KeyA"] { grid-column: 1; }
-.flight-pad:last-child { grid-template-columns: 1fr; }
 .flight-pad .btn { min-height: 44px; }
 .flight-pad .btn:active { background: var(--surface-2); }
 .touch-flight-active > canvas { touch-action: none; }
-.touch-flight-active .flight-hint { bottom: calc(var(--panel-bottom) + 106px); }
+.touch-walk-active .drawer { visibility: hidden; }
 
 /* 1280-wide laptops: list collapses to a rail once a site is selected (handled in JS). */
 
@@ -886,6 +885,28 @@ a { color: var(--primary); }
   .readout { font-size: 12px; padding: 0 6px; }
 }
 
+@media (max-width: 460px) {
+  :root { --bar-h: 78px; }
+  .topbar {
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: center;
+    gap: 0;
+    padding: 0 4px;
+  }
+  .topbar .brand { margin-inline: auto; }
+  .topbar__nav { justify-content: space-between; }
+  .topbar__nav > .btn { padding-inline: 6px; }
+  .topbar__layers span { display: none; }
+}
+
+@media (any-pointer: coarse) {
+  .topbar {
+    left: max(var(--edge), env(safe-area-inset-left));
+    right: max(var(--edge), env(safe-area-inset-right));
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { transition: none !important; animation: none !important; }
 }
@@ -907,6 +928,7 @@ a { color: var(--primary); }
 .terrain-summary__status { margin: 0; }
 .terrain-summary > a { color: inherit; pointer-events: auto; }
 .touch-flight-active .terrain-summary { bottom: calc(var(--panel-bottom) + 130px); }
+.touch-walk-active .terrain-summary { top: var(--panel-top); bottom: auto; }
 .flight-stick {
   position: relative;
   width: 120px;
