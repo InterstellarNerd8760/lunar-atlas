@@ -400,6 +400,37 @@ async function loadMoon(container, loadingStatus) {
     ['globe', 'Globe'], ['north', 'N pole'], ['south', 'S pole'],
   ].map(([view, label]) => el('button', { type: 'button', class: 'btn', 'data-view': view, 'aria-pressed': String(view === 'globe'), text: label }));
   const flightButton = el('button', { type: 'button', class: 'btn', 'aria-pressed': 'false', text: 'Free flight' });
+  const walkButton = el('button', { type: 'button', class: 'btn', text: 'Walk', title: 'Walk on the surface below you', 'aria-pressed': 'false' });
+  let walking = false;
+  let jumpHeight = 0;
+  let jumpVelocity = 0;
+  const walkUp = new THREE.Vector3();
+  const walkRotation = new THREE.Quaternion();
+  walkButton.addEventListener('click', () => {
+    if (walking) leaveFlight();
+    else {
+      if (freeFlight) leaveFlight(false);
+      if (flight) finishFlight();
+      // Drop onto the ground directly below the camera, anywhere on the Moon, facing the horizon.
+      walkUp.copy(camera.position).normalize();
+      const heading = camera.getWorldDirection(new THREE.Vector3()).projectOnPlane(walkUp);
+      if (heading.lengthSq() < 1e-8) heading.copy(camera.up).projectOnPlane(walkUp);
+      if (heading.lengthSq() < 1e-8) heading.set(0, 1, 0).projectOnPlane(walkUp);
+      if (heading.lengthSq() < 1e-8) heading.set(1, 0, 0).projectOnPlane(walkUp);
+      heading.normalize();
+      camera.position.copy(walkUp).multiplyScalar(terrain.surfaceRadius(walkUp) + 1.7 / MOON_RADIUS_METERS);
+      camera.up.copy(walkUp);
+      camera.lookAt(camera.position.clone().add(heading));
+      enterFlight(false);
+      flightButton.textContent = 'Free flight';
+      flightButton.setAttribute('aria-pressed', 'false');
+      walking = true;
+      jumpHeight = jumpVelocity = 0;
+      walkButton.textContent = 'Exit walk';
+      walkButton.setAttribute('aria-pressed', 'true');
+      showFlightControls();
+    }
+  });
   const compareButton = el('button', { type: 'button', class: 'btn', 'aria-haspopup': 'dialog', title: 'Compare sites side by side', text: 'Compare', hidden: !compare, onclick: () => compare?.toggle(currentPlace) });
   const layersButton = el('button', { type: 'button', class: 'btn', 'aria-haspopup': 'dialog', 'aria-keyshortcuts': 'L', title: 'Layers (L)', html: `${icons.layers}<span>Layers</span>` });
   const topbar = el('header', { class: 'topbar glass' }, [
@@ -408,6 +439,7 @@ async function loadMoon(container, loadingStatus) {
       sitesButton,
       el('div', { class: 'topbar__nav topbar__views' }, viewButtons),
       flightButton,
+      walkButton,
       compareButton,
       layersButton,
     ]),
@@ -508,6 +540,9 @@ async function loadMoon(container, loadingStatus) {
 
   const flightHint = el('p', { class: 'flight-hint glass', hidden: true, text: 'Free flight: mouse / drag to look · W A S D move · Q / E turn · Space / C rise / descend · Shift boost · Esc exits' });
   const touchInput = window.matchMedia('(pointer: coarse), (hover: none)');
+  const syncWalkAvailability = () => { walkButton.hidden = touchInput.matches; if (touchInput.matches && walking) leaveFlight(); };
+  syncWalkAvailability();
+  touchInput.addEventListener?.('change', syncWalkAvailability);
   const heldPointers = new Map();
   function flightPad(label, directions) {
     return el('div', { class: 'flight-pad glass', role: 'group', 'aria-label': label }, directions.map(([key, name, symbol]) => {
@@ -842,11 +877,11 @@ async function loadMoon(container, loadingStatus) {
   }
 
   function showFlightControls() {
-    const showTouch = freeFlight && touchInput.matches;
+    const showTouch = freeFlight && !walking && touchInput.matches;
     touchControls.hidden = !showTouch;
     container.classList.toggle('touch-flight-active', showTouch);
     flightHint.hidden = !freeFlight;
-    flightHint.textContent = showTouch
+    flightHint.textContent = walking ? 'Walk: W A S D / arrows move · Drag to look · Shift run · Space jump · Esc exits' : showTouch
       ? 'Thumbstick to move · Drag to look · Rise / Descend'
       : 'Free flight: mouse / drag to look · W A S D move · Q / E turn · Space / C rise / descend · Shift boost · Esc exits';
   }
@@ -859,6 +894,9 @@ async function loadMoon(container, loadingStatus) {
   function leaveFlight(releasePointer = true) {
     if (!freeFlight) return;
     freeFlight = false;
+    walking = false;
+    walkButton.textContent = 'Walk';
+    walkButton.setAttribute('aria-pressed', 'false');
     clearFlightInput();
     // Preserve the view when leaving flight instead of snapping toward the ground.
     const position = camera.position.clone();
@@ -897,8 +935,11 @@ async function loadMoon(container, loadingStatus) {
     button.addEventListener('click', () => setView(button.dataset.view));
   }
   flightButton.addEventListener('click', () => {
-    if (freeFlight) leaveFlight();
-    else enterFlight();
+    if (freeFlight && !walking) leaveFlight();
+    else {
+      if (walking) leaveFlight(false);
+      enterFlight();
+    }
   });
 
   canvas.addEventListener('dblclick', (event) => {
@@ -954,12 +995,13 @@ async function loadMoon(container, loadingStatus) {
     if (freeFlight && document.pointerLockElement !== canvas) leaveFlight(false);
   });
 
-  const movementKeys = new Set(['KeyW', 'KeyA', 'KeyS', 'KeyD', 'KeyQ', 'KeyE', 'Space', 'KeyC', 'ShiftLeft', 'ShiftRight']);
+  const movementKeys = new Set(['KeyW', 'KeyA', 'KeyS', 'KeyD', 'KeyQ', 'KeyE', 'Space', 'KeyC', 'ShiftLeft', 'ShiftRight', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight']);
   document.addEventListener('keydown', (event) => {
     if (freeFlight) {
       if (event.code === 'Escape') leaveFlight();
       else if (!isTextField(event.target) && !event.metaKey && !event.ctrlKey && !event.altKey && movementKeys.has(event.code)) {
         event.preventDefault();
+        if (walking && event.code === 'Space' && !event.repeat && jumpHeight === 0) jumpVelocity = 2.6;
         keys.add(event.code);
       }
       return;
@@ -1055,6 +1097,29 @@ async function loadMoon(container, loadingStatus) {
 
     if (flight) {
       stepFlight(realDelta);
+    } else if (walking) {
+      // Reuse scratch vectors; walking never requests DEM loads.
+      radialDirection.copy(camera.position).normalize();
+      camera.getWorldDirection(viewDirection).projectOnPlane(radialDirection).normalize();
+      rightDirection.crossVectors(viewDirection, radialDirection).normalize();
+      movement.set(0, 0, 0);
+      if (keys.has('KeyW') || keys.has('ArrowUp')) movement.add(viewDirection);
+      if (keys.has('KeyS') || keys.has('ArrowDown')) movement.sub(viewDirection);
+      if (keys.has('KeyD') || keys.has('ArrowRight')) movement.add(rightDirection);
+      if (keys.has('KeyA') || keys.has('ArrowLeft')) movement.sub(rightDirection);
+      if (movement.lengthSq() > 0) {
+        const speed = keys.has('ShiftLeft') || keys.has('ShiftRight') ? 4 : 1.5;
+        camera.position.addScaledVector(movement.normalize(), speed * deltaSeconds / MOON_RADIUS_METERS);
+        walkUp.copy(camera.position).normalize();
+        walkRotation.setFromUnitVectors(radialDirection, walkUp);
+        camera.quaternion.premultiply(walkRotation);
+        camera.up.copy(walkUp);
+      }
+      if (jumpHeight > 0 || jumpVelocity > 0) {
+        jumpHeight += jumpVelocity * deltaSeconds - 0.5 * 1.62 * deltaSeconds * deltaSeconds;
+        jumpVelocity -= 1.62 * deltaSeconds;
+        if (jumpHeight <= 0) jumpHeight = jumpVelocity = 0;
+      }
     } else if (freeFlight) {
       const activeKeys = heldPointers.size ? new Set([...keys, ...heldPointers.values()]) : keys;
       const yawInput = Number(activeKeys.has('KeyQ')) - Number(activeKeys.has('KeyE'));
@@ -1089,6 +1154,7 @@ async function loadMoon(container, loadingStatus) {
     }
 
     applyRelief();
+    if (walking) camera.position.setLength(terrain.surfaceRadius(camera.position) + (1.7 + jumpHeight) / MOON_RADIUS_METERS);
     radialDirection.copy(camera.position);
     const radiusNow = radialDirection.length();
     if (radiusNow > 1e-4) {
