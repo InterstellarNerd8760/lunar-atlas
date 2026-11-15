@@ -1,5 +1,5 @@
 {
-  "processedUtc": "2026-11-14T23:47:33.290199+00:00",
+  "processedUtc": "2026-11-15T00:26:44.176823+00:00",
   "sources": [
     "https://pds.lroc.im-ldi.com/data/LRO-L-LROC-5-RDR-V1.0/LROLRC_2001/DATA/MDR/WAC_EMP/WAC_EMP_643NM_E300N0450_064P.IMG",
     "https://pds.lroc.im-ldi.com/data/LRO-L-LROC-5-RDR-V1.0/LROLRC_2001/DATA/MDR/WAC_EMP/WAC_EMP_643NM_E300N1350_064P.IMG",
@@ -27,8 +27,14 @@
   "wavelengthNm": 643,
   "inputValidFraction": 0.9452157278806584,
   "displayStretch": [
-    0.048888391703367236,
-    0.15728395938873263
+    0.0,
+    0.2
   ],
-  "note": "Single global reflectance stretch. Polar WAC EMP tiles have real coverage holes toward the poles (overall 94.5% valid). Remaining missing samples render black."
+  "note": "Gentle linear mapping of WAC EMP 643 nm reflectance: 0.0-0.20 I/F maps to gray 40-220. No histogram equalization and no gamma. Maria fall around medium-dark gray and highlands around light gray, similar to published LROC WAC browse images. Polar coverage holes (about 5.5% of the globe) are filled with mid-gray 130 rather than black.",
+  "displayStretchKind": "linear-reflectance",
+  "outputGrayRange": [
+    40,
+    220
+  ],
+  "nodataFillGray": 130
 }
