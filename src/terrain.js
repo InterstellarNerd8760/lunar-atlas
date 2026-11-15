@@ -884,10 +884,13 @@ export async function createTerrain({ scene, renderer, dataDirectory, demCatalog
       uniforms.uOriginDir.value.copy(tile.originDir);
       uniforms.uOriginHeight.value = tile.originHeight;
       uniforms.uOriginWrap.value.copy(tile.originWrap);
+      // Tiles share one material, so per-tile uniforms must be re-uploaded per draw.
+      material.uniformsNeedUpdate = true;
     };
     tile.geometry = geometry;
     tile.mesh = mesh;
     tile.epoch = heightEpoch;
+    tile.evicted = false;
     placeMesh(tile);
     scene.add(mesh);
   }
@@ -964,7 +967,7 @@ export async function createTerrain({ scene, renderer, dataDirectory, demCatalog
     for (const [parent, kids] of groups) {
       if (kids.length !== 4 || kids.some((kid) => kid.split)) continue;
       if (forcedLevel >= 0 && parent.level < forcedLevel) continue;
-      if (!kids.every((kid) => kid.score < 0.58)) continue;
+      if (parent.score >= 0.58 || !kids.every((kid) => kid.score < 0.58)) continue;
       for (let i = 0; i < kids.length; i++) {
         const kid = kids[i];
         leaves.delete(kid);
@@ -980,7 +983,9 @@ export async function createTerrain({ scene, renderer, dataDirectory, demCatalog
   }
 
   function stale(tile) {
-    if (!tile.geometry || tile.epoch === heightEpoch) return false;
+    if (!tile.geometry) return false;
+    if (tile.evicted) return true;
+    if (tile.epoch === heightEpoch) return false;
     for (let i = 0; i < loaded.length; i++) {
       if (loaded[i].epoch > tile.epoch && overlaps(tile, loaded[i])) return true;
     }
@@ -1023,6 +1028,10 @@ export async function createTerrain({ scene, renderer, dataDirectory, demCatalog
       while (loaded.length > 2) {
         const drop = ranked.find((dem) => !dem.pinned && loaded.includes(dem));
         if (!drop) break;
+        // Cached meshes still hold the dropped DEM's heights; rebuild them when shown.
+        for (const tile of tiles.values()) {
+          if (tile.geometry && overlaps(tile, drop)) tile.evicted = true;
+        }
         drop.data = null;
         loaded.splice(loaded.indexOf(drop), 1);
         ranked.splice(ranked.indexOf(drop), 1);
@@ -1243,7 +1252,23 @@ export async function createTerrain({ scene, renderer, dataDirectory, demCatalog
       return len - (1 + sampleMeters(x / len, y / len, z / len) * relief * INV_R);
     };
     if (f(lo) <= 0) return new THREE.Vector3(o.x + d.x * lo, o.y + d.y * lo, o.z + d.z * lo);
-    if (f(hi) > 0) return null;
+    if (f(hi) > 0) {
+      // Grazing rays can cross the terrain without reaching the inner sphere,
+      // so march for the first outside-to-inside bracket.
+      const steps = 96;
+      const span = hi - lo;
+      let found = false;
+      for (let i = 1; i <= steps; i++) {
+        const t = lo + (span * i) / steps;
+        if (f(t) <= 0) {
+          hi = t;
+          lo = t - span / steps;
+          found = true;
+          break;
+        }
+      }
+      if (!found) return null;
+    }
     for (let i = 0; i < 18; i++) {
       const mid = (lo + hi) / 2;
       if (f(mid) > 0) lo = mid;
