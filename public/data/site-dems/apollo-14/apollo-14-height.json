@@ -1,0 +1,51 @@
+{
+  "source": "https://pds.lroc.im-ldi.com/data/LRO-L-LROC-5-RDR-V1.0/LROLRC_2001/DATA/SDP/NAC_DTM/APOLLO14/NAC_DTM_APOLLO14.TIF",
+  "productLabel": "https://pds.lroc.im-ldi.com/data/LRO-L-LROC-5-RDR-V1.0/LROLRC_2001/DATA/SDP/NAC_DTM/APOLLO14/NAC_DTM_APOLLO14.LBL",
+  "sourcePage": "https://data.lroc.im-ldi.com/lroc/view_rdr_product/NAC_DTM_APOLLO14",
+  "sourceProduct": "NAC_DTM_APOLLO14",
+  "credit": "NASA/GSFC/Arizona State University, LROC NAC DTM (Henriksen et al. 2016)",
+  "siteId": "apollo-14",
+  "siteName": "Apollo 14",
+  "width": 2000,
+  "height": 2000,
+  "encoding": "float32-le",
+  "units": "m",
+  "order": "row-major",
+  "rowOrder": "north to south",
+  "nodataEncoding": "NaN",
+  "referenceRadiusM": 1737400.0,
+  "projection": "azimuthal equidistant centered on the landing site; x east, y north, meters",
+  "crsWkt": "PROJCS[\"unknown\",GEOGCS[\"unknown\",DATUM[\"unknown\",SPHEROID[\"unknown\",1737400,0]],PRIMEM[\"Reference meridian\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]]],PROJECTION[\"Azimuthal_Equidistant\"],PARAMETER[\"latitude_of_center\",-3.64589],PARAMETER[\"longitude_of_center\",-17.47194],PARAMETER[\"false_easting\",0],PARAMETER[\"false_northing\",0],UNIT[\"metre\",1,AUTHORITY[\"EPSG\",\"9001\"]],AXIS[\"Easting\",EAST],AXIS[\"Northing\",NORTH]]",
+  "affine": [
+    2.0000000000006,
+    0.0,
+    -2000.0,
+    0.0,
+    -2.0000000000006,
+    2000.0
+  ],
+  "extentM": [
+    -2000,
+    -2000,
+    2000,
+    2000
+  ],
+  "centerLatLon": [
+    -3.64589,
+    -17.47194
+  ],
+  "resolutionM": 2.0000000000006,
+  "sourceResolutionM": 2.0000000000006,
+  "sourceSizePx": [
+    2156,
+    14400
+  ],
+  "sourceCrsWkt": "PROJCS[\"Equirectangular Moon\",GEOGCS[\"GCS_Moon\",DATUM[\"D_Moon\",SPHEROID[\"Moon_localRadius\",1737400,0]],PRIMEM[\"Reference_Meridian\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]]],PROJECTION[\"Equirectangular\"],PARAMETER[\"standard_parallel_1\",-3],PARAMETER[\"central_meridian\",180],PARAMETER[\"false_easting\",0],PARAMETER[\"false_northing\",0],UNIT[\"metre\",1,AUTHORITY[\"EPSG\",\"9001\"]],AXIS[\"Easting\",EAST],AXIS[\"Northing\",NORTH]]",
+  "siteHeightM": -1061.7254638671875,
+  "noDataShare": 0.0971,
+  "readMethod": "vsicurl-window",
+  "note": "4 km crop at native DTM spacing, matching the apollo-11-texture convention. Transparent/NaN edges mean the source mosaic is narrower than 4 km.",
+  "minElevationM": -1108.47802734375,
+  "maxElevationM": -882.763916015625,
+  "processedUtc": "2026-11-14T23:49:25.526710+00:00"
+}

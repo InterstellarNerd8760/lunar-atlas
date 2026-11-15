@@ -153,3 +153,8 @@ vite.config.ts.timestamp-*
 /data/work/
 .ipynb_checkpoints/
 __pycache__/
+
+# Optional viewer assets installed from the terrain and texture archives
+/public/data/landing-sites/
+/public/data/lola-sites/
+/public/data/textures/

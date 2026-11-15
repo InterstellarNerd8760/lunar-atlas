@@ -1,0 +1,34 @@
+{
+  "processedUtc": "2026-11-14T23:47:33.290199+00:00",
+  "sources": [
+    "https://pds.lroc.im-ldi.com/data/LRO-L-LROC-5-RDR-V1.0/LROLRC_2001/DATA/MDR/WAC_EMP/WAC_EMP_643NM_E300N0450_064P.IMG",
+    "https://pds.lroc.im-ldi.com/data/LRO-L-LROC-5-RDR-V1.0/LROLRC_2001/DATA/MDR/WAC_EMP/WAC_EMP_643NM_E300N1350_064P.IMG",
+    "https://pds.lroc.im-ldi.com/data/LRO-L-LROC-5-RDR-V1.0/LROLRC_2001/DATA/MDR/WAC_EMP/WAC_EMP_643NM_E300N2250_064P.IMG",
+    "https://pds.lroc.im-ldi.com/data/LRO-L-LROC-5-RDR-V1.0/LROLRC_2001/DATA/MDR/WAC_EMP/WAC_EMP_643NM_E300N3150_064P.IMG",
+    "https://pds.lroc.im-ldi.com/data/LRO-L-LROC-5-RDR-V1.0/LROLRC_2001/DATA/MDR/WAC_EMP/WAC_EMP_643NM_E300S0450_064P.IMG",
+    "https://pds.lroc.im-ldi.com/data/LRO-L-LROC-5-RDR-V1.0/LROLRC_2001/DATA/MDR/WAC_EMP/WAC_EMP_643NM_E300S1350_064P.IMG",
+    "https://pds.lroc.im-ldi.com/data/LRO-L-LROC-5-RDR-V1.0/LROLRC_2001/DATA/MDR/WAC_EMP/WAC_EMP_643NM_E300S2250_064P.IMG",
+    "https://pds.lroc.im-ldi.com/data/LRO-L-LROC-5-RDR-V1.0/LROLRC_2001/DATA/MDR/WAC_EMP/WAC_EMP_643NM_E300S3150_064P.IMG",
+    "https://pds.lroc.im-ldi.com/data/LRO-L-LROC-5-RDR-V1.0/LROLRC_2001/DATA/MDR/WAC_EMP/WAC_EMP_643NM_P900N0000_152P.IMG",
+    "https://pds.lroc.im-ldi.com/data/LRO-L-LROC-5-RDR-V1.0/LROLRC_2001/DATA/MDR/WAC_EMP/WAC_EMP_643NM_P900S0000_152P.IMG"
+  ],
+  "credit": "NASA/GSFC/Arizona State University, LROC WAC",
+  "sourcePage": "https://data.lroc.im-ldi.com/lroc/view_rdr/WAC_EMP",
+  "width": 4096,
+  "height": 2048,
+  "boundsDegrees": [
+    -180,
+    -90,
+    180,
+    90
+  ],
+  "rowOrder": "north to south",
+  "projection": "equirectangular",
+  "wavelengthNm": 643,
+  "inputValidFraction": 0.9452157278806584,
+  "displayStretch": [
+    0.048888391703367236,
+    0.15728395938873263
+  ],
+  "note": "Single global reflectance stretch. Polar WAC EMP tiles have real coverage holes toward the poles (overall 94.5% valid). Remaining missing samples render black."
+}

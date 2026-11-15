@@ -1,0 +1,267 @@
+{
+  "description": "Site-centered heightmaps: LROC NAC DTMs (4 km aeqd crops) and PGDA LOLA 5 m south-pole site DEMs",
+  "encoding": "float32-le",
+  "units": "m",
+  "nodataEncoding": "NaN",
+  "order": "row-major",
+  "rowOrder": "north to south",
+  "referenceRadiusM": 1737400.0,
+  "processedUtc": "2026-11-14T23:51:29.091286+00:00",
+  "sites": [
+    {
+      "id": "apollo-11",
+      "name": "Apollo 11 (Tranquility Base)",
+      "group": "lroc-nac-dtm",
+      "file": "apollo-11/apollo-11-height.f32",
+      "resolutionM": 2.0000000000006,
+      "width": 2000,
+      "height": 2000,
+      "centerLatLon": [
+        0.67416,
+        23.47314
+      ],
+      "minElevationM": -1966.41357421875,
+      "maxElevationM": -1875.7838134765625,
+      "noDataShare": 0.2198,
+      "siteHeightM": -1927.157958984375
+    },
+    {
+      "id": "apollo-12",
+      "name": "Apollo 12",
+      "group": "lroc-nac-dtm",
+      "file": "apollo-12/apollo-12-height.f32",
+      "resolutionM": 2.0000000000006,
+      "width": 2000,
+      "height": 2000,
+      "centerLatLon": [
+        -3.0128,
+        -23.4219
+      ],
+      "minElevationM": -1447.92138671875,
+      "maxElevationM": -1406.923095703125,
+      "noDataShare": 0.4899,
+      "siteHeightM": -1422.3599853515625
+    },
+    {
+      "id": "apollo-14",
+      "name": "Apollo 14",
+      "group": "lroc-nac-dtm",
+      "file": "apollo-14/apollo-14-height.f32",
+      "resolutionM": 2.0000000000006,
+      "width": 2000,
+      "height": 2000,
+      "centerLatLon": [
+        -3.64589,
+        -17.47194
+      ],
+      "minElevationM": -1108.47802734375,
+      "maxElevationM": -882.763916015625,
+      "noDataShare": 0.0971,
+      "siteHeightM": -1061.7254638671875
+    },
+    {
+      "id": "apollo-15",
+      "name": "Apollo 15",
+      "group": "lroc-nac-dtm",
+      "file": "apollo-15/apollo-15-height.f32",
+      "resolutionM": 2.0000000000006,
+      "width": 2000,
+      "height": 2000,
+      "centerLatLon": [
+        26.13239,
+        3.6333
+      ],
+      "minElevationM": -2220.23681640625,
+      "maxElevationM": -1889.9755859375,
+      "noDataShare": 0.186,
+      "siteHeightM": -1923.1429443359375
+    },
+    {
+      "id": "apollo-16",
+      "name": "Apollo 16",
+      "group": "lroc-nac-dtm",
+      "file": "apollo-16/apollo-16-height.f32",
+      "resolutionM": 2.0000000000006,
+      "width": 2000,
+      "height": 2000,
+      "centerLatLon": [
+        -8.9734,
+        15.5011
+      ],
+      "minElevationM": -108.80907440185547,
+      "maxElevationM": 107.84666442871094,
+      "noDataShare": 0.0,
+      "siteHeightM": 8.086527824401855
+    },
+    {
+      "id": "apollo-17",
+      "name": "Apollo 17",
+      "group": "lroc-nac-dtm",
+      "file": "apollo-17/apollo-17-height.f32",
+      "resolutionM": 4.9999999999999,
+      "width": 800,
+      "height": 800,
+      "centerLatLon": [
+        20.1911,
+        30.7723
+      ],
+      "minElevationM": -2725.3603515625,
+      "maxElevationM": -2572.733154296875,
+      "noDataShare": 0.0,
+      "siteHeightM": -2626.583984375
+    },
+    {
+      "id": "site01",
+      "name": "Connecting ridge",
+      "pgdaId": "Site01",
+      "group": "pgda-lola-5m",
+      "artemisRegion": null,
+      "file": "site01/site01-height.f32",
+      "resolutionM": 5.0,
+      "width": 3200,
+      "height": 3200,
+      "centerLatLon": [
+        -89.46316283403668,
+        -137.48955292199918
+      ],
+      "minElevationM": -523.1834106445312,
+      "maxElevationM": 1959.4962158203125,
+      "croppedToFit50MB": false,
+      "siteHeightM": 1944.76708984375
+    },
+    {
+      "id": "site04",
+      "name": "Shackleton rim",
+      "pgdaId": "Site04",
+      "group": "pgda-lola-5m",
+      "artemisRegion": null,
+      "file": "site04/site04-height.f32",
+      "resolutionM": 5.0,
+      "width": 3200,
+      "height": 3200,
+      "centerLatLon": [
+        -89.76681145214992,
+        -171.86989764584402
+      ],
+      "minElevationM": -2847.877197265625,
+      "maxElevationM": 1805.0726318359375,
+      "croppedToFit50MB": false,
+      "siteHeightM": 767.9786376953125
+    },
+    {
+      "id": "sl3",
+      "name": "Connecting ridge extension",
+      "pgdaId": "SL3",
+      "group": "pgda-lola-5m",
+      "artemisRegion": null,
+      "file": "sl3/sl3-height.f32",
+      "resolutionM": 5.0,
+      "width": 3200,
+      "height": 3200,
+      "centerLatLon": [
+        -89.0324156225826,
+        -101.99928693052141
+      ],
+      "minElevationM": -960.2726440429688,
+      "maxElevationM": 1619.619140625,
+      "croppedToFit50MB": true,
+      "siteHeightM": 1178.582275390625
+    },
+    {
+      "id": "haworth",
+      "name": "Haworth",
+      "pgdaId": "Haworth",
+      "group": "pgda-lola-5m",
+      "artemisRegion": "artemis3-haworth",
+      "file": "haworth/haworth-height.f32",
+      "resolutionM": 5.0,
+      "width": 3200,
+      "height": 3200,
+      "centerLatLon": [
+        -86.7639,
+        -22.777
+      ],
+      "minElevationM": 292.0645751953125,
+      "maxElevationM": 2365.155029296875,
+      "croppedToFit50MB": true,
+      "siteHeightM": 1628.2415771484375
+    },
+    {
+      "id": "site23",
+      "name": "Malapert massif",
+      "pgdaId": "Site23",
+      "group": "pgda-lola-5m",
+      "artemisRegion": "artemis3-malapert-massif",
+      "file": "site23/site23-height.f32",
+      "resolutionM": 5.0,
+      "width": 3200,
+      "height": 3200,
+      "centerLatLon": [
+        -85.9948,
+        -0.2358
+      ],
+      "minElevationM": 1923.3245849609375,
+      "maxElevationM": 5173.56298828125,
+      "croppedToFit50MB": true,
+      "siteHeightM": 4783.62939453125
+    },
+    {
+      "id": "site20",
+      "name": "Mons Mouton (Leibnitz beta plateau)",
+      "pgdaId": "Site20",
+      "group": "pgda-lola-5m",
+      "artemisRegion": "artemis3-mons-mouton",
+      "file": "site20/site20-height.f32",
+      "resolutionM": 5.0,
+      "width": 3200,
+      "height": 3200,
+      "centerLatLon": [
+        -85.4266,
+        31.7428
+      ],
+      "minElevationM": 2796.344970703125,
+      "maxElevationM": 6463.86376953125,
+      "croppedToFit50MB": false,
+      "siteHeightM": 6398.8330078125
+    },
+    {
+      "id": "site06",
+      "name": "Nobile rim 1",
+      "pgdaId": "Site06",
+      "group": "pgda-lola-5m",
+      "artemisRegion": "artemis3-nobile-rim-1",
+      "file": "site06/site06-height.f32",
+      "resolutionM": 5.0,
+      "width": 3200,
+      "height": 3200,
+      "centerLatLon": [
+        -85.4381,
+        37.3667
+      ],
+      "minElevationM": 1510.1024169921875,
+      "maxElevationM": 6800.08642578125,
+      "croppedToFit50MB": true,
+      "siteHeightM": 5946.380859375
+    },
+    {
+      "id": "dm2",
+      "name": "Nobile rim 2",
+      "pgdaId": "DM2",
+      "group": "pgda-lola-5m",
+      "artemisRegion": "artemis3-nobile-rim-2",
+      "file": "dm2/dm2-height.f32",
+      "resolutionM": 5.0,
+      "width": 3200,
+      "height": 3200,
+      "centerLatLon": [
+        -83.954,
+        58.8221
+      ],
+      "minElevationM": -1077.700927734375,
+      "maxElevationM": 1646.5538330078125,
+      "croppedToFit50MB": true,
+      "siteHeightM": 1009.90283203125
+    }
+  ],
+  "skipped": []
+}
