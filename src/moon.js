@@ -400,6 +400,18 @@ async function loadMoon(container, loadingStatus) {
     ['globe', 'Globe'], ['north', 'N pole'], ['south', 'S pole'],
   ].map(([view, label]) => el('button', { type: 'button', class: 'btn', 'data-view': view, 'aria-pressed': String(view === 'globe'), text: label }));
   const flightButton = el('button', { type: 'button', class: 'btn', 'aria-pressed': 'false', text: 'Free flight' });
+  const walkButton = el('button', { type: 'button', class: 'btn', text: 'Walk', hidden: true, 'aria-pressed': 'false' });
+  let walking = false;
+  walkButton.addEventListener('click', () => {
+    if (walking) leaveFlight();
+    else {
+      enterFlight(false);
+      walking = true;
+      walkButton.textContent = 'Exit walk';
+      walkButton.setAttribute('aria-pressed', 'true');
+      showFlightControls();
+    }
+  });
   const compareButton = el('button', { type: 'button', class: 'btn', 'aria-haspopup': 'dialog', title: 'Compare sites side by side', text: 'Compare', hidden: !compare, onclick: () => compare?.toggle(currentPlace) });
   const layersButton = el('button', { type: 'button', class: 'btn', 'aria-haspopup': 'dialog', 'aria-keyshortcuts': 'L', title: 'Layers (L)', html: `${icons.layers}<span>Layers</span>` });
   const topbar = el('header', { class: 'topbar glass' }, [
@@ -408,6 +420,7 @@ async function loadMoon(container, loadingStatus) {
       sitesButton,
       el('div', { class: 'topbar__nav topbar__views' }, viewButtons),
       flightButton,
+      walkButton,
       compareButton,
       layersButton,
     ]),
@@ -814,6 +827,7 @@ async function loadMoon(container, loadingStatus) {
       relief = 1;
       terrain.setRelief(relief);
     }
+    walkButton.hidden = !surface;
     flyTo(surface ? surfaceEye(place.lat, place.lon, place) : overviewEye(place.lat, place.lon), instant);
     if (!place.id) return;
     terrain.preloadSite(place.id).then((loaded) => {
@@ -844,11 +858,11 @@ async function loadMoon(container, loadingStatus) {
   }
 
   function showFlightControls() {
-    const showTouch = freeFlight && touchInput.matches;
+    const showTouch = freeFlight && !walking && touchInput.matches;
     touchControls.hidden = !showTouch;
     container.classList.toggle('touch-flight-active', showTouch);
     flightHint.hidden = !freeFlight;
-    flightHint.textContent = showTouch
+    flightHint.textContent = walking ? 'Walk: drag to look · Esc exits (movement coming next)' : showTouch
       ? 'Thumbstick to move · Drag to look · Rise / Descend'
       : 'Free flight: mouse / drag to look · W A S D move · Q / E turn · Space / C rise / descend · Shift boost · Esc exits';
   }
@@ -861,6 +875,9 @@ async function loadMoon(container, loadingStatus) {
   function leaveFlight(releasePointer = true) {
     if (!freeFlight) return;
     freeFlight = false;
+    walking = false;
+    walkButton.textContent = 'Walk';
+    walkButton.setAttribute('aria-pressed', 'false');
     clearFlightInput();
     // Preserve the view when leaving flight instead of snapping toward the ground.
     const position = camera.position.clone();
@@ -1057,6 +1074,8 @@ async function loadMoon(container, loadingStatus) {
 
     if (flight) {
       stepFlight(realDelta);
+    } else if (walking) {
+      camera.position.setLength(terrain.surfaceRadius(camera.position) + 1.7 / MOON_RADIUS_METERS);
     } else if (freeFlight) {
       const activeKeys = heldPointers.size ? new Set([...keys, ...heldPointers.values()]) : keys;
       const yawInput = Number(activeKeys.has('KeyQ')) - Number(activeKeys.has('KeyE'));
