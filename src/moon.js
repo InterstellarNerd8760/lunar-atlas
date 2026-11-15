@@ -400,7 +400,7 @@ async function loadMoon(container, loadingStatus) {
     ['globe', 'Globe'], ['north', 'N pole'], ['south', 'S pole'],
   ].map(([view, label]) => el('button', { type: 'button', class: 'btn', 'data-view': view, 'aria-pressed': String(view === 'globe'), text: label }));
   const flightButton = el('button', { type: 'button', class: 'btn', 'aria-pressed': 'false', text: 'Free flight' });
-  const walkButton = el('button', { type: 'button', class: 'btn', text: 'Walk', hidden: true, 'aria-pressed': 'false' });
+  const walkButton = el('button', { type: 'button', class: 'btn', text: 'Walk', title: 'Walk on the surface below you', 'aria-pressed': 'false' });
   let walking = false;
   let jumpHeight = 0;
   let jumpVelocity = 0;
@@ -409,7 +409,21 @@ async function loadMoon(container, loadingStatus) {
   walkButton.addEventListener('click', () => {
     if (walking) leaveFlight();
     else {
+      if (freeFlight) leaveFlight(false);
+      if (flight) finishFlight();
+      // Drop onto the ground directly below the camera, anywhere on the Moon, facing the horizon.
+      walkUp.copy(camera.position).normalize();
+      const heading = camera.getWorldDirection(new THREE.Vector3()).projectOnPlane(walkUp);
+      if (heading.lengthSq() < 1e-8) heading.copy(camera.up).projectOnPlane(walkUp);
+      if (heading.lengthSq() < 1e-8) heading.set(0, 1, 0).projectOnPlane(walkUp);
+      if (heading.lengthSq() < 1e-8) heading.set(1, 0, 0).projectOnPlane(walkUp);
+      heading.normalize();
+      camera.position.copy(walkUp).multiplyScalar(terrain.surfaceRadius(walkUp) + 1.7 / MOON_RADIUS_METERS);
+      camera.up.copy(walkUp);
+      camera.lookAt(camera.position.clone().add(heading));
       enterFlight(false);
+      flightButton.textContent = 'Free flight';
+      flightButton.setAttribute('aria-pressed', 'false');
       walking = true;
       jumpHeight = jumpVelocity = 0;
       walkButton.textContent = 'Exit walk';
@@ -528,6 +542,9 @@ async function loadMoon(container, loadingStatus) {
 
   const flightHint = el('p', { class: 'flight-hint glass', hidden: true, text: 'Free flight: mouse / drag to look · W A S D move · Q / E turn · Space / C rise / descend · Shift boost · Esc exits' });
   const touchInput = window.matchMedia('(pointer: coarse), (hover: none)');
+  const syncWalkAvailability = () => { walkButton.hidden = touchInput.matches; if (touchInput.matches && walking) leaveFlight(); };
+  syncWalkAvailability();
+  touchInput.addEventListener?.('change', syncWalkAvailability);
   const heldPointers = new Map();
   function flightPad(label, directions) {
     return el('div', { class: 'flight-pad glass', role: 'group', 'aria-label': label }, directions.map(([key, name, symbol]) => {
@@ -664,7 +681,6 @@ async function loadMoon(container, loadingStatus) {
   const noSpin = new THREE.Quaternion();
   function flyTo({ pos, target, up, fov, minDistance = 1.012, maxPolarAngle = Math.PI }, instant = false) {
     if (freeFlight) leaveFlight();
-    walkButton.hidden = true;
     flight = {
       fromPos: camera.position.clone(), fromTarget: controls.target.clone(), fromUp: camera.up.clone(), fromFov: camera.fov,
       toPos: pos.clone(), toTarget: target.clone(), toUp: up.clone(), toFov: fov, minDistance, maxPolarAngle,
@@ -713,7 +729,6 @@ async function loadMoon(container, loadingStatus) {
 
   function setView(view) {
     if (freeFlight) leaveFlight();
-    walkButton.hidden = true;
     clearSelection();
     const isPolarView = view === 'north' || view === 'south';
     const pos = view === 'north' ? new THREE.Vector3(0, 3.25, 0.001)
@@ -786,7 +801,6 @@ async function loadMoon(container, loadingStatus) {
   function focusFeature(feature, { instant = false } = {}) {
     if (!feature || !Number.isFinite(feature.lat) || !Number.isFinite(feature.lon)) return;
     if (freeFlight) leaveFlight();
-    walkButton.hidden = true;
     clearSelection();
     showFeatureNote(feature);
     featureLabels?.setSelected(feature);
@@ -817,7 +831,6 @@ async function loadMoon(container, loadingStatus) {
       return;
     }
     if (freeFlight) leaveFlight();
-    walkButton.hidden = true;
     const changed = currentPlace?.id !== place.id || currentPlace?.lat !== place.lat || currentPlace?.lon !== place.lon;
     currentPlace = place;
     hideFeatureNote();
@@ -837,14 +850,12 @@ async function loadMoon(container, loadingStatus) {
       terrain.setRelief(relief);
     }
     flyTo(surface ? surfaceEye(place.lat, place.lon, place) : overviewEye(place.lat, place.lon), instant);
-    walkButton.hidden = !surface;
     if (!place.id) return;
     terrain.preloadSite(place.id).then((loaded) => {
       if (currentPlace !== place || !loaded || !surface || freeFlight || navigationRevision !== revision) return;
       const eye = surfaceEye(place.lat, place.lon, place);
       if (flight) Object.assign(flight, { toPos: eye.pos, toTarget: eye.target });
       else flyTo(eye, true);
-      walkButton.hidden = false;
     });
   }
 
@@ -926,9 +937,11 @@ async function loadMoon(container, loadingStatus) {
     button.addEventListener('click', () => setView(button.dataset.view));
   }
   flightButton.addEventListener('click', () => {
-    if (freeFlight) leaveFlight();
-    else enterFlight();
-    walkButton.hidden = true;
+    if (freeFlight && !walking) leaveFlight();
+    else {
+      if (walking) leaveFlight(false);
+      enterFlight();
+    }
   });
 
   canvas.addEventListener('dblclick', (event) => {
@@ -990,7 +1003,7 @@ async function loadMoon(container, loadingStatus) {
       if (event.code === 'Escape') leaveFlight();
       else if (!isTextField(event.target) && !event.metaKey && !event.ctrlKey && !event.altKey && movementKeys.has(event.code)) {
         event.preventDefault();
-        if (walking && event.code === 'Space' && !event.repeat && jumpHeight === 0) jumpVelocity = 1.8;
+        if (walking && event.code === 'Space' && !event.repeat && jumpHeight === 0) jumpVelocity = 2.6;
         keys.add(event.code);
       }
       return;
