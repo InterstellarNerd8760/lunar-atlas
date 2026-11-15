@@ -2,6 +2,9 @@ import * as THREE from 'three';
 import { OrbitControls } from 'https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/controls/OrbitControls.js';
 
 import { addSky } from './sky.js';
+import { aimAt, levelFlight, transportFlight, turnFlight } from './flight.js';
+import { createDrawer, createPins, createSiteList } from './sites.js';
+import { bindPopover, closeOpenPopover, el, icons, isTextField, reducedMotion } from './ui.js';
 import { createTerrain } from './terrain.js';
 import { createLanderOverlay, createLanderToggle, loadLandingSites } from './landers.js';
 
@@ -46,10 +49,9 @@ function normId(value) {
 
 function collectPlaces(demSites, previewSites) {
   const places = [];
-  const seen = [];
-  function duplicate(place) {
+  function duplicateOf(place) {
     const id = normId(place.id);
-    return seen.some((other) => {
+    return places.find((other) => {
       const otherId = normId(other.id);
       if (otherId === id) return true;
       const cos = Math.cos(place.lat * Math.PI / 180);
@@ -61,8 +63,11 @@ function collectPlaces(demSites, previewSites) {
   }
   function add(place) {
     if (!Number.isFinite(place.lat) || !Number.isFinite(place.lon)) return;
-    if (duplicate(place)) return;
-    seen.push(place);
+    const existing = duplicateOf(place);
+    if (existing) {
+      for (const key of ['year', 'country', 'mission']) existing[key] ??= place[key];
+      return;
+    }
     places.push(place);
   }
   for (const site of demSites || []) {
@@ -95,38 +100,56 @@ function collectPlaces(demSites, previewSites) {
       group,
       year: site.year,
       country: site.country_or_company,
+      mission: site.mission,
       proxy,
     });
   }
-  const rank = { apollo: 0, lander: 1, pole: 2 };
+  for (const place of places) {
+    if (place.group === 'pole') place.group = place.proxy ? 'artemis' : 'feature';
+  }
+  const rank = { apollo: 0, lander: 1, artemis: 2, feature: 3 };
   places.sort((a, b) => rank[a.group] - rank[b.group] || (a.year || 9999) - (b.year || 9999) || a.name.localeCompare(b.name));
   return places;
+}
+
+const isArtemisNote = (note) => /artemis/i.test(note.status || '');
+
+function noteFinder(notes) {
+  return function findNote(place) {
+    const key = normId(place.name.replace(/^artemis region:\s*/i, ''));
+    const pool = notes.filter((note) => isArtemisNote(note) === (place.group === 'artemis'));
+    return pool.find((note) => normId(note.name) === key)
+      || pool.find((note) => key.includes(normId(note.name)) || normId(note.name).includes(key));
+  };
 }
 
 export function mountMoonView(container) {
   container.replaceChildren();
 
   const status = document.createElement('p');
-  status.className = 'moon-status';
+  status.className = 'loading-status glass';
   status.setAttribute('role', 'status');
   status.textContent = 'Loading LOLA elevation…';
   container.append(status);
 
   loadMoon(container, status).catch((error) => {
     console.error(error);
+    status.hidden = false;
     status.textContent = 'Could not load the Moon data: ' + error.message;
   });
 }
 
-async function loadMoon(container, status) {
+async function loadMoon(container, loadingStatus) {
   const dataDirectory = new URL('../public/data/', import.meta.url);
   const params = new URLSearchParams(window.location.search);
-  const [demResponse, previewResponse] = await Promise.all([
+  const [demResponse, previewResponse, notesResponse] = await Promise.all([
     fetch(new URL('site-dems/index.json', dataDirectory)),
     fetch(new URL('site-previews/index.json', dataDirectory)),
+    fetch(new URL('site-notes.json', dataDirectory)),
   ]);
   const demIndex = demResponse.ok ? await demResponse.json() : { sites: [] };
   const previewIndex = previewResponse.ok ? await previewResponse.json() : { sites: [] };
+  const siteNotes = notesResponse.ok ? await notesResponse.json() : [];
 
   const scene = new THREE.Scene();
   scene.background = new THREE.Color('#030509');
@@ -181,10 +204,30 @@ async function loadMoon(container, status) {
   if (texture) terrain.setAlbedo(texture);
   if (params.get('wire') === '1') terrain.setWireframe(true);
 
+  const places = collectPlaces(demIndex.sites, previewIndex.sites);
+  const findNote = noteFinder(siteNotes);
+  const matchedArtemis = new Set(places.filter((place) => place.group === 'artemis').map(findNote).filter(Boolean));
+  const listedPlaces = [...places];
+  for (const note of siteNotes) {
+    if (!isArtemisNote(note) || matchedArtemis.has(note)) continue;
+    listedPlaces.push({ id: `note-${normId(note.name)}`, name: note.name, group: 'artemis', proxy: true, disabled: true });
+  }
+  const placesById = new Map(places.map((place) => [place.id, place]));
+
+  const drawer = createDrawer(container, {
+    onClose: () => clearSelection(),
+    onFlyTo: () => { if (currentPlace) focusPlace(currentPlace, { surface: false }); },
+    onStand: () => { if (currentPlace) focusPlace(currentPlace); },
+    onEarth: lookAtEarth,
+  });
+
   let sky;
   let skyStatus = 'JPL Horizons';
   try {
-    sky = await addSky(scene, camera, sunlight, container);
+    sky = await addSky(scene, camera, sunlight, container, {
+      visibilitySection: drawer.visSection,
+      onVisibilityStatus: (text) => drawer.setPeek(text),
+    });
   } catch (error) {
     console.warn(error);
     skyStatus = 'Preview lighting';
@@ -213,7 +256,12 @@ async function loadMoon(container, status) {
   function createOrbitControls(up) {
     controls?.dispose();
     camera.up.copy(up);
+    // OrbitControls updates immediately in its constructor; keep the observer fixed.
+    const position = camera.position.clone();
+    const orientation = camera.quaternion.clone();
     controls = new OrbitControls(camera, canvas);
+    camera.position.copy(position);
+    camera.quaternion.copy(orientation);
     controls.enablePan = false;
     controls.enableDamping = true;
     controls.dampingFactor = 0.06;
@@ -224,61 +272,106 @@ async function loadMoon(container, status) {
   createOrbitControls(new THREE.Vector3(0, 1, 0));
 
   const initialCameraPosition = camera.position.clone();
-  const cameraToolbar = document.createElement('nav');
-  cameraToolbar.className = 'camera-toolbar';
-  cameraToolbar.setAttribute('aria-label', 'Camera controls');
-  cameraToolbar.innerHTML =
-    '<span class="camera-toolbar__label">Camera</span>' +
-    '<button type="button" data-view="globe" aria-pressed="true">Globe</button>' +
-    '<button type="button" data-view="north" aria-pressed="false">North pole</button>' +
-    '<button type="button" data-view="south" aria-pressed="false">South pole</button>' +
-    '<button type="button" data-action="flight" aria-pressed="false">Free flight</button>';
-  const siteSelect = document.createElement('select');
-  siteSelect.setAttribute('aria-label', 'Terrain site');
-  siteSelect.add(new Option('Explore a site', ''));
-  cameraToolbar.insertBefore(siteSelect, cameraToolbar.lastElementChild);
-  const reliefControl = document.createElement('select');
-  reliefControl.setAttribute('aria-label', 'Terrain relief');
-  reliefControl.add(new Option('Auto relief', 'auto'));
-  for (let scale = 1; scale <= 4; scale++) {
-    reliefControl.add(new Option(scale === 1 ? '×1 (true scale)' : `×${scale}`, String(scale)));
-  }
+
+  // Top bar
+  const sitesButton = el('button', { type: 'button', class: 'btn btn--icon topbar__sites', 'aria-label': 'Sites', title: 'Search sites (/)', 'aria-controls': 'site-list', 'aria-expanded': 'false', html: icons.search });
+  const viewButtons = [
+    ['globe', 'Globe'], ['north', 'N pole'], ['south', 'S pole'],
+  ].map(([view, label]) => el('button', { type: 'button', class: 'btn', 'data-view': view, 'aria-pressed': String(view === 'globe'), text: label }));
+  const flightButton = el('button', { type: 'button', class: 'btn', 'aria-pressed': 'false', text: 'Free flight' });
+  const layersButton = el('button', { type: 'button', class: 'btn', 'aria-haspopup': 'dialog', 'aria-keyshortcuts': 'L', title: 'Layers (L)', html: `${icons.layers}<span>Layers</span>` });
+  const topbar = el('header', { class: 'topbar glass' }, [
+    el('h1', { class: 'brand', text: 'Lunar Atlas' }),
+    el('nav', { class: 'topbar__nav', 'aria-label': 'Camera' }, [
+      sitesButton,
+      el('div', { class: 'topbar__nav topbar__views' }, [...viewButtons, flightButton]),
+      layersButton,
+    ]),
+  ]);
+  container.append(topbar);
+
+  // Layers menu
   let reliefMode = 'auto';
-  reliefControl.addEventListener('change', () => { reliefMode = reliefControl.value; });
-  cameraToolbar.append(reliefControl);
+  const reliefOptions = [['auto', 'Auto'], ['1', '×1'], ['2', '×2'], ['3', '×3'], ['4', '×4']];
+  const reliefControl = el('div', { class: 'segmented', role: 'group', 'aria-label': 'Terrain relief' }, reliefOptions.map(([value, label]) => el('button', {
+    type: 'button',
+    class: 'btn',
+    'data-relief': value,
+    'aria-pressed': String(value === reliefMode),
+    title: value === 'auto' ? 'Auto relief: up to ×4 from orbit, ×1 near the surface' : value === '1' ? '×1 (true scale)' : `×${value} exaggerated`,
+    'aria-label': value === 'auto' ? 'Auto relief' : value === '1' ? '×1 (true scale)' : `×${value}`,
+    text: label,
+  })));
+  reliefControl.addEventListener('click', (event) => {
+    const button = event.target.closest('[data-relief]');
+    if (!button) return;
+    reliefMode = button.dataset.relief;
+    for (const other of reliefControl.children) other.setAttribute('aria-pressed', String(other === button));
+  });
+  const layersStatus = el('p', { class: 'text-xs layers-menu__status', role: 'status' });
+  const layerRows = [];
   if (texture) {
-    const imageryButton = document.createElement('button');
-    imageryButton.type = 'button';
-    imageryButton.textContent = 'WAC imagery';
-    imageryButton.title = 'Show the WAC image without Sun and Earth lighting';
-    imageryButton.setAttribute('aria-pressed', 'false');
-    imageryButton.addEventListener('click', () => {
-      const on = imageryButton.getAttribute('aria-pressed') !== 'true';
-      terrain.setImageryOnly(on);
-      imageryButton.setAttribute('aria-pressed', String(on));
-    });
-    cameraToolbar.append(imageryButton);
+    const imageryButton = el('input', { type: 'checkbox', id: 'layer-wac', 'aria-describedby': 'layer-wac-desc' });
+    imageryButton.addEventListener('change', () => terrain.setImageryOnly(imageryButton.checked));
+    layerRows.push(el('div', { class: 'switch-row' }, [
+      el('label', { for: 'layer-wac' }, ['WAC imagery', el('span', { class: 'sr-only', id: 'layer-wac-desc', text: 'Show the WAC image without Sun and Earth lighting' })]),
+      imageryButton,
+    ]));
   }
-  container.append(cameraToolbar);
+  if (sky) {
+    const starsToggle = el('input', { type: 'checkbox', id: 'layer-stars', checked: true });
+    starsToggle.addEventListener('change', () => sky.setStars(starsToggle.checked));
+    layerRows.push(el('div', { class: 'switch-row' }, [el('label', { for: 'layer-stars', text: 'Stars' }), starsToggle]));
+  }
+  const layersMenu = el('div', { class: 'popover layers-menu', role: 'dialog', 'aria-label': 'Layers' }, [
+    el('div', { class: 'field' }, [el('h2', { text: 'Terrain relief' }), reliefControl]),
+    ...layerRows,
+    layersStatus,
+  ]);
+  container.append(layersMenu);
+  const layersPopover = bindPopover(layersButton, layersMenu, {
+    onOpen: () => reliefControl.querySelector('[aria-pressed="true"]').focus(),
+  });
 
-  const siteStatus = document.createElement('p');
-  siteStatus.className = 'site-status';
-  siteStatus.setAttribute('role', 'status');
-  siteStatus.hidden = true;
-  container.append(siteStatus);
+  const pins = createPins(container, places, { onSelect: (place) => focusPlace(place) });
+  pins.init((lat, lon, target) => terrain.directionFromLatLon(lat, lon, target));
+  const siteList = createSiteList(container, listedPlaces, {
+    onSelect: (place) => {
+      focusPlace(place);
+      if (narrowQuery.matches) setListOpen(false);
+    },
+  });
 
-  const flightHint = document.createElement('p');
-  flightHint.className = 'flight-hint';
-  flightHint.hidden = true;
-  flightHint.textContent = 'Free flight: mouse to look · W A S D to move · Space / C up or down · Shift to boost · Esc exits';
+  const flightHint = el('p', { class: 'flight-hint glass', hidden: true, text: 'Free flight: mouse / drag to look · W A S D move · Q / E turn · Space / C rise / descend · Shift boost · Esc exits' });
   container.append(flightHint);
 
-  const flightButton = cameraToolbar.querySelector('[data-action="flight"]');
-  const viewButtons = [...cameraToolbar.querySelectorAll('[data-view]')];
+  const narrowQuery = window.matchMedia('(max-width: 1023px)');
+  const railQuery = window.matchMedia('(min-width: 1024px) and (max-width: 1439px)');
+  let railDismissed = false;
+  function updateRail() {
+    siteList.setRail(railQuery.matches && drawer.isOpen && !railDismissed);
+  }
+  railQuery.addEventListener('change', updateRail);
+  siteList.railButton.addEventListener('click', () => {
+    railDismissed = true;
+    updateRail();
+    siteList.search.focus();
+  });
+  function setListOpen(open) {
+    siteList.setOpen(open);
+    sitesButton.setAttribute('aria-expanded', String(open));
+    if (open) siteList.search.focus();
+  }
+  sitesButton.addEventListener('click', () => setListOpen(!siteList.isOpen));
+  function focusSearch() {
+    if (narrowQuery.matches) setListOpen(true);
+    else if (siteList.isRail) { railDismissed = true; updateRail(); }
+    siteList.search.focus();
+    siteList.search.select();
+  }
+
   const keys = new Set();
   let freeFlight = false;
-  let yaw = 0;
-  let pitch = 0;
   let dragPointerId = null;
   let previousFrame = performance.now();
   let fpsFrames = 0;
@@ -286,6 +379,7 @@ async function loadMoon(container, status) {
   let fps = 0;
   let currentPlace = null;
   let relief = 1;
+  let flight = null;
 
   const origin = new THREE.Vector3(0, 0, 0);
   const viewDirection = new THREE.Vector3();
@@ -310,7 +404,10 @@ async function loadMoon(container, status) {
       const delta = terrain.surfaceRadius(camera.position) - oldSurface;
       radialDirection.copy(camera.position).normalize().multiplyScalar(delta);
       camera.position.add(radialDirection);
-      if (!freeFlight && controls.target.lengthSq() >= 0.04) controls.target.add(radialDirection);
+      if (flight) {
+        flight.toPos.add(radialDirection);
+        flight.toTarget.add(radialDirection);
+      } else if (!freeFlight && controls.target.lengthSq() >= 0.04) controls.target.add(radialDirection);
     }
   }
 
@@ -318,129 +415,156 @@ async function loadMoon(container, status) {
     return `Relief ×${relief.toFixed(1)}${relief > 1 ? ' (exaggerated)' : ' (true scale)'}`;
   }
 
-  function setView(view) {
+  // Camera flights: slerp the direction, interpolate altitude in log space.
+  const ease = (t) => (t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2);
+  const fromDir = new THREE.Vector3();
+  const toDir = new THREE.Vector3();
+  const spin = new THREE.Quaternion();
+  const noSpin = new THREE.Quaternion();
+  function flyTo({ pos, target, up, fov, minDistance = 1.012, maxPolarAngle = Math.PI }, instant = false) {
     if (freeFlight) leaveFlight();
-    currentPlace = null;
-    siteSelect.value = '';
-    siteStatus.hidden = true;
-    camera.fov = 42;
+    flight = {
+      fromPos: camera.position.clone(), fromTarget: controls.target.clone(), fromUp: camera.up.clone(), fromFov: camera.fov,
+      toPos: pos.clone(), toTarget: target.clone(), toUp: up.clone(), toFov: fov, minDistance, maxPolarAngle,
+      t: 0, duration: instant || reducedMotion.matches ? 0 : 1.2,
+    };
+    controls.enabled = false;
+    if (!flight.duration) finishFlight();
+  }
+  function finishFlight() {
+    const done = flight;
+    flight = null;
+    camera.position.copy(done.toPos);
+    camera.fov = done.toFov;
     camera.updateProjectionMatrix();
-    const isPolarView = view === 'north' || view === 'south';
-    createOrbitControls(new THREE.Vector3(0, isPolarView ? 0 : 1, isPolarView ? 1 : 0));
-    if (view === 'north') camera.position.set(0, 3.25, 0.001);
-    else if (view === 'south') camera.position.set(0, -3.25, 0.001);
-    else camera.position.copy(initialCameraPosition);
-    controls.target.set(0, 0, 0);
+    createOrbitControls(done.toUp);
+    controls.target.copy(done.toTarget);
+    controls.minDistance = done.minDistance;
+    controls.maxPolarAngle = done.maxPolarAngle;
     camera.lookAt(controls.target);
     controls.update();
-    for (const button of viewButtons) {
-      button.setAttribute('aria-pressed', String(button.dataset.view === view));
-    }
+  }
+  function stepFlight(dt) {
+    flight.t = Math.min(1, flight.t + dt / flight.duration);
+    if (flight.t >= 1) { finishFlight(); return; }
+    const e = ease(flight.t);
+    const r0 = flight.fromPos.length();
+    const r1 = flight.toPos.length();
+    const base = Math.min(r0, r1) - 1e-6;
+    const altitude = Math.exp(THREE.MathUtils.lerp(Math.log(r0 - base), Math.log(r1 - base), e));
+    fromDir.copy(flight.fromPos).normalize();
+    toDir.copy(flight.toPos).normalize();
+    spin.setFromUnitVectors(fromDir, toDir);
+    noSpin.identity().slerp(spin, e);
+    camera.position.copy(fromDir).applyQuaternion(noSpin).multiplyScalar(base + altitude);
+    camera.up.copy(flight.fromUp).lerp(flight.toUp, e).normalize();
+    camera.fov = THREE.MathUtils.lerp(flight.fromFov, flight.toFov, e);
+    camera.updateProjectionMatrix();
+    scratch.copy(flight.fromTarget).lerp(flight.toTarget, e);
+    controls.target.copy(scratch);
+    camera.lookAt(scratch);
   }
 
-  function placeEye(lat, lon) {
+  function setViewPressed(view) {
+    for (const button of viewButtons) button.setAttribute('aria-pressed', String(button.dataset.view === view));
+  }
+
+  function setView(view) {
+    if (freeFlight) leaveFlight();
+    clearSelection();
+    const isPolarView = view === 'north' || view === 'south';
+    const pos = view === 'north' ? new THREE.Vector3(0, 3.25, 0.001)
+      : view === 'south' ? new THREE.Vector3(0, -3.25, 0.001)
+        : initialCameraPosition.clone();
+    flyTo({ pos, target: origin, up: new THREE.Vector3(0, isPolarView ? 0 : 1, isPolarView ? 1 : 0), fov: 42 });
+    setViewPressed(view);
+  }
+
+  function surfaceEye(lat, lon) {
     terrain.directionFromLatLon(lat, lon, scratch);
     const up = scratch.clone();
     const radius = terrain.surfaceRadius(up);
     const north = northAt(lat, lon);
     const sunHoriz = sunlight.position.clone().addScaledVector(up, -sunlight.position.dot(up));
     const ahead = sunHoriz.lengthSq() > 1e-8 ? sunHoriz.normalize() : north;
-    createOrbitControls(orbitUp(up, ahead));
-    camera.fov = 58;
-    camera.updateProjectionMatrix();
-    const eye = up.clone().multiplyScalar(radius + EYE_METERS / MOON_RADIUS_METERS);
-    const look = eye.clone().addScaledVector(ahead, 600 / MOON_RADIUS_METERS);
-    camera.position.copy(eye);
-    controls.target.copy(look);
-    controls.minDistance = 1.2 / MOON_RADIUS_METERS;
-    controls.maxDistance = 8;
-    controls.maxPolarAngle = Math.PI / 2;
-    camera.lookAt(controls.target);
-    controls.update();
-    for (const button of viewButtons) button.setAttribute('aria-pressed', 'false');
+    const pos = up.clone().multiplyScalar(radius + EYE_METERS / MOON_RADIUS_METERS);
+    return {
+      pos,
+      target: pos.clone().addScaledVector(ahead, 600 / MOON_RADIUS_METERS),
+      up: orbitUp(up, ahead),
+      fov: 58,
+      minDistance: 1.2 / MOON_RADIUS_METERS,
+      maxPolarAngle: Math.PI / 2,
+    };
   }
 
-  const notesResponse = await fetch(new URL('site-notes.json', dataDirectory));
-  const siteNotes = notesResponse.ok ? await notesResponse.json() : [];
-  const siteInfo = document.createElement('details');
-  siteInfo.className = 'site-info';
-  siteInfo.innerHTML = '<summary>About this site</summary><div></div>';
-  siteInfo.hidden = true;
-  container.append(siteInfo);
-
-  function showSiteNotes(place) {
-    const normalize = (value) => value.toLowerCase().replace(/[^a-z0-9]/g, '');
-    const key = normalize(place.name);
-    const note = siteNotes.find((entry) => key.includes(normalize(entry.name)) || normalize(entry.name).includes(key));
-    const body = siteInfo.lastElementChild;
-    body.replaceChildren();
-    const description = document.createElement('p');
-    description.textContent = note?.notes ?? `${place.name}. Terrain coordinates come from the bundled landing catalog. Consult the dataset sources for mission context.`;
-    body.append(description);
-    if (place.proxy) {
-      const proxy = document.createElement('p');
-      proxy.textContent = 'Terrain proxy for a candidate region. This is not an official landing coordinate or a selected base.';
-      body.append(proxy);
-    }
-    const link = document.createElement('a');
-    link.href = note?.source ?? 'https://data.lroc.im-ldi.com/';
-    link.textContent = 'Source';
-    link.target = '_blank';
-    link.rel = 'noopener';
-    body.append(link);
-    siteInfo.hidden = false;
+  function overviewEye(lat, lon) {
+    terrain.directionFromLatLon(lat, lon, scratch);
+    const up = scratch.clone();
+    const target = up.clone().multiplyScalar(terrain.surfaceRadius(up));
+    const north = northAt(lat, lon);
+    const height = 30_000 / MOON_RADIUS_METERS;
+    const pos = target.clone().addScaledVector(up, height).addScaledVector(north, -height * 1.2);
+    return { pos, target, up: orbitUp(up, north), fov: 42, minDistance: 1.2 / MOON_RADIUS_METERS, maxPolarAngle: Math.PI / 2 };
   }
 
-  const places = collectPlaces(demIndex.sites, previewIndex.sites);
-  const placesById = new Map(places.map((place) => [place.id, place]));
-  const groupLabels = [
-    ['apollo', 'Apollo landing sites'],
-    ['lander', 'Landing sites'],
-    ['pole', 'South pole terrain'],
-  ];
-  for (const [groupId, label] of groupLabels) {
-    const group = document.createElement('optgroup');
-    group.label = label;
-    for (const place of places.filter((entry) => entry.group === groupId)) {
-      group.append(new Option(place.name, place.id));
-    }
-    if (group.childElementCount) siteSelect.append(group);
+  function clearSelection() {
+    currentPlace = null;
+    drawer.hide();
+    siteList.setSelected(null);
+    pins.setSelected(null);
+    railDismissed = false;
+    updateRail();
   }
 
-  function focusPlace(place, announce = true) {
+  function analyzePlace(place) {
+    terrain.directionFromLatLon(place.lat, place.lon, scratch);
+    sky?.analyze(scratch.clone().multiplyScalar(1 + (terrain.sampleMeters(scratch) || 0) / MOON_RADIUS_METERS), place.name);
+  }
+
+  let navigationRevision = 0;
+  function focusPlace(place, { surface = true, instant = false } = {}) {
+    const revision = ++navigationRevision;
     if (!place) {
       setView('globe');
       return;
     }
     if (freeFlight) leaveFlight();
+    const changed = currentPlace?.id !== place.id || currentPlace?.lat !== place.lat || currentPlace?.lon !== place.lon;
     currentPlace = place;
-    siteSelect.value = place.id;
-    relief = reliefMode === 'auto' ? 1 : Number(reliefMode);
-    terrain.setRelief(relief);
-    placeEye(place.lat, place.lon);
-    if (!announce) return;
-    sky?.analyze(scratch.clone().multiplyScalar(1 + (terrain.sampleMeters(scratch) || 0) / MOON_RADIUS_METERS), place.name);
-    showSiteNotes(place);
-    const coordinateText = `${Math.abs(place.lat).toFixed(4)}° ${place.lat < 0 ? 'S' : 'N'} · ${Math.abs(place.lon).toFixed(4)}° ${place.lon < 0 ? 'W' : 'E'}`;
-    const details = [place.name, place.proxy ? 'Terrain proxy' : place.year, place.country, coordinateText].filter(Boolean);
-    siteStatus.hidden = false;
-    siteStatus.textContent = details.join(' · ');
+    siteList.setSelected(place.id);
+    pins.setSelected(place.id);
+    if (changed) {
+      railDismissed = false;
+      drawer.show(place, place.group === 'point' ? null : findNote(place));
+      analyzePlace(place);
+    }
+    updateRail();
+    setViewPressed(null);
+    if (reliefMode === 'auto' && relief !== 1) {
+      relief = 1;
+      terrain.setRelief(relief);
+    }
+    flyTo(surface ? surfaceEye(place.lat, place.lon) : overviewEye(place.lat, place.lon), instant);
+    if (!place.id) return;
     terrain.preloadSite(place.id).then((loaded) => {
-      if (currentPlace !== place || !loaded) return;
-      placeEye(place.lat, place.lon);
+      if (currentPlace !== place || !loaded || !surface || freeFlight || navigationRevision !== revision) return;
+      const eye = surfaceEye(place.lat, place.lon);
+      if (flight) Object.assign(flight, { toPos: eye.pos, toTarget: eye.target });
+      else flyTo(eye, true);
     });
   }
 
-  siteSelect.addEventListener('change', () => {
-    focusPlace(placesById.get(siteSelect.value));
-  });
+  function lookAtEarth() {
+    if (!sky) return;
+    // Orbit constraints are inappropriate for looking out from a fixed observer.
+    // Do not request pointer lock: the drawer and timeline remain usable.
+    if (!freeFlight) enterFlight(false);
+    aimAt(camera, sky.earth.position);
+  }
 
   function updateFlightLook(deltaX, deltaY) {
-    const sensitivity = 0.002;
-    yaw -= deltaX * sensitivity;
-    pitch = THREE.MathUtils.clamp(pitch - deltaY * sensitivity, -1.52, 1.52);
-    camera.rotation.order = 'YXZ';
-    camera.rotation.set(pitch, yaw, 0);
+    turnFlight(camera, -deltaX * 0.002, -deltaY * 0.002);
   }
 
   function leaveFlight(releasePointer = true) {
@@ -448,16 +572,14 @@ async function loadMoon(container, status) {
     freeFlight = false;
     keys.clear();
     dragPointerId = null;
-    const up = camera.position.clone().normalize();
-    const nearGround = camera.position.length() < 1.25;
-    const [lat, lon] = terrain.latLonFromDirection(up.x, up.y, up.z);
-    const north = northAt(lat, lon);
-    createOrbitControls(nearGround ? orbitUp(up, north) : new THREE.Vector3(0, 1, 0));
-    controls.target.copy(nearGround ? up.clone().multiplyScalar(up.dot(camera.position) * 0.999) : origin);
-    if (!nearGround && controls.target.lengthSq() < 0.01) controls.target.set(0, 0, 0);
-    controls.minDistance = nearGround ? 1.2 / MOON_RADIUS_METERS : 1.012;
-    if (nearGround) controls.maxPolarAngle = Math.PI / 2;
-    camera.lookAt(controls.target);
+    // Preserve the view when leaving flight instead of snapping toward the ground.
+    const position = camera.position.clone();
+    camera.getWorldDirection(viewDirection);
+    const up = position.clone().normalize();
+    createOrbitControls(up);
+    controls.target.copy(position).addScaledVector(viewDirection, 600 / MOON_RADIUS_METERS);
+    controls.minDistance = 1.2 / MOON_RADIUS_METERS;
+    controls.maxPolarAngle = Math.PI;
     controls.update();
     flightButton.textContent = 'Free flight';
     flightButton.setAttribute('aria-pressed', 'false');
@@ -465,47 +587,27 @@ async function loadMoon(container, status) {
     if (releasePointer && document.pointerLockElement === canvas) document.exitPointerLock();
   }
 
-  function enterFlight() {
+  function enterFlight(lockPointer = true) {
+    navigationRevision++;
+    if (flight) finishFlight();
     freeFlight = true;
     keys.clear();
     controls.enabled = false;
-    camera.up.set(0, 1, 0);
-    camera.getWorldDirection(viewDirection);
-    yaw = Math.atan2(-viewDirection.x, -viewDirection.z);
-    pitch = Math.asin(THREE.MathUtils.clamp(viewDirection.y, -1, 1));
-    camera.rotation.order = 'YXZ';
-    camera.rotation.set(pitch, yaw, 0);
+    levelFlight(camera);
     flightButton.textContent = 'Exit flight';
     flightButton.setAttribute('aria-pressed', 'true');
     flightHint.hidden = false;
-    for (const button of viewButtons) button.setAttribute('aria-pressed', 'false');
+    setViewPressed(null);
     canvas.focus({ preventScroll: true });
-    if (canvas.requestPointerLock) canvas.requestPointerLock();
+    if (lockPointer && canvas.requestPointerLock) {
+      // Drag-to-look remains available if the browser denies pointer lock.
+      try { canvas.requestPointerLock()?.catch(() => {}); } catch { /* drag fallback */ }
+    }
   }
 
   for (const button of viewButtons) {
     button.addEventListener('click', () => setView(button.dataset.view));
   }
-  const earthButton = document.createElement('button');
-  earthButton.textContent = 'Look at Earth';
-  earthButton.addEventListener('click', () => {
-    if (!sky) return;
-    if (freeFlight) leaveFlight();
-    controls.target.copy(camera.position).add(sky.earth.position.clone().sub(camera.position).normalize().multiplyScalar(0.001));
-    camera.lookAt(controls.target);
-    controls.update();
-  });
-  cameraToolbar.append(earthButton);
-  const groundButton = document.createElement('button');
-  groundButton.textContent = 'Stand on surface';
-  groundButton.addEventListener('click', () => {
-    if (freeFlight) leaveFlight();
-    const dir = camera.position.clone().normalize();
-    const [lat, lon] = terrain.latLonFromDirection(dir.x, dir.y, dir.z);
-    const place = currentPlace || { id: '', name: 'Surface', lat, lon };
-    focusPlace({ ...place, lat, lon });
-  });
-  cameraToolbar.append(groundButton);
   flightButton.addEventListener('click', () => {
     if (freeFlight) leaveFlight();
     else enterFlight();
@@ -513,6 +615,7 @@ async function loadMoon(container, status) {
 
   canvas.addEventListener('dblclick', (event) => {
     if (freeFlight) return;
+    if (flight) finishFlight();
     const bounds = canvas.getBoundingClientRect();
     const pointer = new THREE.Vector2(
       ((event.clientX - bounds.left) / bounds.width) * 2 - 1,
@@ -522,21 +625,28 @@ async function loadMoon(container, status) {
     picker.setFromCamera(pointer, camera);
     const hit = terrain.raycast(picker.ray.origin, picker.ray.direction);
     if (!hit) return;
-    sky?.analyze(hit, 'Selected terrain point');
     const up = hit.clone().normalize();
     const [lat, lon] = terrain.latLonFromDirection(up.x, up.y, up.z);
+    currentPlace = { id: '', name: 'Selected terrain point', lat, lon, group: 'point' };
+    siteList.setSelected(null);
+    pins.setSelected(null);
+    railDismissed = false;
+    drawer.show(currentPlace, null);
+    updateRail();
+    sky?.analyze(hit, currentPlace.name);
     createOrbitControls(orbitUp(up, northAt(lat, lon)));
     controls.target.copy(hit);
     controls.minDistance = 1.2 / MOON_RADIUS_METERS;
     controls.maxPolarAngle = Math.PI / 2;
     controls.update();
-    for (const button of viewButtons) button.setAttribute('aria-pressed', 'false');
+    setViewPressed(null);
   });
 
   canvas.addEventListener('mousemove', (event) => {
     if (freeFlight && document.pointerLockElement === canvas) updateFlightLook(event.movementX, event.movementY);
   });
   canvas.addEventListener('pointerdown', (event) => {
+    if (flight) finishFlight();
     if (!freeFlight || document.pointerLockElement === canvas) return;
     dragPointerId = event.pointerId;
     canvas.setPointerCapture(event.pointerId);
@@ -553,15 +663,46 @@ async function loadMoon(container, status) {
     if (freeFlight && document.pointerLockElement !== canvas) leaveFlight(false);
   });
 
-  const movementKeys = new Set(['KeyW', 'KeyA', 'KeyS', 'KeyD', 'Space', 'KeyC', 'ShiftLeft', 'ShiftRight']);
+  const movementKeys = new Set(['KeyW', 'KeyA', 'KeyS', 'KeyD', 'KeyQ', 'KeyE', 'Space', 'KeyC', 'ShiftLeft', 'ShiftRight']);
   document.addEventListener('keydown', (event) => {
-    if (event.code === 'Escape' && freeFlight) leaveFlight();
-    if (!freeFlight || !movementKeys.has(event.code)) return;
-    event.preventDefault();
-    keys.add(event.code);
+    if (freeFlight) {
+      if (event.code === 'Escape') leaveFlight();
+      else if (!isTextField(event.target) && !event.metaKey && !event.ctrlKey && !event.altKey && movementKeys.has(event.code)) {
+        event.preventDefault();
+        keys.add(event.code);
+      }
+      return;
+    }
+    if (event.metaKey || event.ctrlKey || event.altKey) return;
+    const target = event.target;
+    const typing = isTextField(target);
+    const key = event.key.length === 1 ? event.key.toLowerCase() : event.key;
+    if (key === 'Escape') {
+      if (closeOpenPopover()) return;
+      if (narrowQuery.matches && siteList.isOpen) { setListOpen(false); sitesButton.focus(); return; }
+      if (drawer.isOpen && !(typing && target.value)) { clearSelection(); return; }
+      return;
+    }
+    if (typing) return;
+    if (key === '/') { event.preventDefault(); focusSearch(); return; }
+    if (key === 'l') { event.preventDefault(); layersPopover.toggle(); return; }
+    if (!sky) return;
+    const timeline = sky.timeline;
+    if (key === '[' || key === ']') { timeline.stepSpeed(key === ']' ? 1 : -1); return; }
+    const onControl = target instanceof HTMLElement && target.matches('button, input, [role="menuitemradio"]');
+    if (onControl) return;
+    if (event.code === 'Space') { event.preventDefault(); timeline.togglePlay(); }
+    else if (key === 'r') timeline.toggleReverse();
+    else if (key === 'n') timeline.now();
+    else if (key === 'ArrowLeft' || key === 'ArrowRight') {
+      event.preventDefault();
+      timeline.step((key === 'ArrowRight' ? 1 : -1) * (event.shiftKey ? 10 : 1));
+    }
   });
   document.addEventListener('keyup', (event) => { keys.delete(event.code); });
   window.addEventListener('blur', () => keys.clear());
+  document.addEventListener('visibilitychange', () => keys.clear());
+  document.addEventListener('focusin', (event) => { if (isTextField(event.target)) keys.clear(); });
 
   function resize() {
     const width = container.clientWidth;
@@ -575,24 +716,28 @@ async function loadMoon(container, status) {
   resizeObserver.observe(container);
   resize();
 
-  status.textContent = `LOLA terrain + ${textureLabel} · ${describeRelief()} · ${skyStatus}`;
-  status.classList.add('moon-status--loaded');
+  loadingStatus.hidden = true;
+  let statusText = '';
+  function updateStatus() {
+    const next = `LOLA terrain + ${textureLabel} · ${describeRelief()} · ${skyStatus}`;
+    if (next !== statusText) layersStatus.textContent = statusText = next;
+  }
+  updateStatus();
 
   setView('globe');
+  if (flight) finishFlight();
   const shot = params.get('shot');
   if (shot) {
-    const panel = container.querySelector('.visibility-panel');
-    if (panel) panel.open = false;
     const key = shot.toLowerCase();
     const aliases = { shackleton: 'site04', apollo11: 'apollo-11', apollo: 'apollo-11' };
-    if (key === 'south') setView('south');
-    else if (key === 'north') setView('north');
-    else if (key === 'globe') setView('globe');
-    else {
+    if (key === 'south' || key === 'north' || key === 'globe') {
+      setView(key);
+      finishFlight();
+    } else {
       const id = aliases[key] || key;
       const place = placesById.get(id)
         || places.find((entry) => normId(entry.id) === normId(id));
-      if (place) focusPlace(place);
+      if (place) focusPlace(place, { surface: true, instant: true });
     }
   }
 
@@ -604,6 +749,7 @@ async function loadMoon(container, status) {
 
   renderer.setAnimationLoop((now) => {
     const deltaSeconds = Math.min((now - previousFrame) / 1000, 0.05);
+    const realDelta = Math.min((now - previousFrame) / 1000, 1);
     previousFrame = now;
     fpsFrames++;
     if (now - fpsStamp > 500) {
@@ -612,7 +758,13 @@ async function loadMoon(container, status) {
       fpsStamp = now;
     }
 
-    if (freeFlight) {
+    sky?.timeline.tick(realDelta);
+
+    if (flight) {
+      stepFlight(realDelta);
+    } else if (freeFlight) {
+      const yawInput = Number(keys.has('KeyQ')) - Number(keys.has('KeyE'));
+      if (yawInput) turnFlight(camera, yawInput * 1.2 * deltaSeconds, 0);
       camera.updateMatrixWorld();
       camera.getWorldDirection(viewDirection);
       rightDirection.setFromMatrixColumn(camera.matrixWorld, 0).normalize();
@@ -628,11 +780,11 @@ async function loadMoon(container, status) {
         movement.normalize();
         const groundR = terrain.surfaceRadius(camera.position);
         const altitude = camera.position.length() - groundR;
-        const near = altitude < 0.02;
-        let speed = THREE.MathUtils.clamp(altitude * 0.28, near ? 2 / MOON_RADIUS_METERS : 0.01, 0.5);
+        let speed = THREE.MathUtils.clamp(altitude * 0.28, 2 / MOON_RADIUS_METERS, 0.5);
         if (keys.has('ShiftLeft') || keys.has('ShiftRight')) speed *= 4;
         camera.position.addScaledVector(movement, speed * deltaSeconds);
         if (camera.position.length() > 18) camera.position.setLength(18);
+        transportFlight(camera, radialDirection);
       }
     } else {
       controls.update();
@@ -666,9 +818,9 @@ async function loadMoon(container, status) {
       fps: Math.round(fps),
       cam: Number(camera.position.length().toFixed(5)),
     };
-    if (!currentPlace) {
-      status.textContent = `LOLA terrain + ${textureLabel} · ${describeRelief()} · ${skyStatus}`;
-    }
+    updateStatus();
+    camera.updateMatrixWorld();
+    pins.update(camera, (direction) => terrain.surfaceRadius(direction), container.clientWidth, container.clientHeight, realDelta);
     landers?.update(camera);
     renderer.render(scene, camera);
     landers?.renderSplats(camera);
