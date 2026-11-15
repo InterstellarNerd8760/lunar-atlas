@@ -4,7 +4,23 @@ A browser-based Moon explorer for comparing sunlight and Earth visibility at lun
 
 ## Local development
 
-Run `python3 -m http.server 8000` from the repository root and open `http://localhost:8000`.
+Install Python 3 and Git. If you already have a checkout, open Terminal and run:
+
+```bash
+cd ~/Documents/lunar-atlas-pr2
+git pull --ff-only origin main
+python3 -m http.server 8000
+```
+
+Use your actual checkout path if it differs. For a fresh checkout, run:
+
+```bash
+git clone https://github.com/InterstellarNerd8760/lunar-atlas.git
+cd lunar-atlas
+python3 -m http.server 8000
+```
+
+Open [http://localhost:8000](http://localhost:8000) in your browser. Keep the terminal open while using the viewer and press Ctrl+C to stop the server. Run the command from the directory containing `index.html`. The browser loads Three.js from a CDN, so it needs an internet connection.
 
 - `src/` contains the browser entry point, Moon scene module, and styles.
 - `notebooks/` is for offline terrain processing in Colab or Kaggle.
@@ -17,7 +33,7 @@ Run `python3 -m http.server 8000` from the repository root and open `http://loca
 
 The checkout includes `public/data/global-height/global-height.f32` and its JSON metadata. Start the local server from the repository root. The viewer builds a reduced mesh from the elevation grid and uses Auto relief (up to ×8 at globe distance, ×1 near the surface and at detailed sites), with a True scale lock.
 
-The WAC texture notebook is [`notebooks/prepare-wac-texture.ipynb`](notebooks/prepare-wac-texture.ipynb). Run it in Colab, download `wac-texture.jpg`, and place it beside the LOLA files in `public/data/`. The Three.js viewer uses the texture when that file is present and otherwise keeps the grayscale terrain view.
+The viewer also loads the included 4096 × 2048 normalized LROC WAC texture from `public/data/wac-texture.jpg`. Its source and processing details are in `public/data/wac-texture.json`. The globe uses grayscale terrain if the texture is unavailable.
 
 
 ## Add the site terrain and sky assets
@@ -37,9 +53,9 @@ The viewer uses the 2048 px Blue Marble Earth texture and 4096 px NASA SVS star 
 For a static deployment with these optional layers, include the extracted directories in the published files.
 
 
-## PR #2 visual and visibility update
+## Viewer and visibility
 
-Run the existing Python server as before. The viewer defaults to the south pole,
+The viewer defaults to the south pole,
 uses Auto relief with a true-scale lock, and adds Look at Earth and Stand on
 surface. Earth keeps its physical radius and ephemeris range. Detail mesh
 vertices use a local center to improve close-range precision.
@@ -50,12 +66,7 @@ body centers above a spherical horizon, sampled every six hours over the bundled
 not resolved. Longest darkness may be truncated by the window boundaries.
 Site notes cite the Notion-curated NASA, LROC and USGS sources.
 
-Re-run notebooks/prepare-wac-texture.ipynb in Colab and place its output at
-public/data/wac-texture.jpg for the 4096×2048 global texture. The source is the
-morphology mosaic with baked illumination; normalized albedo and local site
-image crops are still pending. Local crop loading, mission photo galleries,
-terrain shadows, century-scale history, and two-site comparison are not included
-in this checkpoint. Existing six-hour ephemeris samples are retained.
+The site DEMs in `public/data/site-dems/` and the Apollo 11 and south-pole ZIPs in `data/processed/` are available for integration. The viewer currently loads the optional site and sky archives described above.
 
 Validation: JavaScript syntax and whitespace checks passed. Browser acceptance
 is pending: the available Chromium process fails to launch in this environment
