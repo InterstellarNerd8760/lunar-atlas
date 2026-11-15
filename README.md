@@ -39,7 +39,7 @@ Open [http://localhost:8000](http://localhost:8000) in your browser. Keep the te
 
 ## Show the global LOLA terrain
 
-The checkout includes `public/data/global-height/global-height.f32` and its JSON metadata. Start the local server from the repository root. The viewer builds a reduced mesh from the elevation grid and uses Auto relief (up to ×8 at globe distance, ×1 near the surface and at detailed sites), with a True scale lock.
+The checkout includes `public/data/global-height/global-height.f32` and its JSON metadata. Start the local server from the repository root. The viewer builds a reduced mesh from the elevation grid and uses Auto relief (up to ×3 at globe distance, ×1 near the surface and at detailed sites), with a True scale lock.
 
 The viewer also loads the included 4096 × 2048 normalized LROC WAC texture from `public/data/wac-texture.jpg`. Its source and processing details are in `public/data/wac-texture.json`. The globe uses grayscale terrain if the texture is unavailable.
 
@@ -54,20 +54,11 @@ Open [the legacy texture view](http://localhost:8000/?moonTexture=legacy). The r
 
 ## Explore landing sites
 
-**Explore a site** includes the original landing and candidate-region catalog, the south-pole surveys, and the bundled Apollo and south-pole DEMs. These include Luna, Surveyor, Apollo, Chang’e, Chandrayaan-3, SLIM, and commercial landers.
+**Explore a site** lists every bundled DEM in `public/data/site-dems/index.json`, grouped into Apollo landing sites and south pole terrain. The viewer downloads one site at a time and drapes that grid on the lunar sphere.
 
-The checkout includes smaller terrain grids derived from the original exports and uses the bundled high-resolution DEMs where available for the same site. For full-resolution layers at additional sites, extract the optional archives into `public/data/` from the repository root. Replace the example paths with the paths to your downloads.
-
-```sh
-unzip "/path/to/lola-sites(1).zip" -d public/data
-unzip "/path/to/landing-sites.zip" -d public/data
-```
-
-Select a site in **Explore a site**. The viewer downloads that site's terrain when selected. Historical sites can include an LROC NAC close-up. Artemis III entries in the archive use the coordinates of terrain proxies. The five included proxies and four skipped regions are recorded in `public/data/site-previews/index.json`.
+Select a site in **Explore a site**. Apollo entries use the LROC NAC elevation crops. South-pole entries use the PGDA LOLA 5 m grids, including Shackleton rim and Connecting ridge. Artemis candidate regions in that catalog are terrain proxies, not selected landing coordinates.
 
 The checkout includes the 2048 px Blue Marble Earth texture and 4096 px NASA SVS star map. Credits are in [public/data/sky/CREDITS.txt](public/data/sky/CREDITS.txt). The star panorama uses a fixed decorative orientation. The time slider continues to drive the Sun and Earth's positions using the included Horizons ephemeris.
-
-For a static deployment with these optional layers, include the extracted directories in the published files.
 
 
 ## Viewer and visibility
@@ -83,7 +74,7 @@ body centers above a spherical horizon, sampled every six hours over the bundled
 not resolved. Longest darkness may be truncated by the window boundaries.
 Site notes cite the Notion-curated NASA, LROC and USGS sources.
 
-The viewer loads site DEMs from `public/data/site-dems/` and the optional terrain archives described above. The Apollo 11 imagery and south-pole ZIP exports in `data/processed/` are available for future viewer integration.
+The viewer loads site DEMs from `public/data/site-dems/`. The Apollo 11 imagery and south-pole ZIP exports in `data/processed/` are available for future viewer integration.
 
 Validation: JavaScript syntax and whitespace checks passed. Browser acceptance
 is pending: the available Chromium process fails to launch in this environment
