@@ -890,30 +890,23 @@ a { color: var(--primary); }
   *, *::before, *::after { transition: none !important; animation: none !important; }
 }
 
-/* Always-visible relief controls and dataset summary. */
+/* Quiet terrain attribution above the timeline. */
 .terrain-summary {
   position: absolute;
   z-index: 2;
-  top: var(--panel-top);
-  left: 50%;
-  transform: translateX(-50%);
-  width: max-content;
+  right: var(--edge);
+  bottom: var(--panel-bottom);
   max-width: min(360px, calc(100% - 2 * var(--edge)));
-  padding: 8px 12px;
-  font-size: 11px;
-  line-height: 16px;
+  color: var(--muted-foreground);
+  font-size: 10px;
+  line-height: 14px;
+  text-align: right;
+  text-shadow: 0 1px 3px #000;
+  pointer-events: none;
 }
-.terrain-summary__controls {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-}
-.terrain-summary .layers-menu__status { margin: 6px 0 2px; }
-.terrain-summary > a { display: block; text-align: center; }
-@media (pointer: coarse) {
-  .terrain-summary .btn { min-height: 44px; min-width: 40px; }
-}
+.terrain-summary__status { margin: 0; }
+.terrain-summary > a { color: inherit; pointer-events: auto; }
+.touch-flight-active .terrain-summary { bottom: calc(var(--panel-bottom) + 130px); }
 .flight-stick {
   position: relative;
   width: 120px;
