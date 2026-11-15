@@ -1,0 +1,116 @@
+[
+  {
+    "name": "Haworth",
+    "notes": "One of nine refined Artemis III candidate regions announced by NASA on Oct 28, 2024. Named for nearby Haworth crater, but NASA did not publish a region-center coordinate.",
+    "source": "https://www.nasa.gov/news-release/nasa-provides-update-on-artemis-iii-moon-landing-regions/",
+    "status": "NASA Artemis III candidate region"
+  },
+  {
+    "name": "Peak near Cabeus B",
+    "notes": "One of nine refined Artemis III candidate regions announced by NASA on Oct 28, 2024, in no priority order. Each region contains multiple potential landing sites. NASA published names and a map, not a single center coordinate. No later official replacement list was found as of Nov 11, 2026. In 2026 NASA redesignated Artemis III as a low-Earth-orbit test; this remains the last official public candidate set for the first south-pole crewed landing.",
+    "source": "https://www.nasa.gov/news-release/nasa-provides-update-on-artemis-iii-moon-landing-regions/",
+    "status": "NASA Artemis III candidate region"
+  },
+  {
+    "name": "Apollo 16",
+    "notes": "Lunar Module at Descartes. Planetocentric Mean Earth/Polar Axis, DE421. Coordinates from LRO images; Wagner et al., Icarus 283, 92–103 (2017), as compiled by NASA NSSDC.",
+    "source": "https://nssdc.gsfc.nasa.gov/planetary/lunar/lunar_sites.html",
+    "status": "Historical landing (Apollo)"
+  },
+  {
+    "name": "Connecting Ridge",
+    "notes": "Informal name (Shackleton–de Gerlache Connecting Ridge); not in the IAU gazetteer. Coordinates are the published center of LROC NAC DTM product NAC\\_DTM\\_SHACKRDGE02, not a surveyed peak. Product coverage is about 89.37°S–89.63°S, 209.81°E–239.10°E.",
+    "source": "https://data.lroc.im-ldi.com/lroc/view_rdr/NAC_DTM_SHACKRDGE02",
+    "status": "Notable south-pole feature"
+  },
+  {
+    "name": "Apollo 15",
+    "notes": "Lunar Module at Hadley Rille. Planetocentric Mean Earth/Polar Axis, DE421. Coordinates from LRO images; Wagner et al., Icarus 283, 92–103 (2017), as compiled by NASA NSSDC.",
+    "source": "https://nssdc.gsfc.nasa.gov/planetary/lunar/lunar_sites.html",
+    "status": "Historical landing (Apollo)"
+  },
+  {
+    "name": "Apollo 17",
+    "notes": "Lunar Module at Taurus-Littrow. Planetocentric Mean Earth/Polar Axis, DE421. Coordinates from LRO images; Wagner et al., Icarus 283, 92–103 (2017), as compiled by NASA NSSDC.",
+    "source": "https://nssdc.gsfc.nasa.gov/planetary/lunar/lunar_sites.html",
+    "status": "Historical landing (Apollo)"
+  },
+  {
+    "name": "Malapert massif",
+    "notes": "IAU name Mons Malapert (Feature 16338), approved Aug 26, 2024; LOLA 2011 control network; diameter 67 km. This is the named mountain, not a published center of the Artemis III “Malapert Massif” region polygon.",
+    "source": "https://planetarynames.wr.usgs.gov/Feature/16338",
+    "status": "Notable south-pole feature"
+  },
+  {
+    "name": "Apollo 14",
+    "notes": "Lunar Module at Fra Mauro. Planetocentric Mean Earth/Polar Axis, DE421. Coordinates from LRO images; Wagner et al., Icarus 283, 92–103 (2017), as compiled by NASA NSSDC.",
+    "source": "https://nssdc.gsfc.nasa.gov/planetary/lunar/lunar_sites.html",
+    "status": "Historical landing (Apollo)"
+  },
+  {
+    "name": "Apollo 11",
+    "notes": "Lunar Module at Mare Tranquillitatis. Planetocentric Mean Earth/Polar Axis, DE421. Coordinates from LRO images; Wagner et al., Icarus 283, 92–103 (2017), as compiled by NASA NSSDC.",
+    "source": "https://nssdc.gsfc.nasa.gov/planetary/lunar/lunar_sites.html",
+    "status": "Historical landing (Apollo)"
+  },
+  {
+    "name": "Malapert Massif",
+    "notes": "One of nine refined Artemis III candidate regions announced by NASA on Oct 28, 2024. Distinct from the IAU-named mountain Mons Malapert, whose gazetteer center is listed in the notable-features section. NASA did not publish a region-center coordinate.",
+    "source": "https://www.nasa.gov/news-release/nasa-provides-update-on-artemis-iii-moon-landing-regions/",
+    "status": "NASA Artemis III candidate region"
+  },
+  {
+    "name": "de Gerlache rim",
+    "notes": "IAU crater-center coordinates from the USGS Gazetteer (Feature 1439, de Gerlache; planetographic, +East; diameter 32.71 km). No single official rim-point coordinate is published. Distinct from the Artemis III region “de Gerlache Rim 2,” which has no published center.",
+    "source": "https://planetarynames.wr.usgs.gov/Feature/1439",
+    "status": "Notable south-pole feature"
+  },
+  {
+    "name": "Mons Mouton Plateau",
+    "notes": "One of nine refined Artemis III candidate regions announced by NASA on Oct 28, 2024. Distinct from the Mons Mouton region and from the IAU-named Mons Mouton (gazetteer center 84.60°S, 31.00°E). NASA did not publish a region-center coordinate.",
+    "source": "https://www.nasa.gov/news-release/nasa-provides-update-on-artemis-iii-moon-landing-regions/",
+    "status": "NASA Artemis III candidate region"
+  },
+  {
+    "name": "Nobile Rim 2",
+    "notes": "One of nine refined Artemis III candidate regions announced by NASA on Oct 28, 2024. Named for the rim of Nobile crater. NASA did not publish a region-center coordinate.",
+    "source": "https://www.nasa.gov/news-release/nasa-provides-update-on-artemis-iii-moon-landing-regions/",
+    "status": "NASA Artemis III candidate region"
+  },
+  {
+    "name": "Mons Mouton",
+    "notes": "One of nine refined Artemis III candidate regions announced by NASA on Oct 28, 2024. The IAU feature Mons Mouton (Feature 16070) has a gazetteer center of 84.60°S, 31.00°E, but that is the named mountain, not a published center of this landing region.",
+    "source": "https://www.nasa.gov/news-release/nasa-provides-update-on-artemis-iii-moon-landing-regions/",
+    "status": "NASA Artemis III candidate region"
+  },
+  {
+    "name": "de Gerlache Rim 2",
+    "notes": "One of nine refined Artemis III candidate regions announced by NASA on Oct 28, 2024. Kept from the original 2022 set of 13. Distinct from the IAU crater de Gerlache, whose center is listed in the notable-features section. NASA did not publish a region-center coordinate.",
+    "source": "https://www.nasa.gov/news-release/nasa-provides-update-on-artemis-iii-moon-landing-regions/",
+    "status": "NASA Artemis III candidate region"
+  },
+  {
+    "name": "Nobile Rim 1",
+    "notes": "One of nine refined Artemis III candidate regions announced by NASA on Oct 28, 2024. Named for the rim of Nobile crater. NASA did not publish a region-center coordinate.",
+    "source": "https://www.nasa.gov/news-release/nasa-provides-update-on-artemis-iii-moon-landing-regions/",
+    "status": "NASA Artemis III candidate region"
+  },
+  {
+    "name": "Slater Plain",
+    "notes": "One of nine refined Artemis III candidate regions announced by NASA on Oct 28, 2024. Added in the 2024 downselection. NASA did not publish a region-center coordinate.",
+    "source": "https://www.nasa.gov/news-release/nasa-provides-update-on-artemis-iii-moon-landing-regions/",
+    "status": "NASA Artemis III candidate region"
+  },
+  {
+    "name": "Apollo 12",
+    "notes": "Lunar Module at Oceanus Procellarum. Planetocentric Mean Earth/Polar Axis, DE421. Coordinates from LRO images; Wagner et al., Icarus 283, 92–103 (2017), as compiled by NASA NSSDC.",
+    "source": "https://nssdc.gsfc.nasa.gov/planetary/lunar/lunar_sites.html",
+    "status": "Historical landing (Apollo)"
+  },
+  {
+    "name": "Shackleton rim",
+    "notes": "IAU crater-center coordinates from the USGS Gazetteer of Planetary Nomenclature (Feature 5450, Shackleton; planetographic, +East; diameter 20.92 km). No single official coordinate is published for a specific point on the rim; the rim lies roughly one radius (\\~10 km) from this center.",
+    "source": "https://planetarynames.wr.usgs.gov/Feature/5450",
+    "status": "Notable south-pole feature"
+  }
+]
