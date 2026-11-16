@@ -646,5 +646,53 @@
       "https://www.ispace-inc.com/2023/04/26/status-update-on-ispace-hakuto-r-mission-1-lunar-lander/"
     ],
     "westonsTake": ""
+  },
+  "clps-im3-reiner-gamma": {
+    "id": "clps-im3-reiner-gamma",
+    "name": "CLPS candidate: IM-3 / Reiner Gamma",
+    "about": "Intuitive Machines IM-3 (CP-11) is an announced future NASA Commercial Lunar Payload Services delivery associated with Reiner Gamma. This marker is placed at the USGS/IAU named-feature center only to make the general mission region explorable. It is NOT an officially selected landing point, landing ellipse, or verified lander location. Plans and dates may change.",
+    "facts": [
+      "NASA CLPS destination: Reiner Gamma.",
+      "Map reference: 7.39°, -58.96° — USGS/IAU feature center, NOT selected landing coordinates.",
+      "Lunar albedo swirl",
+      "Future/proposed mission; no completed landing or mission-specific site DEM is claimed."
+    ],
+    "sources": [
+      "https://www.nasa.gov/reference/commercial-lunar-payload-services/",
+      "https://planetarynames.wr.usgs.gov/Feature/4987"
+    ],
+    "westonsTake": ""
+  },
+  "clps-draper-schrodinger": {
+    "id": "clps-draper-schrodinger",
+    "name": "CLPS candidate: Draper / Schrödinger",
+    "about": "Draper CLPS (CP-12) is an announced future NASA Commercial Lunar Payload Services delivery associated with Schrödinger basin. This marker is placed at the USGS/IAU named-feature center only to make the general mission region explorable. It is NOT an officially selected landing point, landing ellipse, or verified lander location. Plans and dates may change.",
+    "facts": [
+      "NASA CLPS destination: Schrödinger basin.",
+      "Map reference: -74.73°, 132.93° — USGS/IAU feature center, NOT selected landing coordinates.",
+      "Large farside impact basin",
+      "Future/proposed mission; no completed landing or mission-specific site DEM is claimed."
+    ],
+    "sources": [
+      "https://www.nasa.gov/reference/commercial-lunar-payload-services/",
+      "https://planetarynames.wr.usgs.gov/Feature/5381"
+    ],
+    "westonsTake": ""
+  },
+  "clps-blueghost3-gruithuisen": {
+    "id": "clps-blueghost3-gruithuisen",
+    "name": "CLPS candidate: Blue Ghost 3 / Gruithuisen Domes",
+    "about": "Firefly Blue Ghost Mission 3 (CP-21) is an announced future NASA Commercial Lunar Payload Services delivery associated with Mons Gruithuisen Delta. This marker is placed at the USGS/IAU named-feature center only to make the general mission region explorable. It is NOT an officially selected landing point, landing ellipse, or verified lander location. Plans and dates may change.",
+    "facts": [
+      "NASA CLPS destination: Mons Gruithuisen Delta.",
+      "Map reference: 36.07°, -39.59° — USGS/IAU feature center, NOT selected landing coordinates.",
+      "Gruithuisen volcanic dome region",
+      "Future/proposed mission; no completed landing or mission-specific site DEM is claimed."
+    ],
+    "sources": [
+      "https://www.nasa.gov/reference/commercial-lunar-payload-services/",
+      "https://planetarynames.wr.usgs.gov/Feature/3981"
+    ],
+    "westonsTake": ""
   }
 }

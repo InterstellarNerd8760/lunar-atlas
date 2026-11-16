@@ -16,6 +16,20 @@ export function installHelp(container) {
     ['Pin legend', 'Solid white: landed spacecraft · red: failed landing attempt · dashed gold: approximate landing coordinates · hollow white: potential landing region · small blue diamond: selected terrain feature. Thousands of named craters and other features are searched or shown as zoom-dependent labels, not spacecraft markers. Click Help or press I to reopen this guide.'],
   ];
   for (const [title, text] of sections) panel.append(el('h3', { text: title }), el('p', { text }));
+  const swatches = [
+    ['landed', 'Solid white', 'Confirmed landing site'],
+    ['failed', 'Red', 'Failed landing or likely impact'],
+    ['approx', 'Dashed gold', 'Approximate coordinates'],
+    ['future', 'Hollow white', 'Potential landing region or planned CLPS mission'],
+    ['terrain', 'Blue diamond', 'Selected terrain feature'],
+  ];
+  panel.append(el('h3', { text: 'Map key' }), el('div', { class: 'pin-key', role: 'list' },
+    swatches.map(([kind, name, detail]) => el('div', { class: 'pin-key__row', role: 'listitem' }, [
+      el('span', { class: `pin-key__symbol pin-key__symbol--${kind}`, 'aria-hidden': 'true' }),
+      el('strong', { text: name }),
+      el('span', { text: detail }),
+    ]))));
+
   container.append(panel);
   const popup = bindPopover(button, panel, { onOpen: () => close.focus() });
   close.addEventListener('click', () => popup.close(true));

@@ -998,3 +998,12 @@ a { color: var(--primary); }
 .help-panel p { margin: 4px 0 16px; }
 .help-panel h3 { margin: 12px 0 0; }
 .site-list--rail > .panel-drag-handle { display: none; }
+
+/* Code-drawn map key; mirrors the existing procedural pin palette. */
+.pin-key { display: grid; gap: 6px; margin: 8px 0; }
+.pin-key__row { display: grid; grid-template-columns: 18px 105px 1fr; gap: 8px; align-items: center; font-size: 12px; }
+.pin-key__symbol { width: 11px; height: 11px; border-radius: 50%; background: #f5f6fa; border: 1px solid #080b12; }
+.pin-key__symbol--failed { background: #e66c73; }
+.pin-key__symbol--approx { background: transparent; border: 2px dashed #e2b657; }
+.pin-key__symbol--future { background: transparent; border: 2px solid #f5f6fa; }
+.pin-key__symbol--terrain { width: 9px; height: 9px; border: 1px solid #c1e4fb; background: #77b9e0; border-radius: 2px; transform: rotate(45deg); }
