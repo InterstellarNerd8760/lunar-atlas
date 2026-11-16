@@ -241,9 +241,9 @@ async function loadMoon(container, loadingStatus) {
     fetch(new URL('site-dems/index.json', dataDirectory)),
     fetch(new URL('site-previews/index.json?v=clps-final-2026', dataDirectory)),
     fetch(new URL('site-notes.json', dataDirectory)),
-    fetch(new URL('site-photos/index.json?v=mission-photo-v5', dataDirectory)),
+    fetch(new URL('site-photos/index.json?v=audit-2026-11-15', dataDirectory)),
     fetch(new URL('landing-sites.csv?v=pin-status-v2', dataDirectory)),
-    fetch(new URL('site-writeups.json?v=clps-final-2026', dataDirectory)),
+    fetch(new URL('site-writeups.json?v=audit-2026-11-15', dataDirectory)),
     fetch(new URL('features.json', dataDirectory)),
     fetch(new URL('horizons.json', dataDirectory)),
   ]);
