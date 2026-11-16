@@ -431,8 +431,8 @@ export function createLanderOverlay({ scene, terrain, sites, canvas, modelsDirec
     splatCamera.updateProjectionMatrix();
     const autoClear = renderer.autoClear;
     renderer.autoClear = false;
-    renderer.render(splatScene, splatCamera);
-    renderer.autoClear = autoClear;
+    try { renderer.render(splatScene, splatCamera); }
+    finally { renderer.autoClear = autoClear; }
   }
 
   // A slot's model: the manifest GLB if there is one, else the procedural fallback.
@@ -464,7 +464,7 @@ export function createLanderOverlay({ scene, terrain, sites, canvas, modelsDirec
       }
       return loadGlb(slot).then((model) => {
         const copy = model.clone();
-        if (concept) copy.traverse((o) => { if (o.isMesh) o.material = tintedConcept(o.material); });
+        if (concept) copy.traverse((o) => { if (o.isMesh) o.material = Array.isArray(o.material) ? o.material.map(tintedConcept) : tintedConcept(o.material); });
         holder.add(copy);
       }).catch((error) => {
         console.warn(`Lander model ${slot} unavailable, using the procedural fallback`, error);
@@ -599,6 +599,7 @@ export function createLanderOverlay({ scene, terrain, sites, canvas, modelsDirec
   let frame = 0;
   let lastRelief = null;
   let lastDems = null;
+  let lastHeightsEpoch = null;
   const dummy = new THREE.Object3D();
   const camLocal = new THREE.Vector3();
 
@@ -607,7 +608,8 @@ export function createLanderOverlay({ scene, terrain, sites, canvas, modelsDirec
     frame++;
     const relief = terrain.relief;
     const dems = terrain.stats?.().dems;
-    const reseatAll = relief !== lastRelief || dems !== lastDems || frame % 120 === 0;
+    const reseatAll = relief !== lastRelief || dems !== lastDems || terrain.heightsEpoch !== lastHeightsEpoch;
+    lastHeightsEpoch = terrain.heightsEpoch;
     lastRelief = relief;
     lastDems = dems;
     const pxHigh = Math.max(canvas.clientHeight || 700, 1);
