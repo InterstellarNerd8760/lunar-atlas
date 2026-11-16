@@ -1,11 +1,11 @@
-import { installHelp } from './help.js?v=pin-status-v2';
+import { installHelp } from './help.js?v=final-layout-v3';
 import * as THREE from 'three';
 import { OrbitControls } from 'https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/controls/OrbitControls.js';
 
 import { addSky } from './sky.js';
 import { aimAt, levelFlight, transportFlight, turnFlight } from './flight.js';
 import { createFeatureLabels } from './features.js';
-import { createDrawer, createPins, createSiteList } from './sites.js?v=pin-status-v2';
+import { createDrawer, createPins, createSiteList } from './sites.js?v=final-layout-v3';
 import { bindPopover, closeOpenPopover, makePanelDraggable, el, icons, isTextField, reducedMotion } from './ui.js';
 import { createTerrain } from './terrain.js';
 import { createHorizonSource } from './horizon.js';
@@ -435,6 +435,7 @@ async function loadMoon(container, loadingStatus) {
   const compareButton = el('button', { type: 'button', class: 'btn', 'aria-haspopup': 'dialog', title: 'Compare sites side by side', text: 'Compare', hidden: !compare, onclick: () => compare?.toggle(currentPlace) });
   const layersButton = el('button', { type: 'button', class: 'btn topbar__layers', 'aria-label': 'Layers', 'aria-haspopup': 'dialog', 'aria-keyshortcuts': 'L', title: 'Layers (L)', html: `${icons.layers}<span>Layers</span>` });
   const topbar = el('header', { class: 'topbar glass' }, [
+    el('h1', { class: 'brand', html: '<span class="brand__accent">Centauri</span> Lunar Atlas <a class="brand__by" href="https://westonrosch.com" target="_blank" rel="noopener">by Weston Rosch</a>' }),
     el('nav', { class: 'topbar__nav', 'aria-label': 'Navigation and settings' }, [
       sitesButton,
       el('div', { class: 'topbar__nav topbar__views' }, viewButtons),
@@ -443,7 +444,6 @@ async function loadMoon(container, loadingStatus) {
       compareButton,
       layersButton,
     ]),
-    el('h1', { class: 'brand', html: '<span class="brand__accent">Centauri</span> Lunar Atlas <a class="brand__by" href="https://westonrosch.com" target="_blank" rel="noopener">by Weston Rosch</a>' }),
   ]);
   container.append(topbar);
 

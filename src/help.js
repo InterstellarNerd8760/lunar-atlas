@@ -13,7 +13,7 @@ export function installHelp(container) {
     ['Time and visibility', 'Use the timeline to change the date, play time, or change its speed. Site visibility shows estimated sunlight and Earth visibility for the displayed period. Compare opens a comparison of up to three locations.'],
     ['Layers and settings', 'Layers (L) controls terrain relief, WAC imagery and feature labels. Relief ×1 uses true scale. Auto increases relief from orbit and returns toward ×1 near the surface. WAC imagery mode displays the image without simulated lighting.'],
     ['Move panels', 'Drag any information panel by its Move panel handle. With the handle focused, arrow keys move it and Home resets its position. Temporary pin labels appear on hover; they do not drag.'],
-    ['Pin legend', 'Solid white: landing · red: failed attempt · hollow white: candidate region · dashed gold: approximate landing coordinates. Click Help or press I to reopen this guide. Shift + / (?) works too.'],
+    ['Pin legend', 'Solid white: landed spacecraft · red: failed landing attempt · dashed gold: approximate landing coordinates · hollow white: potential landing region · small blue diamond: selected terrain feature. Thousands of named craters and other features are searched or shown as zoom-dependent labels, not spacecraft markers. Click Help or press I to reopen this guide.'],
   ];
   for (const [title, text] of sections) panel.append(el('h3', { text: title }), el('p', { text }));
   container.append(panel);

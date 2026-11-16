@@ -6,8 +6,8 @@ export const GROUPS = [
   { id: 'apollo', label: 'Apollo landers', chip: 'Apollo' },
   { id: 'lander', label: 'Robotic landers', chip: 'Robotic landers' },
   { id: 'failed', label: 'Failed landing attempts', chip: 'Failed' },
-  { id: 'artemis', label: 'Artemis region', chip: 'Artemis region' },
-  { id: 'feature', label: 'Notable features', chip: 'Notable features' },
+  { id: 'artemis', label: 'Potential landing regions', chip: 'Future sites' },
+  { id: 'feature', label: 'Selected terrain features', chip: 'Terrain' },
 ];
 
 export function formatCoords(lat, lon) {
@@ -267,7 +267,7 @@ export function createDrawer(container, { onClose, onFlyTo, onStand, onEarth, on
 
   function chipText(place) {
     if (place.group === 'failed') return place.year ? `Failed attempt ${place.year}` : 'Failed landing';
-    if (place.group === 'artemis') return 'Candidate region';
+    if (place.group === 'artemis') return 'Potential landing region';
     if (place.group === 'feature') return 'Feature';
     if (place.group === 'point') return 'Terrain point';
     if (place.approximate) return 'Approximate landing site';
@@ -392,7 +392,8 @@ export function createPins(container, places, { onSelect, scene } = {}) {
     const classes = ['pin'];
     const status = pinStatus(place);
     if (status === 'future') classes.push('pin--proxy', 'pin--future');
-    if (place.approximate) classes.push('pin--approx');
+    if (status === 'feature') classes.push('pin--terrain');
+    if (status === 'approximate' || (status === 'failed' && place.approximate)) classes.push('pin--approx');
     if (status === 'failed') classes.push('pin--failed');
     const labelText = place.name;
     const button = el('button', {
