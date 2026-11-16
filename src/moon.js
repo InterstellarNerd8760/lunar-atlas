@@ -404,8 +404,11 @@ async function loadMoon(container, loadingStatus) {
   let walking = false;
   let jumpHeight = 0;
   let jumpVelocity = 0;
+  let walkSwayPhase = 0;
+  let walkSway = 0;
   const walkUp = new THREE.Vector3();
   const walkRotation = new THREE.Quaternion();
+  const walkOrientation = new THREE.Quaternion();
   walkButton.addEventListener('click', () => {
     if (walking) leaveFlight();
     else {
@@ -426,6 +429,7 @@ async function loadMoon(container, loadingStatus) {
       flightButton.setAttribute('aria-pressed', 'false');
       walking = true;
       jumpHeight = jumpVelocity = 0;
+      walkSwayPhase = walkSway = 0;
       walkButton.textContent = 'Exit walk';
       walkButton.setAttribute('aria-pressed', 'true');
       showFlightControls();
@@ -594,9 +598,10 @@ async function loadMoon(container, loadingStatus) {
   }
   const altitudePad = flightPad('Altitude', [['Space', 'Rise', 'Rise'], ['KeyC', 'Descend', 'Descend']]);
   let touchRunning = false;
-  const runButton = el('button', { type: 'button', class: 'btn', text: 'Run', 'aria-pressed': 'false', onclick: () => setTouchRun(!touchRunning) });
+  const runButton = el('button', { type: 'button', class: 'btn', text: 'Run', 'aria-label': 'Run', 'aria-pressed': 'false', onclick: () => setTouchRun(!touchRunning) });
   function setTouchRun(active) {
     touchRunning = active;
+    runButton.textContent = active ? 'Running' : 'Run';
     runButton.setAttribute('aria-pressed', String(active));
   }
   function jump() {
@@ -894,7 +899,7 @@ async function loadMoon(container, loadingStatus) {
     container.classList.toggle('touch-walk-active', showTouch && walking);
     flightHint.hidden = !freeFlight;
     if (showTouch) {
-      flightHint.textContent = walking ? 'Thumbstick to walk · Drag the Moon to look' : 'Thumbstick to move · Drag to look · Rise / Descend';
+      flightHint.textContent = walking ? 'Thumbstick to move · Drag to look · Run toggles speed' : 'Thumbstick to move · Drag to look · Rise / Descend';
     } else {
       flightHint.textContent = walking
         ? 'Walk: W A S D / arrows move · Drag to look · Shift run · Space jump · Esc exits'
@@ -1124,15 +1129,23 @@ async function loadMoon(container, loadingStatus) {
       if (keys.has('KeyS') || keys.has('ArrowDown')) movement.sub(viewDirection);
       if (keys.has('KeyD') || keys.has('ArrowRight')) movement.add(rightDirection);
       if (keys.has('KeyA') || keys.has('ArrowLeft')) movement.sub(rightDirection);
+      let swayTarget = 0;
       if (movement.lengthSq() > 0) {
         if (movement.lengthSq() > 1) movement.normalize();
-        const speed = touchRunning || keys.has('ShiftLeft') || keys.has('ShiftRight') ? 4 : 1.5;
+        const running = touchRunning || keys.has('ShiftLeft') || keys.has('ShiftRight');
+        const speed = running ? 4 : 1.5;
         camera.position.addScaledVector(movement, speed * deltaSeconds / MOON_RADIUS_METERS);
+        if (jumpHeight === 0 && jumpVelocity === 0 && !reducedMotion.matches) {
+          const stride = movement.length();
+          walkSwayPhase += deltaSeconds * stride * (running ? 8.5 : 5.5);
+          swayTarget = Math.sin(walkSwayPhase) * stride * (running ? 0.026 : 0.016);
+        }
         walkUp.copy(camera.position).normalize();
         walkRotation.setFromUnitVectors(radialDirection, walkUp);
         camera.quaternion.premultiply(walkRotation);
         camera.up.copy(walkUp);
       }
+      walkSway = reducedMotion.matches ? 0 : THREE.MathUtils.damp(walkSway, swayTarget, 12, deltaSeconds);
       if (jumpHeight > 0 || jumpVelocity > 0) {
         jumpHeight += jumpVelocity * deltaSeconds - 0.5 * 1.62 * deltaSeconds * deltaSeconds;
         jumpVelocity -= 1.62 * deltaSeconds;
@@ -1197,9 +1210,19 @@ async function loadMoon(container, loadingStatus) {
       cam: Number(camera.position.length().toFixed(5)),
     };
     updateStatus();
+    // Apply sway only to the rendered view so movement and look input use a level camera.
+    const swayView = walking && Math.abs(walkSway) > 1e-5;
+    if (swayView) {
+      walkOrientation.copy(camera.quaternion);
+      camera.rotateZ(walkSway);
+    }
     camera.updateMatrixWorld();
     pins.update(camera, (direction) => terrain.surfaceRadius(direction), container.clientWidth, container.clientHeight, realDelta);
     featureLabels?.update(camera, (direction) => terrain.surfaceRadius(direction), container.clientWidth, container.clientHeight, realDelta);
     renderer.render(scene, camera);
+    if (swayView) {
+      camera.quaternion.copy(walkOrientation);
+      camera.updateMatrixWorld();
+    }
   });
 }
