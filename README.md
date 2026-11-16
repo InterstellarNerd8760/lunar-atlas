@@ -1,6 +1,18 @@
 # Centauri Lunar Atlas
 
-A browser-based Moon explorer for comparing sunlight and Earth visibility at lunar sites.
+A browser-based 3D Moon explorer built by Weston Rosch as a solo entry for the **Lunar Landing Site Navigator** challenge at NASA Space Apps Mountain View 2026.
+
+**[Launch Lunar Atlas](https://moon.westonrosch.com/)** · **[View the seven-slide demo](https://westonrosch.com/projects/lunar-atlas/slides/)** · **[Read the project write-up](https://westonrosch.com/projects/lunar-atlas/)**
+
+Select a landing site to see how the terrain horizon affects sunlight and direct line of sight to Earth. Compare up to three sites over the same November 14–December 14, 2026 UTC window, or use Free flight and Walk mode to explore the terrain from orbit to eye level.
+
+Lunar Atlas uses NASA LOLA elevation, LROC imagery and terrain models, and JPL Horizons ephemerides. The visibility estimates use six-hour samples and depend on the available terrain resolution. They are intended for exploration and preliminary comparisons.
+
+- [Submission and methodology](docs/SUBMISSION.md)
+- [Data sources and processing notes](docs/data-sources.md)
+- [Image credits and licenses](docs/CREDITS.md)
+
+Weston led the concept, design, dataset selection, integration, and testing. AI tools assisted with implementation, debugging, research, and documentation. The [submission notes](docs/SUBMISSION.md#ai--super-intelligence-disclosure) describe the assistance in more detail.
 
 ## Local development
 
@@ -75,11 +87,6 @@ small terrain features, disk edges, and transitions between samples are not reso
 Site notes cite the Notion-curated NASA, LROC and USGS sources.
 
 The viewer loads site DEMs from `public/data/site-dems/`. The Apollo 11 imagery and south-pole ZIP exports in `data/processed/` are available for future viewer integration.
-
-Validation: JavaScript syntax and whitespace checks passed. Browser acceptance
-is pending: the available Chromium process fails to launch in this environment
-with an operation-not-permitted socket error. Ground-view appearance, terrain
-collision at human height, GPU performance and mobile layout require review.
 
 ## Terrain horizon and site comparison
 
