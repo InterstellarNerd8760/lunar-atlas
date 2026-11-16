@@ -44,10 +44,10 @@ export function installHelp(container) {
   if (!hasSeenWelcome && !directView) {
     const begin = el('button', { type: 'button', class: 'btn welcome-screen__start', text: 'Start exploring  →' });
     const intro = el('section', { class: 'welcome-screen__intro' }, [
-      el('p', { class: 'welcome-screen__eyebrow', text: 'CENTAURI / LUNAR ATLAS' }),
-      el('h1', { id: 'welcome-title', text: 'Explore the Moon.' }),
-      el('p', { class: 'welcome-screen__lead', text: 'Real lunar terrain. Historic missions. Future landing regions. Sunlight and Earth visibility, all in an interactive 3D atlas.' }),
-      el('p', { class: 'welcome-screen__subtitle', text: 'Your journey begins with the familiar Earth-facing near side. Orbit the globe, choose a landing site, or walk the lunar surface.' }),
+      el('p', { class: 'welcome-screen__eyebrow', text: 'CENTAURI LUNAR ATLAS  /  USER GUIDE' }),
+      el('h1', { id: 'welcome-title', text: 'Explore the Moon' }),
+      el('p', { class: 'welcome-screen__lead', text: 'NASA terrain and imagery. Historic landing sites, future mission regions, and local sunlight and Earth visibility.' }),
+      el('p', { class: 'welcome-screen__subtitle', text: 'Start on the Earth-facing near side, then orbit, fly, compare sites or walk the surface. This guide opens again with I, F1, or Help.' }),
       el('div', { class: 'welcome-screen__credits' }, [
         el('span', { text: 'NASA LOLA + LROC' }),
         el('span', { text: 'JPL Horizons' }),
@@ -59,13 +59,20 @@ export function installHelp(container) {
       el('div', {}, [el('h3', { text: title }), el('p', { text: description })]),
     ]));
     const guide = el('section', { class: 'welcome-screen__guide', 'aria-label': 'Controls and map key' }, [
-      el('p', { class: 'welcome-screen__eyebrow', text: 'HOW TO EXPLORE / QUICK GUIDE' }),
+      el('p', { class: 'welcome-screen__eyebrow', text: 'CONTROLS & NAVIGATION' }),
       ...controls,
+      el('div', { class: 'welcome-screen__legend' }, [
+        el('p', { class: 'welcome-screen__eyebrow', text: 'SITE MARKERS' }),
+        el('div', { class: 'pin-key' }, swatches.map(([kind, name, detail]) => el('div', { class: 'pin-key__row' }, [
+          el('span', { class: `pin-key__symbol pin-key__symbol--${kind}`, 'aria-hidden': 'true' }),
+          el('strong', { text: name }), el('span', { text: detail }),
+        ]))),
+      ]),
     ]);
     const welcome = el('div', { class: 'welcome-screen', role: 'dialog', 'aria-modal': 'true', 'aria-labelledby': 'welcome-title' }, [
       el('div', { class: 'welcome-screen__body' }, [intro, guide]),
       el('footer', { class: 'welcome-screen__footer' }, [
-        el('p', { text: 'Orbit · Search · Compare · Walk' }),
+        el('p', { text: 'LOLA TERRAIN  ·  LROC IMAGERY  ·  JPL HORIZONS' }),
         begin,
       ]),
     ]);
