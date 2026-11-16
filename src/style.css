@@ -162,14 +162,14 @@ a { color: var(--primary); }
 .vis__solar[data-level="no"] { border-color: #d0605e; }
 .brand__accent { color: hsl(217 91% 60%); }
 .brand {
-  margin: 0 auto 0 0;
+  margin: 0 0 0 auto;
   font-size: 16px;
   line-height: 24px;
   font-weight: 500;
   white-space: nowrap;
 }
 
-.topbar__nav { display: flex; align-items: center; gap: 2px; min-width: 0; }
+.topbar__nav { display: flex; align-items: center; gap: 2px; min-width: 0; flex: 0 1 auto; }
 .topbar__sites { display: none; }
 
 /* Popovers */
@@ -902,8 +902,9 @@ a { color: var(--primary); }
     gap: 0;
     padding: 0 4px;
   }
-  .topbar .brand { margin-inline: auto; }
-  .topbar__nav { justify-content: space-between; }
+  .topbar .brand { margin: 0 4px 0 auto; align-self: flex-end; font-size: 14px; }
+  .topbar__nav { justify-content: flex-start; width: 100%; overflow-x: auto; scrollbar-width: none; }
+  .topbar__nav::-webkit-scrollbar { display: none; }
   .topbar__nav > .btn { padding-inline: 6px; }
   .topbar__layers span { display: none; }
 }
