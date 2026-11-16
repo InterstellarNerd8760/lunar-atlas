@@ -1,3 +1,4 @@
+import { installHelp, makePanelDraggable } from './help.js';
 import * as THREE from 'three';
 import { OrbitControls } from 'https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/controls/OrbitControls.js';
 
@@ -1080,6 +1081,8 @@ async function loadMoon(container, loadingStatus) {
   resize();
 
   loadingStatus.hidden = true;
+  for (const panel of container.querySelectorAll('.drawer, .site-list')) makePanelDraggable(panel);
+  installHelp(container);
   let statusText = '';
   function updateStatus() {
     const next = `LOLA terrain + ${textureLabel} · ${describeRelief()} · ${skyStatus}`;
