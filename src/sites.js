@@ -13,6 +13,7 @@ export function formatCoords(lat, lon) {
 }
 
 function metaLine(place) {
+  if (place.disabled) return 'Region information · coordinates unpublished';
   if (place.group === 'artemis') return 'Terrain proxy';
   if (place.group === 'feature') return 'South pole terrain';
   return [place.year, place.country].filter(Boolean).join(' · ');
@@ -66,8 +67,8 @@ export function createSiteList(container, places, { onSelect, features = [], onF
         type: 'button',
         class: 'row',
         'data-id': place.id,
-        'aria-disabled': place.disabled ? 'true' : null,
-        title: place.disabled ? 'No published coordinates' : null,
+        
+        title: place.disabled ? 'Read region information; no published coordinates for navigation' : null,
       }, [
         el('span', { class: 'row__name', text: place.name }),
         el('span', { class: 'row__meta', text: metaLine(place) }),
@@ -112,7 +113,7 @@ export function createSiteList(container, places, { onSelect, features = [], onF
       .map((entry) => ({ ...entry, rank: entry.key === query ? 0 : entry.key.startsWith(query) ? 1 : entry.key.includes(query) ? 2 : 3 }))
       .sort((a, b) => a.rank - b.rank || a.name.localeCompare(b.name));
     results.replaceChildren(...matches.slice(0, MAX_SEARCH_RESULTS).map((entry) => {
-      const row = el('button', { type: 'button', class: 'row', 'aria-disabled': entry.disabled ? 'true' : null }, [
+      const row = el('button', { type: 'button', class: 'row', title: entry.disabled ? 'Read region information; coordinates unpublished' : null }, [
         el('span', { class: 'row__name', text: entry.name }),
         el('span', { class: 'row__meta', text: entry.meta }),
       ]);
@@ -280,6 +281,9 @@ export function createDrawer(container, { onClose, onFlyTo, onStand, onEarth, on
       const hasCoords = Number.isFinite(place.lat) && Number.isFinite(place.lon);
       coordsText.textContent = hasCoords ? formatCoords(place.lat, place.lon) : 'No published coordinates';
       copyButton.hidden = !hasCoords;
+      for (const button of drawer.querySelectorAll('.actions button')) button.disabled = !hasCoords;
+      visSection.hidden = !hasCoords;
+      if (!hasCoords) peek.textContent = 'Coordinates unpublished — region information only';
       imageSlot.hidden = isPoint;
       imageFrame.replaceChildren();
       if (note?.image) {
