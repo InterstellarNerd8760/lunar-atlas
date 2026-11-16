@@ -88,3 +88,9 @@ Sunlight and Earth visibility use a 360° terrain horizon instead of a smooth sp
 **Compare** in the top bar (or on a site's panel) puts up to three sites side by side over the same Horizons window.
 
 Tests: `node --test tests/horizon.test.mjs`.
+
+## Pin legend and keyboard help
+
+The existing marker geometry (flat ground disc, thin stalk, small sphere) is built entirely in three.js; there are no externally generated pin sprites. **White:** landed spacecraft. **Red:** failed landing impact (Luna 25 likely impact and HAKUTO-R Mission 1 approximate crash). **Hollow white:** mapped future candidate-region proxy. **Dashed gold:** an approximately located landing site, notably Luna 9 and Luna 13. A failed mission's coordinate may also be approximate; see its source note. Missions that never reached the Moon (for example, Peregrine) are not shown as fictitious impact locations. Near-surface pin labels show the actual mission on hover and disappear on pointer exit.
+
+Open the guide with **Help**, **I**, **Shift + /** (question mark), or **F1**; text inputs ignore these shortcuts. Other information windows remain draggable by their Move panel handles, but pin hover labels stay anchored and cannot be dragged.
