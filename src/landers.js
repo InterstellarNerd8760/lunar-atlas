@@ -3,8 +3,9 @@
 // - Apollo sites: NASA's Apollo LM (public/models/apollo-lm.glb, NASA 3D
 //   Resources) with the ascent stage hidden, since only the descent stage
 //   stayed on the surface. Apollo 15/16/17 also get a Lunar Roving Vehicle.
-// - Robotic landings: a procedural lander sized to each mission, plus a rover
-//   marker for Lunokhod 1/2, Yutu, Yutu-2 and Pragyan.
+// - Robotic landings: Sketchfab GLBs for Luna 9, Lunokhod 1/2, Yutu / Yutu-2,
+//   Vikram (Chandrayaan-3), and SLIM, plus a procedural lander for the other
+//   missions and a procedural Pragyan rover.
 // - Artemis candidate regions: CONCEPT hardware only (Starship HLS or Blue Moon,
 //   habitat, solar tower, NASA's SEV pressurized rover). Not real hardware or
 //   selected sites. Concept models get a cyan tint.
@@ -280,19 +281,19 @@ const SLOTS = {
   solarTower: { height: 10, fallback: ['solarTower'] },
   pressurizedRover: { length: 6, fallback: ['pressurizedRover'] },
   // Robotic landers: [span, height] of the landed hardware, rough public figures.
-  luna9: { height: 0.9, fallback: ['roboticLander', 1.6, 0.9] },
+  luna9: { length: 1.5, fallback: ['roboticLander', 1.5, 0.9] }, // 58 cm capsule; 1.5 m petal span
   surveyor: { height: 3.0, fallback: ['roboticLander', 4.3, 3.0] },
   lunaLander: { height: 2.0, fallback: ['roboticLander', 4.0, 2.0] }, // Luna 16/20/23/24 descent stage
   lunokhodLander: { height: 1.6, fallback: ['roboticLander', 4.0, 1.6] }, // Luna 17/21
   change3: { height: 2.8, fallback: ['roboticLander', 4.0, 2.8] }, // Chang'e 3/4
   change5: { height: 2.6, fallback: ['roboticLander', 4.5, 2.6] }, // Chang'e 5/6 lander
-  vikram: { height: 1.6, fallback: ['roboticLander', 3.0, 1.6] },
-  slim: { height: 2.4, fallback: ['roboticLander', 2.7, 2.4] },
+  vikram: { height: 2.0, fallback: ['roboticLander', 3.5, 2.0] },
+  slim: { length: 2.4, fallback: ['roboticLander', 2.4, 1.7] },
   novaC: { height: 4.3, fallback: ['roboticLander', 3.8, 4.3] }, // IM-1 / IM-2
   blueGhost: { height: 2.0, fallback: ['roboticLander', 3.5, 2.0] },
   genericLander: { height: 2.0, fallback: ['roboticLander', 3.0, 2.0] },
   // Rovers: [width, height, length].
-  lunokhod: { length: 2.3, fallback: ['smallRover', 1.6, 1.35, 2.3] },
+  lunokhod: { height: 1.92, fallback: ['smallRover', 2.15, 1.92, 2.3] }, // lid raised; 1.92 m tall (Lavochkin). Length 4.42 m is for a fully horizontal lid.
   yutu: { length: 1.5, fallback: ['smallRover', 1.0, 1.1, 1.5] },
   pragyan: { length: 0.92, fallback: ['smallRover', 0.75, 0.85, 0.92] },
 };

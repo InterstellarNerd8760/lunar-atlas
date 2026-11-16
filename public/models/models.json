@@ -10,6 +10,21 @@
     "pressurizedRover": {
       "file": "nasa-sev-rover.glb"
     },
+    "luna9": {
+      "file": "luna-9.glb"
+    },
+    "lunokhod": {
+      "file": "lunokhod.glb"
+    },
+    "yutu": {
+      "file": "yutu.glb"
+    },
+    "vikram": {
+      "file": "vikram.glb"
+    },
+    "slim": {
+      "file": "slim.glb"
+    },
     "starshipHLSSplat": {
       "type": "splat",
       "file": "starship-hls-budget3d.spz",
