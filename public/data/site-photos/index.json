@@ -178,7 +178,15 @@
       "caption": "LROC NAC view of the Chang'e 3 lander and Yutu rover just before sunset on their first day of lunar exploration.",
       "credit": "NASA/GSFC/Arizona State University",
       "license": "Public domain (NASA/LROC); credit requested as NASA/GSFC/Arizona State University",
-      "source_page_url": "https://lroc.im-ldi.com/images/637"
+      "source_page_url": "https://lroc.im-ldi.com/images/637",
+      "additionalImage": {
+        "image": "https://www.cas.cn/cm/201604/W020160425340370360188.jpg",
+        "title": "Chang’e 3 lander camera view of the Yutu rover",
+        "caption": "Real Chang’e 3 lunar surface image showing the rover on the regolith and spacecraft structures in the foreground.",
+        "credit": "CNSA / Chinese Academy of Sciences / Xinhua",
+        "source": "https://www.cas.cn/cm/201604/t20160425_4554055.shtml",
+        "kind": "surface photograph"
+      }
     },
     {
       "id": "change-4",
@@ -187,7 +195,15 @@
       "caption": "LROC NAC view of the Chang'e 4 lander and Yutu-2 rover on the floor of Von Kármán crater on the lunar far side.",
       "credit": "NASA/GSFC/Arizona State University",
       "license": "Public domain (NASA/LROC); credit requested as NASA/GSFC/Arizona State University",
-      "source_page_url": "https://lroc.im-ldi.com/images/1091"
+      "source_page_url": "https://lroc.im-ldi.com/images/1091",
+      "additionalImage": {
+        "image": "https://j.people.com.cn/NMediaFile/2019/0112/FOREIGN201901121223000434362785646.jpg",
+        "title": "Chang’e 4 photograph of Yutu-2 on the Moon’s far side",
+        "caption": "Actual surface photograph of the Yutu-2 rover deployed from the Chang’e 4 lander; not orbital imagery or concept art.",
+        "credit": "CNSA / CLEP / Xinhua, distributed by People's Daily",
+        "source": "https://www.cnsa.gov.cn/english/n6465652/n6465653/index.html",
+        "kind": "surface photograph"
+      }
     },
     {
       "id": "change-5",
@@ -196,7 +212,15 @@
       "caption": "First LROC NAC look at the Chang'e 5 lander on the basaltic plains of Oceanus Procellarum.",
       "credit": "NASA/GSFC/Arizona State University",
       "license": "Public domain (NASA/LROC); credit requested as NASA/GSFC/Arizona State University",
-      "source_page_url": "https://lroc.im-ldi.com/images/1172"
+      "source_page_url": "https://lroc.im-ldi.com/images/1172",
+      "additionalImage": {
+        "image": "https://planetary.s3.amazonaws.com/web/assets/pictures/change-5-landing-leg.jpg",
+        "title": "Chang’e 5 lander footpad on the lunar surface",
+        "caption": "Actual image of a Chang’e 5 lander leg and footpad resting on the Moon.",
+        "credit": "CNSA, via The Planetary Society",
+        "source": "https://www.planetary.org/space-images/change-5-on-the-moon",
+        "kind": "surface photograph"
+      }
     },
     {
       "id": "chandrayaan-3",

@@ -1,3 +1,3 @@
-import { mountMoonView } from './moon.js?v=mission-photo-v4';
+import { mountMoonView } from './moon.js?v=mission-photo-v5';
 
 mountMoonView(document.querySelector('#moon-view'));
