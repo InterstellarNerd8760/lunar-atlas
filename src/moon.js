@@ -81,7 +81,8 @@ function landingCatalog(text) {
     const cells = parseCsvRow(line);
     const id = cells[index.id];
     if (!id) continue;
-    catalog.set(id, { approximate: isApproximateSource(cells[index.coord_source] || '') });
+    const kind = cells[index.kind] || '';
+    catalog.set(id, { approximate: isApproximateSource(cells[index.coord_source] || ''), kind, failed: kind === 'failed landing' });
   }
   return catalog;
 }
@@ -90,7 +91,7 @@ function collectPlaces(demSites, previewSites, catalog = new Map()) {
   const places = [];
   function decorate(place) {
     const row = catalog.get(place.id);
-    if (row) place.approximate = row.approximate;
+    if (row) Object.assign(place, { approximate: row.approximate, kind: row.kind, failed: row.failed });
     return place;
   }
   function duplicateOf(place) {
@@ -109,7 +110,7 @@ function collectPlaces(demSites, previewSites, catalog = new Map()) {
     if (!Number.isFinite(place.lat) || !Number.isFinite(place.lon)) return;
     const existing = duplicateOf(place);
     if (existing) {
-      for (const key of ['year', 'country', 'mission', 'approximate']) existing[key] ??= place[key];
+      for (const key of ['year', 'country', 'mission', 'approximate', 'kind', 'failed']) existing[key] ??= place[key];
       decorate(existing);
       return;
     }
@@ -151,8 +152,9 @@ function collectPlaces(demSites, previewSites, catalog = new Map()) {
   }
   for (const place of places) {
     if (place.group === 'pole') place.group = place.proxy ? 'artemis' : 'feature';
+    if (place.failed && (place.group === 'lander' || place.group === 'apollo')) place.group = 'failed';
   }
-  const rank = { apollo: 0, lander: 1, artemis: 2, feature: 3 };
+  const rank = { apollo: 0, lander: 1, failed: 2, artemis: 3, feature: 4 };
   places.sort((a, b) => rank[a.group] - rank[b.group] || (a.year || 9999) - (b.year || 9999) || a.name.localeCompare(b.name));
   return places;
 }
