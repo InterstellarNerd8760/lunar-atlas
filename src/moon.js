@@ -1,11 +1,11 @@
-import { installHelp } from './help.js';
+import { installHelp } from './help.js?v=pin-status-v2';
 import * as THREE from 'three';
 import { OrbitControls } from 'https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/controls/OrbitControls.js';
 
 import { addSky } from './sky.js';
 import { aimAt, levelFlight, transportFlight, turnFlight } from './flight.js';
 import { createFeatureLabels } from './features.js';
-import { createDrawer, createPins, createSiteList } from './sites.js';
+import { createDrawer, createPins, createSiteList } from './sites.js?v=pin-status-v2';
 import { bindPopover, closeOpenPopover, makePanelDraggable, el, icons, isTextField, reducedMotion } from './ui.js';
 import { createTerrain } from './terrain.js';
 import { createHorizonSource } from './horizon.js';
@@ -237,11 +237,11 @@ async function loadMoon(container, loadingStatus) {
   const params = new URLSearchParams(window.location.search);
   const [demResponse, previewResponse, notesResponse, photosResponse, catalogResponse, writeupsResponse, featuresResponse, horizonsResponse] = await Promise.all([
     fetch(new URL('site-dems/index.json', dataDirectory)),
-    fetch(new URL('site-previews/index.json', dataDirectory)),
+    fetch(new URL('site-previews/index.json?v=pin-status-v2', dataDirectory)),
     fetch(new URL('site-notes.json', dataDirectory)),
     fetch(new URL('site-photos/index.json', dataDirectory)),
-    fetch(new URL('landing-sites.csv', dataDirectory)),
-    fetch(new URL('site-writeups.json', dataDirectory)),
+    fetch(new URL('landing-sites.csv?v=pin-status-v2', dataDirectory)),
+    fetch(new URL('site-writeups.json?v=pin-status-v2', dataDirectory)),
     fetch(new URL('features.json', dataDirectory)),
     fetch(new URL('horizons.json', dataDirectory)),
   ]);
