@@ -1,4 +1,4 @@
-import { installHelp, makePanelDraggable } from './help.js';
+import { installHelp } from './help.js';
 import * as THREE from 'three';
 import { OrbitControls } from 'https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/controls/OrbitControls.js';
 
@@ -6,7 +6,7 @@ import { addSky } from './sky.js';
 import { aimAt, levelFlight, transportFlight, turnFlight } from './flight.js';
 import { createFeatureLabels } from './features.js';
 import { createDrawer, createPins, createSiteList } from './sites.js';
-import { bindPopover, closeOpenPopover, el, icons, isTextField, reducedMotion } from './ui.js';
+import { bindPopover, closeOpenPopover, makePanelDraggable, el, icons, isTextField, reducedMotion } from './ui.js';
 import { createTerrain } from './terrain.js';
 import { createHorizonSource } from './horizon.js';
 import { createComparePanel } from './compare.js';
@@ -433,7 +433,7 @@ async function loadMoon(container, loadingStatus) {
   const compareButton = el('button', { type: 'button', class: 'btn', 'aria-haspopup': 'dialog', title: 'Compare sites side by side', text: 'Compare', hidden: !compare, onclick: () => compare?.toggle(currentPlace) });
   const layersButton = el('button', { type: 'button', class: 'btn topbar__layers', 'aria-label': 'Layers', 'aria-haspopup': 'dialog', 'aria-keyshortcuts': 'L', title: 'Layers (L)', html: `${icons.layers}<span>Layers</span>` });
   const topbar = el('header', { class: 'topbar glass' }, [
-    el('h1', { class: 'brand', html: 'Lunar Atlas <a class="brand__by" href="https://westonrosch.com" target="_blank" rel="noopener">by Weston Rosch</a>' }),
+    el('h1', { class: 'brand', html: 'Lunar Atlas <a class="brand__by" href="https://westonrosch.com" target="_blank" rel="noopener">by <span class="brand__accent">Centauri</span></a>' }),
     el('nav', { class: 'topbar__nav', 'aria-label': 'Camera' }, [
       sitesButton,
       el('div', { class: 'topbar__nav topbar__views' }, viewButtons),
@@ -1028,6 +1028,7 @@ async function loadMoon(container, loadingStatus) {
 
   const movementKeys = new Set(['KeyW', 'KeyA', 'KeyS', 'KeyD', 'KeyQ', 'KeyE', 'Space', 'KeyC', 'ShiftLeft', 'ShiftRight', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight']);
   document.addEventListener('keydown', (event) => {
+    if (event.code === 'Escape' && closeOpenPopover()) { event.preventDefault(); return; }
     if (freeFlight) {
       if (event.code === 'Escape') leaveFlight();
       else if (!isTextField(event.target) && !event.metaKey && !event.ctrlKey && !event.altKey && movementKeys.has(event.code)) {
@@ -1081,7 +1082,7 @@ async function loadMoon(container, loadingStatus) {
   resize();
 
   loadingStatus.hidden = true;
-  for (const panel of container.querySelectorAll('.drawer, .site-list')) makePanelDraggable(panel);
+  for (const panel of container.querySelectorAll('.popover, .drawer, .site-list')) makePanelDraggable(panel);
   installHelp(container);
   let statusText = '';
   function updateStatus() {
