@@ -793,6 +793,8 @@ a { color: var(--primary); }
   border-color: #e2b657;
   outline-color: #e2b657;
 }
+/* Failure remains red when both impact coordinates are approximate and the pin is selected. */
+.pin--failed.pin--approx.pin--selected .pin__dot { border-color: #e66c73; outline-color: #e66c73; }
 
 /* Free flight hint */
 
