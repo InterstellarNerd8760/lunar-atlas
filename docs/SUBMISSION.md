@@ -42,7 +42,7 @@ This is an exploratory visualization, **not flight-qualified landing, power-stor
 
 ## AI / super-intelligence disclosure
 
-Weston Rosch led the product concept, feature and visual direction, dataset selection and processing workflow, scientific review, integration decisions, and iterative testing. AI coding assistants, including Grok Bot, ChatGPT/Codex, Devin and GLM-5.2, were used to accelerate code authoring, debugging, technical research, and editorial review. AI assistance was applied to implementation and documentation; NASA and other original datasets remain attributed to their sources. The application location markers use **Three.js geometry and CSS**, not AI-generated image assets. Site photography and third-party artist concepts are credited as separate source materials. Review separately any image added to the demonstration for compliance with NASA Space Apps AI-asset labeling and minor-likeness restrictions.
+Weston Rosch led the product concept, feature and visual direction, dataset selection and processing workflow, scientific review, integration decisions, and iterative testing. AI coding assistants, including Grok Bot, ChatGPT/Codex, and Devin, were used to accelerate code authoring, debugging, technical research, and editorial review. AI assistance was applied to implementation and documentation; NASA and other original datasets remain attributed to their sources. The application location markers use **Three.js geometry and CSS**, not AI-generated image assets. Site photography and third-party artist concepts are credited as separate source materials. Review separately any image added to the demonstration for compliance with NASA Space Apps AI-asset labeling and minor-likeness restrictions.
 
 ## Submission checks
 
