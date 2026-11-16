@@ -1,11 +1,11 @@
-import { installHelp } from './help.js?v=pin-status-v2';
+import { installHelp } from './help.js?v=final-layout-v3';
 import * as THREE from 'three';
 import { OrbitControls } from 'https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/controls/OrbitControls.js';
 
 import { addSky } from './sky.js';
 import { aimAt, levelFlight, transportFlight, turnFlight } from './flight.js';
 import { createFeatureLabels } from './features.js';
-import { createDrawer, createPins, createSiteList } from './sites.js?v=pin-status-v2';
+import { createDrawer, createPins, createSiteList } from './sites.js?v=final-layout-v3';
 import { bindPopover, closeOpenPopover, makePanelDraggable, el, icons, isTextField, reducedMotion } from './ui.js';
 import { createTerrain } from './terrain.js';
 import { createHorizonSource } from './horizon.js';
