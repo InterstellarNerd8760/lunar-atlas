@@ -598,7 +598,22 @@ async function loadMoon(container, loadingStatus) {
   }
   const altitudePad = flightPad('Altitude', [['Space', 'Rise', 'Rise'], ['KeyC', 'Descend', 'Descend']]);
   let touchRunning = false;
-  const runButton = el('button', { type: 'button', class: 'btn', text: 'Run', 'aria-label': 'Run', 'aria-pressed': 'false', onclick: () => setTouchRun(!touchRunning) });
+  function walkAction(label, action) {
+    return el('button', {
+      type: 'button', class: 'btn', text: label, 'aria-label': label,
+      onpointerdown(event) {
+        if (event.button !== 0) return;
+        // A second finger can activate a button while the joystick owns the first.
+        if (event.pointerType === 'touch') event.preventDefault();
+        action();
+      },
+      onclick(event) {
+        if (event.detail === 0) action();
+      },
+    });
+  }
+  const runButton = walkAction('Run', () => setTouchRun(!touchRunning));
+  runButton.setAttribute('aria-pressed', 'false');
   function setTouchRun(active) {
     touchRunning = active;
     runButton.textContent = active ? 'Running' : 'Run';
@@ -609,7 +624,7 @@ async function loadMoon(container, loadingStatus) {
   }
   const walkPad = el('div', { class: 'flight-pad glass', role: 'group', 'aria-label': 'Walk actions', hidden: true }, [
     runButton,
-    el('button', { type: 'button', class: 'btn', text: 'Jump', onclick: jump }),
+    walkAction('Jump', jump),
   ]);
   const touchControls = el('div', { class: 'flight-touch', hidden: true }, [joystick, altitudePad, walkPad]);
   container.append(flightHint, touchControls);
