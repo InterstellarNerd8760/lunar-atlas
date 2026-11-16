@@ -5,7 +5,7 @@ export function installHelp(container) {
   container.querySelector('.topbar__nav').append(button);
   const panel = el('section', { class: 'popover help-panel', role: 'dialog', 'aria-label': 'Using Lunar Atlas' });
   const close = el('button', { type: 'button', class: 'btn', text: 'Start exploring' });
-  panel.append(el('h2', { text: 'Explore Lunar Atlas' }));
+  panel.append(el('h2', { text: 'Explore Lunar Atlas' }), close);
   const sections = [
     ['Find a place', 'Search for a mission or crater, or choose Random site. Select a site to read its sources and open its surface view. Drag the Moon to orbit and scroll or pinch to zoom. Double-click terrain to focus there.'],
     ['Free flight', 'WASD moves you relative to your view. Q and E turn. Space rises and C descends. Hold Shift to boost. Drag to look if pointer lock is unavailable. Esc exits. On touch screens, use the thumbstick and Rise / Descend.'],
@@ -15,7 +15,6 @@ export function installHelp(container) {
     ['Move panels', 'Drag a panel by its Move panel handle. With the handle focused, arrow keys move it and Home resets its position. Reopen this guide with Help or ?.'],
   ];
   for (const [title, text] of sections) panel.append(el('h3', { text: title }), el('p', { text }));
-  panel.append(close);
   container.append(panel);
   const popup = bindPopover(button, panel, { onOpen: () => close.focus() });
   close.addEventListener('click', () => popup.close(true));
