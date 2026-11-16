@@ -1012,3 +1012,50 @@ a { color: var(--primary); }
 .image-slot--related { padding-top: 8px; border-top: 1px solid var(--border); }
 .image-slot--related figcaption { color: var(--muted-foreground); font-size: 10px; line-height: 1.45; }
 .image-slot--related figcaption a { color: var(--foreground); }
+
+/* Full-screen first-visit tour; the WebGL Moon remains rendered underneath. */
+.welcome-screen {
+  position: absolute; inset: 0; z-index: 30;
+  display: flex; flex-direction: column; overflow: hidden;
+  background: radial-gradient(ellipse at 12% 75%, rgb(31 61 94 / .38), transparent 55%), #070b12;
+  color: var(--foreground);
+  transform: translateX(0);
+  transition: transform 680ms cubic-bezier(.76, 0, .2, 1);
+  box-shadow: 8px 0 42px rgb(0 0 0 / .7);
+}
+.welcome-screen--leaving { transform: translateX(-103%); pointer-events: none; }
+.welcome-screen__body {
+  width: min(1280px, 100%); min-height: 0; flex: 1;
+  display: grid; grid-template-columns: minmax(0, .9fr) minmax(0, 1fr);
+  gap: clamp(24px, 5vw, 92px); margin-inline: auto;
+  padding: clamp(22px, 5vw, 82px);
+}
+.welcome-screen__intro { align-self: center; max-width: 560px; }
+.welcome-screen__eyebrow { margin: 0 0 22px; color: var(--primary); font: 600 11px/1.5 var(--font-mono); letter-spacing: .2em; }
+.welcome-screen__intro h1 { margin: 0 0 25px; font-size: clamp(48px, 6.3vw, 104px); line-height: .98; font-weight: 400; letter-spacing: -.055em; }
+.welcome-screen__lead { font-size: clamp(17px, 1.65vw, 23px); line-height: 1.4; font-weight: 400; color: #eef2fa; }
+.welcome-screen__subtitle { max-width: 490px; margin-top: 20px; color: var(--muted-foreground); font-size: 14px; line-height: 1.75; }
+.welcome-screen__credits { display: flex; flex-wrap: wrap; gap: 10px 18px; padding-top: 30px; font: 11px/1.5 var(--font-mono); color: var(--subtle-foreground); }
+.welcome-screen__guide { min-height: 0; overflow: auto; padding: 4px 20px 4px 0; overscroll-behavior: contain; scrollbar-color: #34465e transparent; }
+.welcome-screen__guide-item { display: grid; grid-template-columns: 34px 1fr; gap: 18px; padding: 17px 0; border-bottom: 1px solid var(--border); }
+.welcome-screen__guide-number { font: 12px/1.7 var(--font-mono); color: var(--primary); }
+.welcome-screen__guide h3 { margin: 0 0 6px; font: 500 17px/1.3 var(--font-sans); }
+.welcome-screen__guide p:not(.welcome-screen__eyebrow) { margin: 0; max-width: 570px; font-size: 13px; line-height: 1.65; color: var(--muted-foreground); }
+.welcome-screen__footer { flex: none; display: flex; justify-content: space-between; align-items: center; gap: 18px; border-top: 1px solid var(--border-strong); padding: 15px clamp(22px, 5vw, 80px) max(15px, env(safe-area-inset-bottom)); background: #0b101b; }
+.welcome-screen__footer p { margin: 0; color: var(--subtle-foreground); font: 12px/1.5 var(--font-mono); }
+.welcome-screen__start { min-width: 210px; min-height: 50px; background: var(--primary); color: #080b12; border: 1px solid var(--primary); font-weight: 650; font-size: 15px; }
+.welcome-screen__start:hover { background: #d0e5ff; color: #05080e; }
+@media (max-width: 780px) {
+  .welcome-screen__body { grid-template-columns: 1fr; grid-template-rows: auto 1fr; gap: 10px; padding: 26px 22px 8px; }
+  .welcome-screen__intro { align-self: start; max-width: none; }
+  .welcome-screen__intro h1 { font-size: clamp(43px, 9vw, 65px); margin-bottom: 12px; }
+  .welcome-screen__lead { font-size: 16px; }
+  .welcome-screen__subtitle { font-size: 13px; margin-top: 8px; }
+  .welcome-screen__credits { padding: 12px 0 5px; }
+  .welcome-screen__guide { border-top: 1px solid var(--border); padding-top: 16px; padding-right: 6px; }
+  .welcome-screen__guide-item { padding: 12px 0; }
+  .welcome-screen__footer { padding: 12px 20px max(12px, env(safe-area-inset-bottom)); }
+  .welcome-screen__footer p { display: none; }
+  .welcome-screen__start { width: 100%; }
+}
+@media (prefers-reduced-motion: reduce) { .welcome-screen { transition: none; } }

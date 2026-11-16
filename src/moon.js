@@ -1,4 +1,4 @@
-import { installHelp } from './help.js?v=clps-final-2026';
+import { installHelp } from './help.js?v=welcome-nearside-v1';
 import * as THREE from 'three';
 import { OrbitControls } from 'https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/controls/OrbitControls.js';
 
@@ -279,7 +279,9 @@ async function loadMoon(container, loadingStatus) {
   scene.background = new THREE.Color('#030509');
 
   const camera = new THREE.PerspectiveCamera(42, 1, 0.4 / MOON_RADIUS_METERS, 900);
-  camera.position.set(0, 0.1, 3.25);
+  // +X is lunar latitude 0°, longitude 0° in this globe: the familiar Earth-facing near side.
+  // Small northward offset keeps the Moon upright without changing the canonical view.
+  camera.position.set(3.25, 0.08, 0.02);
 
   const renderer = new THREE.WebGLRenderer({
     antialias: true,

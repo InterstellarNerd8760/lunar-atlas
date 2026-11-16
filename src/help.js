@@ -1,10 +1,10 @@
-import { el, bindPopover, isTextField } from './ui.js';
+import { el, bindPopover, isTextField, reducedMotion } from './ui.js';
 
 export function installHelp(container) {
   const button = el('button', { type: 'button', class: 'btn', text: 'Help', 'aria-haspopup': 'dialog' });
   container.querySelector('.topbar__nav').append(button);
   const panel = el('section', { class: 'popover help-panel', role: 'dialog', 'aria-label': 'Using Lunar Atlas' });
-  const close = el('button', { type: 'button', class: 'btn', text: 'Start exploring' });
+  const close = el('button', { type: 'button', class: 'btn', text: 'Close help' });
   panel.append(el('h2', { text: 'Explore Lunar Atlas' }), close);
   const sections = [
     ['Find a place', 'Search for a mission or crater, or choose Random site. Select a site to read its sources and open its surface view. Drag the Moon to orbit and scroll or pinch to zoom. Double-click terrain to focus there.'],
@@ -33,19 +33,84 @@ export function installHelp(container) {
   container.append(panel);
   const popup = bindPopover(button, panel, { onOpen: () => close.focus() });
   close.addEventListener('click', () => popup.close(true));
+
+  // Full-screen first-visit onboarding, separate from the normal draggable Help dialog.
+  // Mark it complete only when the visitor explicitly starts exploring.
+  let welcomeVisible = false;
+  let hasSeenWelcome = false;
+  try { hasSeenWelcome = localStorage.getItem('lunar-atlas-welcome-v2') === 'complete'; }
+  catch { /* Private browsing / blocked storage: show the guide for this visit. */ }
+  const directView = new URLSearchParams(window.location.search).has('shot');
+  if (!hasSeenWelcome && !directView) {
+    const begin = el('button', { type: 'button', class: 'btn welcome-screen__start', text: 'Start exploring  →' });
+    const intro = el('section', { class: 'welcome-screen__intro' }, [
+      el('p', { class: 'welcome-screen__eyebrow', text: 'CENTAURI / LUNAR ATLAS' }),
+      el('h1', { id: 'welcome-title', text: 'Explore the Moon.' }),
+      el('p', { class: 'welcome-screen__lead', text: 'Real lunar terrain. Historic missions. Future landing regions. Sunlight and Earth visibility, all in an interactive 3D atlas.' }),
+      el('p', { class: 'welcome-screen__subtitle', text: 'Your journey begins with the familiar Earth-facing near side. Orbit the globe, choose a landing site, or walk the lunar surface.' }),
+      el('div', { class: 'welcome-screen__credits' }, [
+        el('span', { text: 'NASA LOLA + LROC' }),
+        el('span', { text: 'JPL Horizons' }),
+        el('span', { text: 'Built by Weston Rosch' }),
+      ]),
+    ]);
+    const controls = sections.map(([title, description], index) => el('div', { class: 'welcome-screen__guide-item' }, [
+      el('span', { class: 'welcome-screen__guide-number', text: String(index + 1).padStart(2, '0') }),
+      el('div', {}, [el('h3', { text: title }), el('p', { text: description })]),
+    ]));
+    const guide = el('section', { class: 'welcome-screen__guide', 'aria-label': 'Controls and map key' }, [
+      el('p', { class: 'welcome-screen__eyebrow', text: 'HOW TO EXPLORE / QUICK GUIDE' }),
+      ...controls,
+    ]);
+    const welcome = el('div', { class: 'welcome-screen', role: 'dialog', 'aria-modal': 'true', 'aria-labelledby': 'welcome-title' }, [
+      el('div', { class: 'welcome-screen__body' }, [intro, guide]),
+      el('footer', { class: 'welcome-screen__footer' }, [
+        el('p', { text: 'Orbit · Search · Compare · Walk' }),
+        begin,
+      ]),
+    ]);
+    container.append(welcome);
+    welcomeVisible = true;
+    // Set focus after the DOM is attached; the CTA is always available above the guide scroll.
+    begin.focus({ preventScroll: true });
+    let dismissed = false;
+    const finish = () => {
+      if (dismissed) return;
+      dismissed = true;
+      welcomeVisible = false;
+      begin.disabled = true;
+      try { localStorage.setItem('lunar-atlas-welcome-v2', 'complete'); } catch {}
+      const remove = () => {
+        welcome.remove();
+        container.querySelector('canvas')?.focus({ preventScroll: true });
+      };
+      if (reducedMotion.matches) { remove(); return; }
+      welcome.classList.add('welcome-screen--leaving');
+      welcome.addEventListener('transitionend', (event) => {
+        if (event.target === welcome) remove();
+      }, { once: true });
+      window.setTimeout(() => { if (welcome.isConnected) remove(); }, 800);
+    };
+    begin.addEventListener('click', finish);
+    welcome.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape') { event.preventDefault(); finish(); }
+      if (event.key === 'Tab') {
+        // Keep keyboard focus within this first-visit modal.
+        const focusables = [begin, ...welcome.querySelectorAll('a[href], button:not([disabled]), input:not([disabled])')].filter((node, i, list) => list.indexOf(node) === i);
+        const first = focusables[0], last = focusables[focusables.length - 1];
+        if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
+        else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
+      }
+    });
+  }
   document.addEventListener('keydown', event => {
     // I is a single-key fallback: ? normally requires Shift+Slash on US keyboards.
     const helpKey = event.code === 'KeyI' || event.code === 'F1'
       || event.key === '?' || (event.code === 'Slash' && event.shiftKey);
-    if (!helpKey || isTextField(event.target) || event.ctrlKey || event.metaKey || event.altKey) return;
+    if (welcomeVisible || !helpKey || isTextField(event.target) || event.ctrlKey || event.metaKey || event.altKey) return;
     event.preventDefault();
     popup.toggle();
   });
-  try {
-    if (!localStorage.getItem('lunar-atlas-help-v1')) {
-      popup.open();
-      localStorage.setItem('lunar-atlas-help-v1', 'shown');
-    }
-  } catch { /* Help remains available when storage is blocked. */ }
+  // Returning visitors open the standard draggable Help panel from the toolbar or I / ? / F1.
 }
 
