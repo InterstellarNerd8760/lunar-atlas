@@ -752,6 +752,11 @@ a { color: var(--primary); }
 .pin:hover .pin__dot, .pin:focus-visible .pin__dot { width: 12px; height: 12px; }
 .pin--selected .pin__dot { width: 14px; height: 14px; background: var(--primary); outline: 2px solid var(--primary); outline-offset: 2px; }
 .pin--proxy.pin--selected .pin__dot { background: transparent; border-color: var(--primary); }
+.pin--failed .pin__dot { background: #e66c73; border-color: #461b25; box-shadow: 0 0 0 1px #e66c73; }
+.pin--failed.pin--selected .pin__dot { background: #e66c73; outline-color: #e66c73; }
+.pin--failed.pin--approx .pin__dot { background: transparent; border: 2px dashed #e66c73; }
+.pin--future .pin__dot { background: transparent; border: 2px solid #f5f6fa; }
+.pin--future.pin--selected .pin__dot { border-color: var(--primary); background: transparent; }
 
 .pin__label {
   position: absolute;
@@ -774,8 +779,8 @@ a { color: var(--primary); }
 
 .pin:hover .pin__label, .pin:focus-visible .pin__label, .pin--selected .pin__label { opacity: 1; }
 
-/* Exact lander location: stays visible when zoomed in. Dashed gold = approximate coordinates. */
-.pin--near.pin--selected .pin__label,
+/* Near-surface labels are temporary hover/focus hints, not draggable panels. */
+.pin--near.pin--selected:not(:hover):not(:focus-visible) .pin__label { opacity: 0; }
 .pin--near:hover .pin__label,
 .pin--near:focus-visible .pin__label { opacity: 1; }
 .pin--approx .pin__dot {
