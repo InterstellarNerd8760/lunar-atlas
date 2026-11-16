@@ -160,15 +160,16 @@ a { color: var(--primary); }
 .vis__solar[data-level="good"] { border-color: #4caf7a; }
 .vis__solar[data-level="partial"], .vis__solar[data-level="day"] { border-color: #d9a441; }
 .vis__solar[data-level="no"] { border-color: #d0605e; }
-.brand__accent { color: hsl(217 91% 60%); }\n.brand {
-  margin: 0 auto 0 0;
+.brand__accent { color: hsl(217 91% 60%); }
+.brand {
+  margin: 0 0 0 auto;
   font-size: 16px;
   line-height: 24px;
   font-weight: 500;
   white-space: nowrap;
 }
 
-.topbar__nav { display: flex; align-items: center; gap: 2px; min-width: 0; }
+.topbar__nav { display: flex; align-items: center; gap: 2px; min-width: 0; flex: 0 1 auto; }
 .topbar__sites { display: none; }
 
 /* Popovers */
@@ -901,8 +902,9 @@ a { color: var(--primary); }
     gap: 0;
     padding: 0 4px;
   }
-  .topbar .brand { margin-inline: auto; }
-  .topbar__nav { justify-content: space-between; }
+  .topbar .brand { margin: 0 4px 0 auto; align-self: flex-end; font-size: 14px; }
+  .topbar__nav { justify-content: flex-start; width: 100%; overflow-x: auto; scrollbar-width: none; }
+  .topbar__nav::-webkit-scrollbar { display: none; }
   .topbar__nav > .btn { padding-inline: 6px; }
   .topbar__layers span { display: none; }
 }
@@ -978,3 +980,10 @@ a { color: var(--primary); }
 }
 
 .moon-only__restore:hover, .moon-only__restore:focus-visible { opacity: 1; }
+
+.panel-drag-handle { display: block; width: 100%; min-height: 28px; border: 0; background: transparent; color: var(--muted-foreground); font: inherit; font-size: 11px; cursor: grab; touch-action: none; }
+.panel-drag-handle:active { cursor: grabbing; }
+.help-panel { top: var(--panel-top); left: 50%; transform: translateX(-50%); width: 520px; max-width: calc(100vw - 24px); max-height: calc(100dvh - var(--panel-top) - 16px); overflow: auto; }
+.help-panel p { margin: 4px 0 16px; }
+.help-panel h3 { margin: 12px 0 0; }
+.site-list--rail > .panel-drag-handle { display: none; }

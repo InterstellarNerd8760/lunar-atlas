@@ -112,5 +112,11 @@
     "notes": "IAU crater-center coordinates from the USGS Gazetteer of Planetary Nomenclature (Feature 5450, Shackleton; planetographic, +East; diameter 20.92 km). No single official coordinate is published for a specific point on the rim; the rim lies roughly one radius (\\~10 km) from this center.",
     "source": "https://planetarynames.wr.usgs.gov/Feature/5450",
     "status": "Notable south-pole feature"
+  },
+  {
+    "name": "Shackleton floor",
+    "notes": "Representative floor location at the USGS/IAU Gazetteer center of Shackleton crater (89.67°S, 129.78°E; Feature 5450), not a surveyed lowest point. This is distinct from the rim landing-site terrain. The globe uses bundled LOLA global/south-polar elevation here, and the visibility panel ray-marches the available terrain to estimate the Sun and Earth's visibility. This location has no dedicated high-resolution Shackleton-floor DEM; near-field ridges smaller than the sampling grid may be missed. Treat 30-day illumination and power results as approximations, not mission-design measurements.",
+    "source": "https://planetarynames.wr.usgs.gov/Feature/5450",
+    "status": "Representative south-pole crater floor (LOLA coarse terrain)"
   }
 ]

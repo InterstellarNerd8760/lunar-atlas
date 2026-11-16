@@ -598,5 +598,21 @@
       "https://www.nasa.gov/news-release/nasa-provides-update-on-artemis-iii-moon-landing-regions/"
     ],
     "westonsTake": ""
+  },
+  "shackleton-floor": {
+    "id": "shackleton-floor",
+    "name": "Shackleton floor",
+    "about": "Shackleton crater sits close to the Moon's south pole. Its steep walls shield much of the interior from direct sunlight, unlike nearby elevated rims and ridges. Explore this representative point at the official crater center to compare the local terrain horizon and Earth visibility with Shackleton rim, Connecting ridge and other polar destinations.",
+    "facts": [
+      "Representative location: 89.67°S, 129.78°E, the IAU Gazetteer center of Shackleton (Feature 5450; diameter about 20.9 km).",
+      "A crater-center location is not necessarily the precise lowest point of the crater floor.",
+      "This view is based on bundled LOLA global and south-polar elevation data; no dedicated fine-resolution floor DEM is included.",
+      "Sun/Earth estimates use the current 30-day Horizons window and the terrain available to the renderer."
+    ],
+    "sources": [
+      "https://planetarynames.wr.usgs.gov/Feature/5450",
+      "https://pds-geosciences.wustl.edu/missions/lro/lola.htm"
+    ],
+    "westonsTake": ""
   }
 }

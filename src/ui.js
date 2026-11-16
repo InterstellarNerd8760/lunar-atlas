@@ -33,6 +33,7 @@ export function el(tag, props = {}, children = []) {
 const popovers = new Set();
 
 export function bindPopover(trigger, panel, { onOpen, onClose } = {}) {
+  makePanelDraggable(panel);
   panel.hidden = true;
   trigger.setAttribute('aria-expanded', 'false');
   const api = {
@@ -76,4 +77,47 @@ document.addEventListener('pointerdown', (event) => {
 
 export function isTextField(target) {
   return target instanceof HTMLElement && (target.isContentEditable || target.matches('input:not([type="range"]):not([type="checkbox"]):not([type="radio"]), textarea, select'));
+}
+
+export function makePanelDraggable(panel) {
+  if (panel.querySelector(':scope > .panel-drag-handle')) return;
+  const handle = el('button', { type: 'button', class: 'panel-drag-handle', text: 'Move panel', 'aria-label': 'Move panel. Arrow keys move, Home resets.' });
+  panel.prepend(handle);
+  let drag = null;
+  let moved = false;
+  const reset = () => {
+    for (const property of ['left', 'top', 'right', 'bottom', 'transform', 'width', 'height']) panel.style.removeProperty(property);
+    moved = false;
+  };
+  function move(left, top) {
+    const bounds = panel.getBoundingClientRect();
+    if (panel.classList.contains('site-list')) panel.style.height = bounds.height + 'px';
+    const parent = panel.offsetParent?.getBoundingClientRect() || { left: 0, top: 0 };
+    const x = Math.max(0, Math.min(left, window.innerWidth - bounds.width));
+    const y = Math.max(0, Math.min(top, window.innerHeight - Math.min(bounds.height, window.innerHeight)));
+    Object.assign(panel.style, { left: (x - parent.left) + 'px', top: (y - parent.top) + 'px', right: 'auto', bottom: 'auto', transform: 'none', width: bounds.width + 'px' });
+    moved = true;
+  }
+  handle.addEventListener('pointerdown', event => {
+    if (event.button !== 0) return;
+    const bounds = panel.getBoundingClientRect();
+    drag = { id: event.pointerId, x: event.clientX - bounds.left, y: event.clientY - bounds.top };
+    handle.setPointerCapture(event.pointerId);
+    event.preventDefault();
+  });
+  handle.addEventListener('pointermove', event => {
+    if (drag?.id === event.pointerId) move(event.clientX - drag.x, event.clientY - drag.y);
+  });
+  for (const type of ['pointerup', 'pointercancel', 'lostpointercapture']) handle.addEventListener(type, () => { drag = null; });
+  handle.addEventListener('keydown', event => {
+    if (event.key === 'Home') { event.preventDefault(); reset(); return; }
+    const steps = { ArrowLeft: [-16, 0], ArrowRight: [16, 0], ArrowUp: [0, -16], ArrowDown: [0, 16] };
+    if (!steps[event.key]) return;
+    event.preventDefault();
+    event.stopPropagation();
+    const bounds = panel.getBoundingClientRect();
+    move(bounds.left + steps[event.key][0], bounds.top + steps[event.key][1]);
+  });
+  if (panel.classList.contains('site-list')) new MutationObserver(reset).observe(panel, { attributes: true, attributeFilter: ['class'] });
+  window.addEventListener('resize', () => { if (moved) reset(); });
 }
