@@ -433,7 +433,7 @@ async function loadMoon(container, loadingStatus) {
   const compareButton = el('button', { type: 'button', class: 'btn', 'aria-haspopup': 'dialog', title: 'Compare sites side by side', text: 'Compare', hidden: !compare, onclick: () => compare?.toggle(currentPlace) });
   const layersButton = el('button', { type: 'button', class: 'btn topbar__layers', 'aria-label': 'Layers', 'aria-haspopup': 'dialog', 'aria-keyshortcuts': 'L', title: 'Layers (L)', html: `${icons.layers}<span>Layers</span>` });
   const topbar = el('header', { class: 'topbar glass' }, [
-    el('h1', { class: 'brand', html: 'Lunar Atlas <a class="brand__by" href="https://westonrosch.com" target="_blank" rel="noopener">by <span class="brand__accent">Centauri</span></a>' }),
+    el('h1', { class: 'brand', html: 'Lunar Atlas <a class="brand__by" href="https://westonrosch.com" target="_blank" rel="noopener">by Weston Rosch</a>' }),
     el('nav', { class: 'topbar__nav', 'aria-label': 'Camera' }, [
       sitesButton,
       el('div', { class: 'topbar__nav topbar__views' }, viewButtons),
@@ -481,11 +481,28 @@ async function loadMoon(container, loadingStatus) {
   const namesToggle = el('input', { type: 'checkbox', id: 'layer-feature-names', checked: true });
   namesToggle.addEventListener('change', () => featureLabels?.setEnabled(namesToggle.checked));
   layerRows.push(el('div', { class: 'switch-row' }, [el('label', { for: 'layer-feature-names', text: 'Feature names' }), namesToggle]));
+  const hideUiButton = el('button', {
+    type: 'button', class: 'btn', text: 'Hide UI', title: 'Hide UI (H)', 'aria-keyshortcuts': 'H',
+    onclick: () => setMoonOnly(true),
+  });
+  const restoreUiButton = el('button', {
+    type: 'button', class: 'btn glass moon-only__restore', text: 'Show UI', hidden: true,
+    title: 'Show UI (H or Esc)', onclick: () => setMoonOnly(false),
+  });
+  function setMoonOnly(enabled) {
+    closeOpenPopover();
+    container.classList.toggle('moon-only', enabled);
+    pins.setMarkersVisible(!enabled);
+    restoreUiButton.hidden = !enabled;
+    if (enabled) renderer.domElement.focus({ preventScroll: true });
+    else layersButton.focus({ preventScroll: true });
+  }
   const layersMenu = el('div', { class: 'popover layers-menu', role: 'dialog', 'aria-label': 'Layers' }, [
     el('div', { class: 'field' }, [el('h2', { text: 'Terrain relief' }), reliefControl]),
     ...layerRows,
+    hideUiButton,
   ]);
-  container.append(layersMenu);
+  container.append(layersMenu, restoreUiButton);
   const terrainSummary = el('aside', { class: 'terrain-summary', 'aria-label': 'Terrain relief and sources' }, [
     layersStatus,
     el('a', {
@@ -1028,6 +1045,13 @@ async function loadMoon(container, loadingStatus) {
 
   const movementKeys = new Set(['KeyW', 'KeyA', 'KeyS', 'KeyD', 'KeyQ', 'KeyE', 'Space', 'KeyC', 'ShiftLeft', 'ShiftRight', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight']);
   document.addEventListener('keydown', (event) => {
+    const moonOnly = container.classList.contains('moon-only');
+    if (!event.metaKey && !event.ctrlKey && !event.altKey && !isTextField(event.target)
+      && (event.key.toLowerCase() === 'h' || (moonOnly && event.key === 'Escape'))) {
+      event.preventDefault();
+      if (!event.repeat) setMoonOnly(!moonOnly);
+      return;
+    }
     if (event.code === 'Escape' && closeOpenPopover()) { event.preventDefault(); return; }
     if (freeFlight) {
       if (event.code === 'Escape') leaveFlight();
@@ -1048,7 +1072,7 @@ async function loadMoon(container, loadingStatus) {
       if (drawer.isOpen && !(typing && target.value)) { clearSelection(); return; }
       return;
     }
-    if (typing) return;
+    if (typing || moonOnly) return;
     if (key === '/') { event.preventDefault(); focusSearch(); return; }
     if (key === 'l') { event.preventDefault(); layersPopover.toggle(); return; }
     if (!sky) return;

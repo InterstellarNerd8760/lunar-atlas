@@ -963,6 +963,23 @@ a { color: var(--primary); }
 }
 .touch-flight-active .flight-hint { bottom: calc(var(--panel-bottom) + 130px); }
 
+/* Keep the WebGL view interactive while its overlays are hidden. */
+.moon-only > :not(canvas, .moon-only__restore) { display: none !important; }
+
+.moon-only__restore {
+  position: absolute;
+  z-index: 7;
+  top: max(var(--edge), env(safe-area-inset-top));
+  right: max(var(--edge), env(safe-area-inset-right));
+  opacity: 0.65;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .moon-only__restore:not(:hover, :focus-visible) { opacity: 0; }
+}
+
+.moon-only__restore:hover, .moon-only__restore:focus-visible { opacity: 1; }
+
 .panel-drag-handle { display: block; width: 100%; min-height: 28px; border: 0; background: transparent; color: var(--muted-foreground); font: inherit; font-size: 11px; cursor: grab; touch-action: none; }
 .panel-drag-handle:active { cursor: grabbing; }
 .help-panel { top: var(--panel-top); left: 50%; transform: translateX(-50%); width: 520px; max-width: calc(100vw - 24px); max-height: calc(100dvh - var(--panel-top) - 16px); overflow: auto; }
