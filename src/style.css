@@ -961,3 +961,10 @@ a { color: var(--primary); }
   pointer-events: none;
 }
 .touch-flight-active .flight-hint { bottom: calc(var(--panel-bottom) + 130px); }
+
+.panel-drag-handle { display: block; width: 100%; min-height: 28px; border: 0; background: transparent; color: var(--muted-foreground); font: inherit; font-size: 11px; cursor: grab; touch-action: none; }
+.panel-drag-handle:active { cursor: grabbing; }
+.help-panel { top: var(--panel-top); left: 50%; transform: translateX(-50%); width: 520px; max-width: calc(100vw - 24px); max-height: calc(100dvh - var(--panel-top) - 16px); overflow: auto; }
+.help-panel p { margin: 4px 0 16px; }
+.help-panel h3 { margin: 12px 0 0; }
+.site-list--rail > .panel-drag-handle { display: none; }
