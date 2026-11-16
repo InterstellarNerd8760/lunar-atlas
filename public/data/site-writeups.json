@@ -614,5 +614,37 @@
       "https://pds-geosciences.wustl.edu/missions/lro/lola.htm"
     ],
     "westonsTake": ""
+  },
+  "luna-25-impact": {
+    "id": "luna-25-impact",
+    "name": "Luna 25 (likely impact)",
+    "about": "Russia's Luna 25 mission did not achieve a controlled lunar landing in August 2023. NASA's Lunar Reconnaissance Orbiter observed a new crater on the inner rim of Pontécoulant G near the estimated spacecraft impact. This pin marks the likely impact rather than the intended polar landing site.",
+    "facts": [
+      "Outcome: failed landing, August 19, 2023.",
+      "Probable LRO-observed impact: 57.865°S, 61.360°E.",
+      "The crater is about 400 km from Luna 25's intended landing point; attribution is likely, not absolute.",
+      "No mission-specific high-resolution terrain patch is bundled for this impact point."
+    ],
+    "sources": [
+      "https://www.nasa.gov/humans-in-space/nasas-lro-observes-crater-likely-from-luna-25-impact/"
+    ],
+    "westonsTake": ""
+  },
+  "hakuto-r-m1": {
+    "id": "hakuto-r-m1",
+    "name": "HAKUTO-R Mission 1 (impact)",
+    "about": "Japanese company ispace attempted to land HAKUTO-R Mission 1 near Atlas crater in April 2023. The spacecraft lost contact late in its descent and did not make a safe soft landing. This pin uses the approximate crash location recorded in Japan's United Nations registration, not a precisely surveyed site.",
+    "facts": [
+      "Outcome: unsuccessful soft landing, April 25, 2023 UTC.",
+      "Approximate registered crash position: 47.55°N, 44.38°E.",
+      "ispace identified a descent anomaly; the location should be treated as an approximate impact area.",
+      "The failure marker does not imply an intact landed spacecraft."
+    ],
+    "sources": [
+      "https://planet4589.org/space/un/docs/ser.e/1132.pdf",
+      "https://www.nasa.gov/missions/lro/nasas-lro-views-impact-site-of-hakuto-r-mission-1-moon-lander/",
+      "https://www.ispace-inc.com/2023/04/26/status-update-on-ispace-hakuto-r-mission-1-lunar-lander/"
+    ],
+    "westonsTake": ""
   }
 }

@@ -3282,6 +3282,30 @@
       "coordinateSourceUrl": "https://planetarynames.wr.usgs.edu/Feature/5450",
       "terrainSource": "LOLA global elevation + south-polar overview; no dedicated Shackleton-floor fine DEM",
       "previewOnly": true
+    },
+    {
+      "id": "luna-25-impact",
+      "name": "Luna 25 (likely impact)",
+      "mission": "Luna 25",
+      "year": 2023,
+      "country_or_company": "Russia (Roscosmos)",
+      "lat": -57.865,
+      "lon": 61.36,
+      "previewOnly": true,
+      "locationType": "failed landing impact",
+      "source": "https://www.nasa.gov/humans-in-space/nasas-lro-observes-crater-likely-from-luna-25-impact/"
+    },
+    {
+      "id": "hakuto-r-m1",
+      "name": "HAKUTO-R Mission 1 (impact)",
+      "mission": "HAKUTO-R Mission 1",
+      "year": 2023,
+      "country_or_company": "ispace (Japan)",
+      "lat": 47.55,
+      "lon": 44.38,
+      "previewOnly": true,
+      "locationType": "approximate failed landing area",
+      "source": "https://planet4589.org/space/un/docs/ser.e/1132.pdf"
     }
   ],
   "skipped": [

@@ -1,9 +1,11 @@
 import * as THREE from 'three';
 import { el, icons } from './ui.js';
+import { pinStatus, pinDescription } from './pin-status.js';
 
 export const GROUPS = [
   { id: 'apollo', label: 'Apollo landers', chip: 'Apollo' },
   { id: 'lander', label: 'Robotic landers', chip: 'Robotic landers' },
+  { id: 'failed', label: 'Failed landing attempts', chip: 'Failed' },
   { id: 'artemis', label: 'Artemis region', chip: 'Artemis region' },
   { id: 'feature', label: 'Notable features', chip: 'Notable features' },
 ];
@@ -13,9 +15,10 @@ export function formatCoords(lat, lon) {
 }
 
 function metaLine(place) {
-  if (place.group === 'artemis') return 'Terrain proxy';
+  if (place.group === 'artemis') return 'Candidate region · terrain proxy';
   if (place.group === 'feature') return 'South pole terrain';
-  return [place.year, place.country].filter(Boolean).join(' · ');
+  if (place.group === 'failed') return ['Failed landing', place.year, place.country].filter(Boolean).join(' · ');
+  return [place.approximate ? 'Approximate coordinates' : null, place.year, place.country].filter(Boolean).join(' · ');
 }
 
 const searchKey = (value) => value.normalize('NFD').replace(/\p{M}/gu, '').trim().toLowerCase();
@@ -263,9 +266,11 @@ export function createDrawer(container, { onClose, onFlyTo, onStand, onEarth, on
   });
 
   function chipText(place) {
+    if (place.group === 'failed') return place.year ? `Failed attempt ${place.year}` : 'Failed landing';
     if (place.group === 'artemis') return 'Candidate region';
     if (place.group === 'feature') return 'Feature';
     if (place.group === 'point') return 'Terrain point';
+    if (place.approximate) return 'Approximate landing site';
     return place.year ? `Landed ${place.year}` : 'Landed';
   }
 
@@ -326,19 +331,20 @@ export function createDrawer(container, { onClose, onFlyTo, onStand, onEarth, on
 }
 
 export function isLanderPlace(place) {
-  return place.group === 'apollo' || place.group === 'lander';
+  return place.group === 'apollo' || place.group === 'lander' || place.group === 'failed';
 }
 
 const MOON_RADIUS_METERS = 1_737_400;
 const NEAR_ALTITUDE = 0.004; // about 7 km; below this the old globe pins hid
 
 function closeLabel(place) {
-  return place.approximate ? 'Approximate location' : 'Lander location';
+  // A hover hint must show the actual site, not a generic label.
+  return place.name;
 }
 
 function createGroundMarker(place) {
   const units = (meters) => meters / MOON_RADIUS_METERS;
-  const color = place.approximate ? 0xe2b657 : 0xf5f6fa;
+  const color = pinStatus(place) === 'failed' ? 0xe66c73 : place.approximate ? 0xe2b657 : 0xf5f6fa;
   const material = new THREE.MeshBasicMaterial({
     color,
     side: THREE.DoubleSide,
@@ -384,14 +390,16 @@ export function createPins(container, places, { onSelect, scene } = {}) {
   const pins = places.map((place) => {
     const lander = isLanderPlace(place);
     const classes = ['pin'];
-    if (place.group === 'artemis') classes.push('pin--proxy');
+    const status = pinStatus(place);
+    if (status === 'future') classes.push('pin--proxy', 'pin--future');
     if (place.approximate) classes.push('pin--approx');
+    if (status === 'failed') classes.push('pin--failed');
     const labelText = place.name;
     const button = el('button', {
       type: 'button',
       class: classes.join(' '),
       tabindex: '-1',
-      'aria-label': place.approximate ? `${place.name}, approximate location` : place.name,
+      'aria-label': `${place.name}, ${pinDescription(place)}`,
     }, [el('span', { class: 'pin__dot' }), el('span', { class: 'pin__label', text: labelText })]);
     button.addEventListener('click', () => onSelect(place));
     layer.append(button);
