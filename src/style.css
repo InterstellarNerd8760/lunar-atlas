@@ -1014,85 +1014,34 @@ a { color: var(--primary); }
 .image-slot--related figcaption a { color: var(--foreground); }
 
 
-/* First-visit guide uses the Lunar Atlas app's existing dark glass, dividers,
-   buttons, blue accent, mono labels and compact panel typography. */
-.welcome-screen {
-  position: absolute; inset: 0; z-index: 30;
-  display: flex; flex-direction: column; overflow: hidden;
-  background: var(--background); color: var(--foreground);
-  transform: translateX(0);
-  transition: transform 540ms var(--ease);
-  box-shadow: 8px 0 32px rgb(0 0 0 / .56);
-}
-.welcome-screen--leaving { transform: translateX(-103%); pointer-events: none; }
-.welcome-screen__body {
-  display: grid; grid-template-columns: minmax(0, 0.86fr) minmax(0, 1.14fr);
-  gap: clamp(20px, 3vw, 48px); flex: 1; min-height: 0;
-  width: min(1220px, 100%); margin: auto;
-  padding: clamp(20px, 4vw, 52px) clamp(20px, 3vw, 44px);
-}
-.welcome-screen__intro {
-  min-width: 0; align-self: center;
-  padding: clamp(20px, 3vw, 36px);
-  border: 1px solid var(--border-strong); border-radius: var(--radius);
-  background: var(--surface-1);
-}
-.welcome-screen__eyebrow {
-  margin: 0 0 14px; color: var(--primary);
-  font: 500 11px/1.5 var(--font-mono); letter-spacing: .1em;
-}
-.welcome-screen__intro h1 {
-  margin: 0 0 18px; font: 500 clamp(30px, 3.6vw, 49px)/1.1 var(--font-sans);
-  letter-spacing: -.035em; color: var(--foreground);
-}
-.welcome-screen__lead { margin: 0 0 12px; font-size: 16px; line-height: 1.55; color: var(--foreground); }
-.welcome-screen__subtitle { margin: 0; font-size: 13px; line-height: 1.65; color: var(--muted-foreground); }
-.welcome-screen__credits {
-  display: flex; flex-wrap: wrap; gap: 6px; margin-top: 22px;
-  padding-top: 16px; border-top: 1px solid var(--border);
-  font: 500 10px/1.6 var(--font-mono); color: var(--muted-foreground);
-}
-.welcome-screen__credits span { padding: 4px 8px; border: 1px solid var(--border); border-radius: var(--radius-control); }
-.welcome-screen__guide {
-  min-width: 0; min-height: 0; overflow: auto; padding: 20px;
-  border: 1px solid var(--border-strong); border-radius: var(--radius);
-  background: var(--surface-1);
-  scrollbar-color: #4b5260 transparent; overscroll-behavior: contain;
-}
-.welcome-screen__guide-item {
-  display: grid; grid-template-columns: 28px minmax(0,1fr); gap: 10px;
-  padding: 13px 0; border-top: 1px solid var(--border);
-}
-.welcome-screen__guide-number { font: 500 11px/1.6 var(--font-mono); color: var(--primary); }
-.welcome-screen__guide h3 { margin: 0 0 4px; font: 500 14px/20px var(--font-sans); }
-.welcome-screen__guide p:not(.welcome-screen__eyebrow) { margin: 0; font: 400 12px/1.6 var(--font-sans); color: var(--muted-foreground); }
-.welcome-screen__legend { padding-top: 18px; border-top: 1px solid var(--border); }
-.welcome-screen__legend .pin-key__row { grid-template-columns: 18px 100px minmax(0,1fr); font-size: 11px; }
-.welcome-screen__footer {
-  display: flex; flex: none; align-items: center; justify-content: space-between; gap: 16px;
-  min-height: 74px; padding: 12px max(var(--edge), env(safe-area-inset-left)) max(12px, env(safe-area-inset-bottom));
-  border-top: 1px solid var(--border-strong);
-  background: var(--surface-3);
-}
-.welcome-screen__footer p { margin: 0; font: 500 11px/1.5 var(--font-mono); color: var(--subtle-foreground); }
-.welcome-screen__start {
-  min-width: 190px; min-height: 44px; padding: 0 20px;
-  background: var(--primary); color: var(--primary-foreground);
-  border: 1px solid var(--primary); border-radius: var(--radius-control);
-  font: 500 14px/20px var(--font-sans);
-}
-.welcome-screen__start:hover { background: #c3e1ff; color: var(--primary-foreground); }
-@media (max-width: 760px) {
-  .welcome-screen__body { grid-template-columns: 1fr; grid-template-rows: auto minmax(0,1fr); padding: 12px; gap: 12px; }
-  .welcome-screen__intro { align-self: stretch; padding: 14px 16px; }
-  .welcome-screen__intro h1 { font-size: 30px; margin-bottom: 9px; }
-  .welcome-screen__lead { font-size: 14px; line-height: 1.45; }
-  .welcome-screen__subtitle { font-size: 12px; line-height: 1.5; }
-  .welcome-screen__credits { margin-top: 9px; padding-top: 8px; }
-  .welcome-screen__guide { padding: 12px 16px; }
-  .welcome-screen__guide-item { padding: 10px 0; }
-  .welcome-screen__footer { min-height: 66px; }
-  .welcome-screen__footer p { display: none; }
-  .welcome-screen__start { width: 100%; }
-}
-@media (prefers-reduced-motion: reduce) { .welcome-screen { transition: none; } }
+
+/* UI-kit-compliant first-visit guide: glass surface, hairlines, native typography,
+   4px spacing rhythm, no gradients, no shadows, no decorative oversized text. */
+.welcome-screen { position:absolute; inset:0; z-index:30; display:grid; place-items:center; padding:var(--edge); background:rgb(8 11 18 / .72); opacity:1; transition:opacity 160ms ease-out; }
+.welcome-screen--leaving { opacity:0; pointer-events:none; }
+.welcome-screen__shell { display:flex; flex-direction:column; width:min(880px,100%); max-height:calc(100dvh - 2 * var(--edge)); min-height:0; box-shadow:none; }
+.welcome-screen__header { display:flex; align-items:center; justify-content:space-between; gap:8px; min-height:48px; padding:0 12px; border-bottom:1px solid var(--border); flex:none; }
+.welcome-screen__brand { font:500 16px/24px var(--font-sans); }
+.welcome-screen__status { border:1px solid var(--border-strong); border-radius:999px; padding:3px 10px; color:var(--muted-foreground); font:400 12px/16px var(--font-sans); }
+.welcome-screen__body { display:grid; grid-template-columns:minmax(0,.86fr) minmax(0,1.14fr); flex:1; min-height:0; }
+.welcome-screen__intro,.welcome-screen__guide { min-width:0; overflow:auto; padding:16px; scrollbar-width:thin; scrollbar-color:var(--border-strong) transparent; }
+.welcome-screen__intro { border-right:1px solid var(--border); }
+.welcome-screen__eyebrow { margin:0 0 8px; color:var(--muted-foreground); font:500 12px/16px var(--font-sans); }
+.welcome-screen__intro h1 { margin:0 0 12px; font:600 18px/24px var(--font-sans); }
+.welcome-screen__lead { margin:0 0 12px; font:400 14px/20px var(--font-sans); }
+.welcome-screen__subtitle { margin:0 0 16px; color:var(--muted-foreground); font:400 12px/16px var(--font-sans); }
+.welcome-screen__credits { display:grid; gap:4px; padding-top:12px; border-top:1px solid var(--border); color:var(--muted-foreground); font:400 12px/16px var(--font-sans); }
+.welcome-screen__credits span { padding:2px 0; }
+.welcome-screen__guide { padding:12px 16px; }
+.welcome-screen__guide-item { display:grid; grid-template-columns:20px minmax(0,1fr); gap:8px; padding:8px 0; border-top:1px solid var(--border); }
+.welcome-screen__guide-number { color:var(--muted-foreground); font:500 12px/16px var(--font-mono); }
+.welcome-screen__guide h3 { margin:0 0 4px; font:500 14px/20px var(--font-sans); }
+.welcome-screen__guide p:not(.welcome-screen__eyebrow) { margin:0; color:var(--muted-foreground); font:400 12px/16px var(--font-sans); }
+.welcome-screen__legend { margin-top:8px; padding-top:12px; border-top:1px solid var(--border); }
+.welcome-screen__legend .pin-key__row { grid-template-columns:18px 100px minmax(0,1fr); font-size:12px; line-height:16px; }
+.welcome-screen__footer { display:flex; flex:none; align-items:center; justify-content:space-between; gap:12px; min-height:64px; padding:8px 12px; border-top:1px solid var(--border); }
+.welcome-screen__footer p { margin:0; color:var(--muted-foreground); font:400 12px/16px var(--font-sans); }
+.welcome-screen__start { min-width:152px; min-height:40px; border:1px solid var(--primary); border-radius:var(--radius-control); padding:0 12px; background:var(--accent); color:var(--foreground); font:500 14px/20px var(--font-sans); transition:background-color 150ms ease-out, border-color 150ms ease-out, color 150ms ease-out; }
+.welcome-screen__start:hover { background:rgb(158 201 255 / .24); }
+@media(max-width:680px) { .welcome-screen__shell { height:calc(100dvh - 2 * var(--edge)); } .welcome-screen__body { grid-template-columns:minmax(0,1fr); grid-template-rows:auto minmax(0,1fr); } .welcome-screen__intro { overflow:visible; padding:12px; border-right:0; border-bottom:1px solid var(--border); } .welcome-screen__intro h1 { margin-bottom:8px; } .welcome-screen__subtitle { margin-bottom:8px; } .welcome-screen__credits { display:none; } .welcome-screen__guide { padding:12px; } .welcome-screen__footer p { display:none; } .welcome-screen__start { width:100%; min-height:44px; } }
+@media(prefers-reduced-motion:reduce) { .welcome-screen { transition:none; } }

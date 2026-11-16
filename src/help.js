@@ -42,9 +42,9 @@ export function installHelp(container) {
   catch { /* Private browsing / blocked storage: show the guide for this visit. */ }
   const directView = new URLSearchParams(window.location.search).has('shot');
   if (!hasSeenWelcome && !directView) {
-    const begin = el('button', { type: 'button', class: 'btn welcome-screen__start', text: 'Start exploring  →' });
+    const begin = el('button', { type: 'button', class: 'btn welcome-screen__start', text: 'Start exploring' });
     const intro = el('section', { class: 'welcome-screen__intro' }, [
-      el('p', { class: 'welcome-screen__eyebrow', text: 'CENTAURI LUNAR ATLAS  /  USER GUIDE' }),
+      el('p', { class: 'welcome-screen__eyebrow', text: 'Lunar Atlas · Guide' }),
       el('h1', { id: 'welcome-title', text: 'Explore the Moon' }),
       el('p', { class: 'welcome-screen__lead', text: 'NASA terrain and imagery. Historic landing sites, future mission regions, and local sunlight and Earth visibility.' }),
       el('p', { class: 'welcome-screen__subtitle', text: 'Start on the Earth-facing near side, then orbit, fly, compare sites or walk the surface. This guide opens again with I, F1, or Help.' }),
@@ -55,14 +55,14 @@ export function installHelp(container) {
       ]),
     ]);
     const controls = sections.map(([title, description], index) => el('div', { class: 'welcome-screen__guide-item' }, [
-      el('span', { class: 'welcome-screen__guide-number', text: String(index + 1).padStart(2, '0') }),
+      el('span', { class: 'welcome-screen__guide-number', text: String(index + 1) }),
       el('div', {}, [el('h3', { text: title }), el('p', { text: description })]),
     ]));
     const guide = el('section', { class: 'welcome-screen__guide', 'aria-label': 'Controls and map key' }, [
-      el('p', { class: 'welcome-screen__eyebrow', text: 'CONTROLS & NAVIGATION' }),
+      el('p', { class: 'welcome-screen__eyebrow', text: 'Controls and navigation' }),
       ...controls,
       el('div', { class: 'welcome-screen__legend' }, [
-        el('p', { class: 'welcome-screen__eyebrow', text: 'SITE MARKERS' }),
+        el('p', { class: 'welcome-screen__eyebrow', text: 'Site markers' }),
         el('div', { class: 'pin-key' }, swatches.map(([kind, name, detail]) => el('div', { class: 'pin-key__row' }, [
           el('span', { class: `pin-key__symbol pin-key__symbol--${kind}`, 'aria-hidden': 'true' }),
           el('strong', { text: name }), el('span', { text: detail }),
@@ -70,11 +70,7 @@ export function installHelp(container) {
       ]),
     ]);
     const welcome = el('div', { class: 'welcome-screen', role: 'dialog', 'aria-modal': 'true', 'aria-labelledby': 'welcome-title' }, [
-      el('div', { class: 'welcome-screen__body' }, [intro, guide]),
-      el('footer', { class: 'welcome-screen__footer' }, [
-        el('p', { text: 'LOLA TERRAIN  ·  LROC IMAGERY  ·  JPL HORIZONS' }),
-        begin,
-      ]),
+      el('div', { class: 'welcome-screen__shell glass' }, [el('header', { class: 'welcome-screen__header' }, [el('span', { class: 'welcome-screen__brand', text: 'Centauri Lunar Atlas' }), el('span', { class: 'welcome-screen__status', text: 'Getting started' })]), el('div', { class: 'welcome-screen__body' }, [intro, guide]), el('footer', { class: 'welcome-screen__footer' }, [el('p', { text: 'LOLA terrain · LROC imagery · JPL Horizons' }), begin])]),
     ]);
     container.append(welcome);
     welcomeVisible = true;
@@ -96,7 +92,7 @@ export function installHelp(container) {
       welcome.addEventListener('transitionend', (event) => {
         if (event.target === welcome) remove();
       }, { once: true });
-      window.setTimeout(() => { if (welcome.isConnected) remove(); }, 800);
+      window.setTimeout(() => { if (welcome.isConnected) remove(); }, 260);
     };
     begin.addEventListener('click', finish);
     welcome.addEventListener('keydown', (event) => {

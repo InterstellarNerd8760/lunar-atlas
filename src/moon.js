@@ -1,4 +1,4 @@
-import { installHelp } from './help.js?v=welcome-nearside-v2';
+import { installHelp } from './help.js?v=ui-kit-welcome-v3';
 import * as THREE from 'three';
 import { OrbitControls } from 'https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/controls/OrbitControls.js';
 
