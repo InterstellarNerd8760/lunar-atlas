@@ -383,7 +383,7 @@ export function createPins(container, places, { onSelect, scene } = {}) {
   }
   const pins = places.map((place) => {
     const lander = isLanderPlace(place);
-    const classes = ['pin'];
+    const classes = ['pin', `pin--${place.group}`];
     if (place.group === 'artemis') classes.push('pin--proxy');
     if (place.approximate) classes.push('pin--approx');
     const labelText = place.name;
@@ -392,7 +392,7 @@ export function createPins(container, places, { onSelect, scene } = {}) {
       class: classes.join(' '),
       tabindex: '-1',
       'aria-label': place.approximate ? `${place.name}, approximate location` : place.name,
-    }, [el('span', { class: 'pin__dot' }), el('span', { class: 'pin__label', text: labelText })]);
+    }, [el('span', { class: 'pin__stalk' }), el('span', { class: 'pin__dot' }), el('span', { class: 'pin__label', text: labelText })]);
     button.addEventListener('click', () => onSelect(place));
     layer.append(button);
     const marker = (markers && lander && Number.isFinite(place.lat) && Number.isFinite(place.lon))

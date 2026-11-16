@@ -9,6 +9,7 @@ import { bindPopover, closeOpenPopover, el, icons, isTextField, reducedMotion } 
 import { createTerrain } from './terrain.js';
 import { createHorizonSource } from './horizon.js';
 import { createComparePanel } from './compare.js';
+import { createLanderOverlay, loadLandingSites } from './landers.js';
 
 const MOON_RADIUS_METERS = 1_737_400;
 const EYE_METERS = 2.2;
@@ -361,6 +362,24 @@ async function loadMoon(container, loadingStatus) {
     skyStatus = 'Preview lighting';
   }
 
+  // Lander model overlay (src/landers.js). Visibility is controlled in Layers.
+  let landers = null;
+  try {
+    landers = createLanderOverlay({
+      scene,
+      terrain,
+      sites: await loadLandingSites(dataDirectory),
+      canvas: renderer.domElement,
+      renderer,
+      showPins: false, // sites.js draws the site pins in the same style
+      modelsDirectory: new URL('../public/models/', import.meta.url),
+    });
+    if (params.get('landers') === '0') landers.setVisible(false);
+    window.__lunarLanders = landers;
+  } catch (error) {
+    console.warn('Lander overlay unavailable', error);
+  }
+
   const compare = sky ? createComparePanel(container, {
     places,
     positions: sky.positions,
@@ -470,6 +489,13 @@ async function loadMoon(container, loadingStatus) {
   });
   const layersStatus = el('p', { class: 'terrain-summary__status', role: 'status' });
   const layerRows = [];
+  if (landers) {
+    const landersToggle = el('input', { type: 'checkbox', id: 'layer-landers', checked: landers.visible });
+    landersToggle.addEventListener('change', () => landers.setVisible(landersToggle.checked));
+    layerRows.push(el('div', { class: 'switch-row' }, [
+      el('label', { for: 'layer-landers', text: 'Lander models · cyan = concepts' }), landersToggle,
+    ]));
+  }
   if (texture) {
     const imageryButton = el('input', { type: 'checkbox', id: 'layer-wac', 'aria-describedby': 'layer-wac-desc' });
     imageryButton.addEventListener('change', () => terrain.setImageryOnly(imageryButton.checked));
@@ -1232,8 +1258,10 @@ async function loadMoon(container, loadingStatus) {
     }
     camera.updateMatrixWorld();
     pins.update(camera, (direction) => terrain.surfaceRadius(direction), container.clientWidth, container.clientHeight, realDelta);
+    landers?.update(camera);
     featureLabels?.update(camera, (direction) => terrain.surfaceRadius(direction), container.clientWidth, container.clientHeight, realDelta);
     renderer.render(scene, camera);
+    landers?.renderSplats(camera);
     if (swayView) {
       camera.quaternion.copy(walkOrientation);
       camera.updateMatrixWorld();
