@@ -8,7 +8,7 @@ export function installHelp(container) {
   panel.append(el('h2', { text: 'Explore Lunar Atlas' }), close);
   const sections = [
     ['Find a place', 'Search for a mission or crater, or choose Random site. Select a site to read its sources and open its surface view. Drag the Moon to orbit and scroll or pinch to zoom. Double-click terrain to focus there.'],
-    ['Free flight', 'WASD moves you relative to your view. Q and E turn. Space rises and C descends. Hold Shift to boost. Drag to look if pointer lock is unavailable. Esc exits. On touch screens, use the thumbstick and Rise / Descend.'],
+    ['Free flight', 'WASD moves you relative to your view. Q and E turn. Space rises and C descends. Hold Shift to boost. Drag to look; the pointer stays available to hover site pins. Esc exits. On touch screens, use the thumbstick and Rise / Descend.'],
     ['Walk', 'Choose Stand on surface, then Walk. WASD or arrow keys move, Shift runs, and Space jumps. Drag to look. On touch screens, use the thumbstick, Run and Jump. Esc or Exit walk returns to orbit controls.'],
     ['Time and visibility', 'Use the timeline to change the date, play time, or change its speed. Site visibility shows estimated sunlight and Earth visibility for the displayed period. Compare opens a comparison of up to three locations.'],
     ['Layers and settings', 'Layers (L) controls terrain relief, WAC imagery and feature labels. Relief ×1 uses true scale. Auto increases relief from orbit and returns toward ×1 near the surface. WAC imagery mode displays the image without simulated lighting.'],
