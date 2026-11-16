@@ -17,7 +17,13 @@ This file tracks source provenance for the layers used or planned in Lunar Atlas
 
 NASA's [October 28, 2024 Artemis III update](https://www.nasa.gov/news-release/nasa-provides-update-on-artemis-iii-moon-landing-regions/) lists nine candidate regions: Peak near Cabeus B, Haworth, Malapert Massif, Mons Mouton Plateau, Mons Mouton, Nobile Rim 1, Nobile Rim 2, de Gerlache Rim 2, and Slater Plain. Each region contains multiple possible landing sites; NASA has not announced a permanent lunar-base site. Shackleton was discussed among earlier candidates but is not in this updated nine-region list.
 
+**Updated program status (October 2026):** The 2024 Artemis III map is now **historical landing-region context**, not a finalized Artemis III landing plan. NASA [reassigned Artemis III to a 2027 low-Earth-orbit demonstration](https://www.nasa.gov/missions/artemis/nasas-artemis-iii-mission-to-test-future-moon-lander-operations/) and targets [Artemis IV as the first crewed lunar landing in 2028](https://www.nasa.gov/missions/artemis/nasa-shares-plans-to-accelerate-artemis-return-to-moon/). Lunar Atlas maps five of the archived nine candidate regions as terrain proxies; none is a selected base, confirmed future spacecraft or precise touchdown coordinate.
+
 ## Export provenance checklist
 
 For every processed raster or ephemeris export, capture the source product and URL, download date/version, original filename, coordinate reference/projection, spatial bounds, dimensions, resolution and units, no-data handling, scale/offset, resampling/compositing method, processing notebook/script and commit, output filename, checksum, and required credit/citation. Label inferred or visually exaggerated values.
 Lunar feature search uses the [USGS/IAU Moon center-point gazetteer](https://planetarynames.wr.usgs.gov/Page/MOON/target) in the LOLA 2011 control network. The bundled index contains the official name, feature type, center coordinates, diameter, and Gazetteer record ID for each adopted entry in the export. Refresh it with `python3 scripts/prepare-lunar-names.py MOON_nomenclature_center_pts.zip`.
+
+## Planned CLPS mission geography
+
+The exploratory **future region** markers (IM-3 at Reiner Gamma, Draper SERIES-2 at Schrödinger basin, Firefly Blue Ghost Mission 3 at the Gruithuisen Domes) match destinations published in [NASA's current CLPS listing](https://www.nasa.gov/commercial-lunar-payload-services/clps-landing-sites/). Marker coordinates are **illustrative USGS/IAU named-feature centers** rather than official landing-coordinate claims. Mission assignments, timing and landing points may change.
