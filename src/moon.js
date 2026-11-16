@@ -325,12 +325,6 @@ async function loadMoon(container, loadingStatus) {
 
   const places = collectPlaces(demIndex.sites, previewIndex.sites, catalog);
   const findNote = noteFinder(siteNotes);
-  const matchedArtemis = new Set(places.filter((place) => place.group === 'artemis').map(findNote).filter(Boolean));
-  const listedPlaces = [...places];
-  for (const note of siteNotes) {
-    if (!isArtemisNote(note) || matchedArtemis.has(note)) continue;
-    listedPlaces.push({ id: `note-${normId(note.name)}`, name: note.name, group: 'artemis', proxy: true, disabled: true });
-  }
   const placesById = new Map(places.map((place) => [place.id, place]));
 
   const drawer = createDrawer(container, {
@@ -530,7 +524,7 @@ async function loadMoon(container, loadingStatus) {
 
   const pins = createPins(container, places, { onSelect: (place) => focusPlace(place), scene });
   pins.init((lat, lon, target) => terrain.directionFromLatLon(lat, lon, target));
-  const siteList = createSiteList(container, listedPlaces, {
+  const siteList = createSiteList(container, places, {
     features: featureSearch,
     onFeatureSelect: (feature) => {
       focusFeature(feature);
