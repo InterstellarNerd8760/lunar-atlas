@@ -160,7 +160,8 @@ a { color: var(--primary); }
 .vis__solar[data-level="good"] { border-color: #4caf7a; }
 .vis__solar[data-level="partial"], .vis__solar[data-level="day"] { border-color: #d9a441; }
 .vis__solar[data-level="no"] { border-color: #d0605e; }
-.brand__accent { color: hsl(217 91% 60%); }\n.brand {
+.brand__accent { color: hsl(217 91% 60%); }
+.brand {
   margin: 0 auto 0 0;
   font-size: 16px;
   line-height: 24px;
