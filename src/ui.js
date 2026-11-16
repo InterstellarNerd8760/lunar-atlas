@@ -1,3 +1,4 @@
+import { makePanelDraggable } from './help.js';
 const svg = (body) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">${body}</svg>`;
 
 export const icons = {
@@ -33,6 +34,7 @@ export function el(tag, props = {}, children = []) {
 const popovers = new Set();
 
 export function bindPopover(trigger, panel, { onOpen, onClose } = {}) {
+  makePanelDraggable(panel);
   panel.hidden = true;
   trigger.setAttribute('aria-expanded', 'false');
   const api = {
