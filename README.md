@@ -1,4 +1,4 @@
-# Lunar Atlas
+# Centauri Lunar Atlas
 
 A browser-based Moon explorer for comparing sunlight and Earth visibility at lunar sites.
 
@@ -56,7 +56,7 @@ Open [the legacy texture view](http://localhost:8000/?moonTexture=legacy). The v
 
 **Explore a site** lists every bundled DEM in `public/data/site-dems/index.json`, grouped into Apollo landing sites and south pole terrain. The viewer downloads one site at a time and drapes that grid on the lunar sphere.
 
-Select a site in **Explore a site**. Apollo entries use the LROC NAC elevation crops. South-pole entries use the PGDA LOLA 5 m grids, including Shackleton rim and Connecting ridge. Artemis candidate regions in that catalog are terrain proxies, not selected landing coordinates.
+Select a site in **Explore a site**. Apollo entries use the LROC NAC elevation crops. South-pole entries with local DEMs use the PGDA LOLA 5 m grids, including Shackleton rim and Connecting ridge. **Shackleton floor** is a separate selectable site at the official Shackleton crater center (89.67°S, 129.78°E), and uses global/south-polar LOLA coverage rather than a dedicated 5 m floor DEM. Its visibility estimates are approximate and should not be mistaken for rim measurements. Artemis candidate regions in the catalog are terrain proxies, not selected landing coordinates.
 
 The checkout includes the 2048 px Blue Marble Earth texture and 4096 px NASA SVS star map. Credits are in [public/data/sky/CREDITS.txt](public/data/sky/CREDITS.txt). The star panorama uses a fixed decorative orientation. The time slider continues to drive the Sun and Earth's positions using the included Horizons ephemeris.
 
@@ -69,9 +69,9 @@ surface. Earth keeps its physical radius and ephemeris range. Detail mesh
 vertices use a local center to improve close-range precision.
 
 Select a site or double-click terrain for the visibility panel. Estimates use
-body centers above a spherical horizon, sampled every six hours over the bundled
-30-day window. Terrain occlusion, disk edges and transitions between samples are
-not resolved. Longest darkness may be truncated by the window boundaries.
+Sun and Earth centers above a terrain horizon, sampled every six hours over the bundled
+30-day window. The terrain-horizon algorithm uses LOLA heights where available;
+small terrain features, disk edges, and transitions between samples are not resolved. Longest darkness may be truncated by the window boundaries.
 Site notes cite the Notion-curated NASA, LROC and USGS sources.
 
 The viewer loads site DEMs from `public/data/site-dems/`. The Apollo 11 imagery and south-pole ZIP exports in `data/processed/` are available for future viewer integration.
