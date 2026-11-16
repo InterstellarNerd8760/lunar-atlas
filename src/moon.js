@@ -1,4 +1,4 @@
-import { installHelp } from './help.js?v=final-layout-v3';
+import { installHelp } from './help.js?v=clps-final-2026';
 import * as THREE from 'three';
 import { OrbitControls } from 'https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/controls/OrbitControls.js';
 
@@ -237,11 +237,11 @@ async function loadMoon(container, loadingStatus) {
   const params = new URLSearchParams(window.location.search);
   const [demResponse, previewResponse, notesResponse, photosResponse, catalogResponse, writeupsResponse, featuresResponse, horizonsResponse] = await Promise.all([
     fetch(new URL('site-dems/index.json', dataDirectory)),
-    fetch(new URL('site-previews/index.json?v=pin-status-v2', dataDirectory)),
+    fetch(new URL('site-previews/index.json?v=clps-final-2026', dataDirectory)),
     fetch(new URL('site-notes.json', dataDirectory)),
     fetch(new URL('site-photos/index.json', dataDirectory)),
     fetch(new URL('landing-sites.csv?v=pin-status-v2', dataDirectory)),
-    fetch(new URL('site-writeups.json?v=pin-status-v2', dataDirectory)),
+    fetch(new URL('site-writeups.json?v=clps-final-2026', dataDirectory)),
     fetch(new URL('features.json', dataDirectory)),
     fetch(new URL('horizons.json', dataDirectory)),
   ]);

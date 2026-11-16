@@ -1,3 +1,3 @@
-import { mountMoonView } from './moon.js?v=final-layout-v3';
+import { mountMoonView } from './moon.js?v=clps-final-2026';
 
 mountMoonView(document.querySelector('#moon-view'));
