@@ -151,7 +151,7 @@ a { color: var(--primary); }
   align-items: center;
   gap: 8px;
   height: var(--bar-h);
-  padding: 0 4px 0 16px;
+  padding: 0 12px 0 16px;
 }
 
 .brand__by { margin-left: 6px; font-size: 12px; font-weight: 400; opacity: 0.6; color: inherit; text-decoration: none; }
@@ -162,14 +162,14 @@ a { color: var(--primary); }
 .vis__solar[data-level="no"] { border-color: #d0605e; }
 .brand__accent { color: hsl(217 91% 60%); }
 .brand {
-  margin: 0 0 0 auto;
+  margin: 0 auto 0 0;
   font-size: 16px;
   line-height: 24px;
   font-weight: 500;
   white-space: nowrap;
 }
 
-.topbar__nav { display: flex; align-items: center; gap: 2px; min-width: 0; flex: 0 1 auto; }
+.topbar__nav { display: flex; align-items: center; justify-content: flex-end; gap: 2px; min-width: 0; margin-left: auto; flex: 0 1 auto; }
 .topbar__sites { display: none; }
 
 /* Popovers */
@@ -757,6 +757,10 @@ a { color: var(--primary); }
 .pin--failed.pin--approx .pin__dot { background: transparent; border: 2px dashed #e66c73; }
 .pin--future .pin__dot { background: transparent; border: 2px solid #f5f6fa; }
 .pin--future.pin--selected .pin__dot { border-color: var(--primary); background: transparent; }
+/* A small blue diamond distinguishes selected terrain destinations from hollow future landing regions. */
+.pin--terrain .pin__dot { width: 9px; height: 9px; border: 1px solid #c1e4fb; border-radius: 2px; background: #77b9e0; box-shadow: 0 0 0 1px var(--background); transform: translate(-50%, -50%) rotate(45deg); }
+.pin--terrain:hover .pin__dot, .pin--terrain:focus-visible .pin__dot { width: 11px; height: 11px; }
+.pin--terrain.pin--selected .pin__dot { background: #77b9e0; outline: 2px solid var(--primary); outline-offset: 2px; }
 
 .pin__label {
   position: absolute;
@@ -909,8 +913,8 @@ a { color: var(--primary); }
     gap: 0;
     padding: 0 4px;
   }
-  .topbar .brand { margin: 0 4px 0 auto; align-self: flex-end; font-size: 14px; }
-  .topbar__nav { justify-content: flex-start; width: 100%; overflow-x: auto; scrollbar-width: none; }
+  .topbar .brand { margin: 0 auto 0 4px; align-self: flex-start; font-size: 14px; }
+  .topbar__nav { justify-content: flex-end; width: max-content; max-width: 100%; margin-left: auto; overflow-x: auto; scrollbar-width: none; }
   .topbar__nav::-webkit-scrollbar { display: none; }
   .topbar__nav > .btn { padding-inline: 6px; }
   .topbar__layers span { display: none; }
