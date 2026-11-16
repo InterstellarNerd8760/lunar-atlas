@@ -1,8 +1,9 @@
 // Outcome and coordinate precision are independent attributes.
 export function pinStatus(place) {
   if (place.failed || place.kind === 'failed landing') return 'failed';
-  if (place.approximate) return 'approximate';
+  // Future regions are still future regions even when their proxy coordinates are approximate.
   if (place.group === 'artemis' || place.proxy) return 'future';
+  if (place.approximate) return 'approximate';
   if (place.group === 'feature' || place.group === 'point') return 'feature';
   return 'landed';
 }
