@@ -962,7 +962,7 @@ async function loadMoon(container, loadingStatus) {
     if (releasePointer && document.pointerLockElement === canvas) document.exitPointerLock();
   }
 
-  function enterFlight(lockPointer = true) {
+  function enterFlight(lockPointer = false) {
     navigationRevision++;
     if (flight) finishFlight();
     freeFlight = true;
