@@ -601,14 +601,13 @@ async function loadMoon(container, loadingStatus) {
   function walkAction(label, action) {
     return el('button', {
       type: 'button', class: 'btn', text: label, 'aria-label': label,
-      onpointerdown(event) {
-        if (event.button !== 0) return;
-        // A second finger can activate a button while the joystick owns the first.
-        if (event.pointerType === 'touch') event.preventDefault();
+      ontouchstart(event) {
+        // Handle the second finger directly, even when the browser suppresses its click.
+        event.preventDefault();
         action();
       },
       onclick(event) {
-        if (event.detail === 0) action();
+        if (event.pointerType !== 'touch') action();
       },
     });
   }
