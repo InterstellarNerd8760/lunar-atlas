@@ -3,9 +3,12 @@ import { OrbitControls } from 'https://cdn.jsdelivr.net/npm/three@0.180.0/exampl
 
 import { addSky } from './sky.js';
 import { aimAt, levelFlight, transportFlight, turnFlight } from './flight.js';
+import { createFeatureLabels } from './features.js';
 import { createDrawer, createPins, createSiteList } from './sites.js';
 import { bindPopover, closeOpenPopover, el, icons, isTextField, reducedMotion } from './ui.js';
 import { createTerrain } from './terrain.js';
+import { createHorizonSource } from './horizon.js';
+import { createComparePanel } from './compare.js';
 import { createLanderOverlay, createLanderToggle, loadLandingSites } from './landers.js';
 
 const MOON_RADIUS_METERS = 1_737_400;
@@ -47,8 +50,49 @@ function normId(value) {
   return String(value || '').toLowerCase().replace(/[^a-z0-9]/g, '');
 }
 
-function collectPlaces(demSites, previewSites) {
+function isApproximateSource(source) {
+  return /not LROC-confirmed/i.test(source || '');
+}
+
+function parseCsvRow(line) {
+  const cells = [];
+  let cell = '';
+  let quoted = false;
+  for (let i = 0; i < line.length; i++) {
+    const ch = line[i];
+    if (ch === '"') {
+      if (quoted && line[i + 1] === '"') { cell += '"'; i++; }
+      else quoted = !quoted;
+    } else if (ch === ',' && !quoted) {
+      cells.push(cell);
+      cell = '';
+    } else cell += ch;
+  }
+  cells.push(cell);
+  return cells;
+}
+
+function landingCatalog(text) {
+  const lines = text.trim().split(/\r?\n/).filter(Boolean);
+  const header = parseCsvRow(lines.shift());
+  const index = Object.fromEntries(header.map((name, i) => [name, i]));
+  const catalog = new Map();
+  for (const line of lines) {
+    const cells = parseCsvRow(line);
+    const id = cells[index.id];
+    if (!id) continue;
+    catalog.set(id, { approximate: isApproximateSource(cells[index.coord_source] || '') });
+  }
+  return catalog;
+}
+
+function collectPlaces(demSites, previewSites, catalog = new Map()) {
   const places = [];
+  function decorate(place) {
+    const row = catalog.get(place.id);
+    if (row) place.approximate = row.approximate;
+    return place;
+  }
   function duplicateOf(place) {
     const id = normId(place.id);
     return places.find((other) => {
@@ -65,10 +109,11 @@ function collectPlaces(demSites, previewSites) {
     if (!Number.isFinite(place.lat) || !Number.isFinite(place.lon)) return;
     const existing = duplicateOf(place);
     if (existing) {
-      for (const key of ['year', 'country', 'mission']) existing[key] ??= place[key];
+      for (const key of ['year', 'country', 'mission', 'approximate']) existing[key] ??= place[key];
+      decorate(existing);
       return;
     }
-    places.push(place);
+    places.push(decorate(place));
   }
   for (const site of demSites || []) {
     const [lat, lon] = site.centerLatLon || [];
@@ -123,6 +168,52 @@ function noteFinder(notes) {
   };
 }
 
+function photoKey(value) {
+  return normId(String(value || '').replace(/^artemis region:\s*/i, '').replace(/^(note|artemis3)-/, ''));
+}
+
+function findPhoto(place, photosById) {
+  if (photosById.has(place.id)) return photosById.get(place.id);
+  const keys = new Set([photoKey(place.id), photoKey(place.name)].filter(Boolean));
+  for (const photo of photosById.values()) {
+    if (keys.has(photoKey(photo.id)) || keys.has(photoKey(photo.title))) return photo;
+  }
+  return null;
+}
+
+function findWriteup(place, writeupsById) {
+  if (writeupsById.has(place.id)) return writeupsById.get(place.id);
+  const keys = new Set([photoKey(place.id), photoKey(place.name)].filter(Boolean));
+  for (const writeup of writeupsById.values()) {
+    if (keys.has(photoKey(writeup.id)) || keys.has(photoKey(writeup.name))) return writeup;
+  }
+  return null;
+}
+
+function attachWriteup(note, place, writeupsById) {
+  const writeup = findWriteup(place, writeupsById);
+  if (!writeup) return note;
+  return {
+    ...(note || {}),
+    about: writeup.about,
+    facts: writeup.facts,
+    sources: writeup.sources,
+    take: String(writeup.westonsTake || '').trim(),
+  };
+}
+
+function attachPhoto(note, place, photosById, dataDirectory) {
+  const photo = findPhoto(place, photosById);
+  if (!photo) return note;
+  return {
+    ...(note || {}),
+    image: new URL(photo.file.includes('/') ? photo.file : `site-photos/${photo.file}`, dataDirectory).href,
+    imageAlt: photo.title || place.name,
+    imageCaption: photo.caption,
+    imageCredit: photo.credit,
+  };
+}
+
 export function mountMoonView(container) {
   container.replaceChildren();
 
@@ -142,14 +233,43 @@ export function mountMoonView(container) {
 async function loadMoon(container, loadingStatus) {
   const dataDirectory = new URL('../public/data/', import.meta.url);
   const params = new URLSearchParams(window.location.search);
-  const [demResponse, previewResponse, notesResponse] = await Promise.all([
+  const [demResponse, previewResponse, notesResponse, photosResponse, catalogResponse, writeupsResponse, featuresResponse, horizonsResponse] = await Promise.all([
     fetch(new URL('site-dems/index.json', dataDirectory)),
     fetch(new URL('site-previews/index.json', dataDirectory)),
     fetch(new URL('site-notes.json', dataDirectory)),
+    fetch(new URL('site-photos/index.json', dataDirectory)),
+    fetch(new URL('landing-sites.csv', dataDirectory)),
+    fetch(new URL('site-writeups.json', dataDirectory)),
+    fetch(new URL('features.json', dataDirectory)),
+    fetch(new URL('horizons.json', dataDirectory)),
   ]);
   const demIndex = demResponse.ok ? await demResponse.json() : { sites: [] };
   const previewIndex = previewResponse.ok ? await previewResponse.json() : { sites: [] };
   const siteNotes = notesResponse.ok ? await notesResponse.json() : [];
+  const photoIndex = photosResponse.ok ? await photosResponse.json() : { photos: [] };
+  const photosById = new Map((photoIndex.photos || []).map((photo) => [photo.id, photo]));
+  const catalog = catalogResponse.ok ? landingCatalog(await catalogResponse.text()) : new Map();
+  const writeupsById = new Map();
+  if (writeupsResponse.ok) {
+    const writeups = await writeupsResponse.json();
+    for (const [id, writeup] of Object.entries(writeups)) writeupsById.set(id, writeup);
+  }
+  const namedFeatures = featuresResponse.ok ? ((await featuresResponse.json()).features || []) : [];
+  const searchableFeatures = await fetch(new URL('lunar-names.json', dataDirectory))
+    .then((response) => {
+      if (!response.ok) throw new Error(`Lunar name catalog request failed (${response.status})`);
+      return response.json();
+    })
+    .then(({ types, features }) => features.map(([name, lat, lon, diameter_km, type, id]) => ({
+      name, lat, lon, diameter_km, type: types[type] === 'Satellite Feature' ? 'Satellite crater' : types[type],
+      source: `https://planetarynames.wr.usgs.gov/Feature/${id}`,
+    })))
+    .catch((error) => {
+      console.warn(error);
+      return [];
+    });
+  const catalogNames = new Set(searchableFeatures.map((feature) => feature.name.toLowerCase()));
+  const featureSearch = [...searchableFeatures, ...namedFeatures.filter((feature) => !catalogNames.has(feature.name.toLowerCase()))];
 
   const scene = new THREE.Scene();
   scene.background = new THREE.Color('#030509');
@@ -204,7 +324,7 @@ async function loadMoon(container, loadingStatus) {
   if (texture) terrain.setAlbedo(texture);
   if (params.get('wire') === '1') terrain.setWireframe(true);
 
-  const places = collectPlaces(demIndex.sites, previewIndex.sites);
+  const places = collectPlaces(demIndex.sites, previewIndex.sites, catalog);
   const findNote = noteFinder(siteNotes);
   const matchedArtemis = new Set(places.filter((place) => place.group === 'artemis').map(findNote).filter(Boolean));
   const listedPlaces = [...places];
@@ -219,6 +339,14 @@ async function loadMoon(container, loadingStatus) {
     onFlyTo: () => { if (currentPlace) focusPlace(currentPlace, { surface: false }); },
     onStand: () => { if (currentPlace) focusPlace(currentPlace); },
     onEarth: lookAtEarth,
+    onCompare: () => compare?.open(currentPlace),
+  });
+
+  const horizon = createHorizonSource({
+    sample: terrain.sampleBaseMeters,
+    precomputed: horizonsResponse.ok ? await horizonsResponse.json().catch(() => null) : null,
+    label: () => terrain.heightsLabel,
+    epoch: () => terrain.heightsEpoch,
   });
 
   let sky;
@@ -227,6 +355,7 @@ async function loadMoon(container, loadingStatus) {
     sky = await addSky(scene, camera, sunlight, container, {
       visibilitySection: drawer.visSection,
       onVisibilityStatus: (text) => drawer.setPeek(text),
+      horizon,
     });
   } catch (error) {
     console.warn(error);
@@ -251,6 +380,17 @@ async function loadMoon(container, loadingStatus) {
   } catch (error) {
     console.warn('Lander overlay unavailable', error);
   }
+
+  const compare = sky ? createComparePanel(container, {
+    places,
+    positions: sky.positions,
+    horizon,
+    getPoint: () => (currentPlace?.group === 'point' ? currentPlace : null),
+  }) : null;
+  // Horizons computed on the startup grid are refreshed once the 16 px/deg grid lands.
+  terrain.heightsReady.then(() => {
+    if (currentPlace && Number.isFinite(currentPlace.lat)) analyzePlace(currentPlace);
+  });
 
   const canvas = renderer.domElement;
   let controls;
@@ -280,12 +420,51 @@ async function loadMoon(container, loadingStatus) {
     ['globe', 'Globe'], ['north', 'N pole'], ['south', 'S pole'],
   ].map(([view, label]) => el('button', { type: 'button', class: 'btn', 'data-view': view, 'aria-pressed': String(view === 'globe'), text: label }));
   const flightButton = el('button', { type: 'button', class: 'btn', 'aria-pressed': 'false', text: 'Free flight' });
-  const layersButton = el('button', { type: 'button', class: 'btn', 'aria-haspopup': 'dialog', 'aria-keyshortcuts': 'L', title: 'Layers (L)', html: `${icons.layers}<span>Layers</span>` });
+  const walkButton = el('button', { type: 'button', class: 'btn', text: 'Walk', title: 'Walk on the surface below you', 'aria-pressed': 'false' });
+  let walking = false;
+  let jumpHeight = 0;
+  let jumpVelocity = 0;
+  let walkSwayPhase = 0;
+  let walkSway = 0;
+  const walkUp = new THREE.Vector3();
+  const walkRotation = new THREE.Quaternion();
+  const walkOrientation = new THREE.Quaternion();
+  walkButton.addEventListener('click', () => {
+    if (walking) leaveFlight();
+    else {
+      if (freeFlight) leaveFlight(false);
+      if (flight) finishFlight();
+      // Drop onto the ground directly below the camera, anywhere on the Moon, facing the horizon.
+      walkUp.copy(camera.position).normalize();
+      const heading = camera.getWorldDirection(new THREE.Vector3()).projectOnPlane(walkUp);
+      if (heading.lengthSq() < 1e-8) heading.copy(camera.up).projectOnPlane(walkUp);
+      if (heading.lengthSq() < 1e-8) heading.set(0, 1, 0).projectOnPlane(walkUp);
+      if (heading.lengthSq() < 1e-8) heading.set(1, 0, 0).projectOnPlane(walkUp);
+      heading.normalize();
+      camera.position.copy(walkUp).multiplyScalar(terrain.surfaceRadius(walkUp) + 1.7 / MOON_RADIUS_METERS);
+      camera.up.copy(walkUp);
+      camera.lookAt(camera.position.clone().add(heading));
+      enterFlight(false);
+      flightButton.textContent = 'Free flight';
+      flightButton.setAttribute('aria-pressed', 'false');
+      walking = true;
+      jumpHeight = jumpVelocity = 0;
+      walkSwayPhase = walkSway = 0;
+      walkButton.textContent = 'Exit walk';
+      walkButton.setAttribute('aria-pressed', 'true');
+      showFlightControls();
+    }
+  });
+  const compareButton = el('button', { type: 'button', class: 'btn', 'aria-haspopup': 'dialog', title: 'Compare sites side by side', text: 'Compare', hidden: !compare, onclick: () => compare?.toggle(currentPlace) });
+  const layersButton = el('button', { type: 'button', class: 'btn topbar__layers', 'aria-label': 'Layers', 'aria-haspopup': 'dialog', 'aria-keyshortcuts': 'L', title: 'Layers (L)', html: `${icons.layers}<span>Layers</span>` });
   const topbar = el('header', { class: 'topbar glass' }, [
     el('h1', { class: 'brand', text: 'Lunar Atlas' }),
     el('nav', { class: 'topbar__nav', 'aria-label': 'Camera' }, [
       sitesButton,
-      el('div', { class: 'topbar__nav topbar__views' }, [...viewButtons, flightButton]),
+      el('div', { class: 'topbar__nav topbar__views' }, viewButtons),
+      flightButton,
+      walkButton,
+      compareButton,
       layersButton,
     ]),
   ]);
@@ -309,7 +488,7 @@ async function loadMoon(container, loadingStatus) {
     reliefMode = button.dataset.relief;
     for (const other of reliefControl.children) other.setAttribute('aria-pressed', String(other === button));
   });
-  const layersStatus = el('p', { class: 'text-xs layers-menu__status', role: 'status' });
+  const layersStatus = el('p', { class: 'terrain-summary__status', role: 'status' });
   const layerRows = [];
   if (texture) {
     const imageryButton = el('input', { type: 'checkbox', id: 'layer-wac', 'aria-describedby': 'layer-wac-desc' });
@@ -324,19 +503,59 @@ async function loadMoon(container, loadingStatus) {
     starsToggle.addEventListener('change', () => sky.setStars(starsToggle.checked));
     layerRows.push(el('div', { class: 'switch-row' }, [el('label', { for: 'layer-stars', text: 'Stars' }), starsToggle]));
   }
+  const namesToggle = el('input', { type: 'checkbox', id: 'layer-feature-names', checked: true });
+  namesToggle.addEventListener('change', () => featureLabels?.setEnabled(namesToggle.checked));
+  layerRows.push(el('div', { class: 'switch-row' }, [el('label', { for: 'layer-feature-names', text: 'Feature names' }), namesToggle]));
   const layersMenu = el('div', { class: 'popover layers-menu', role: 'dialog', 'aria-label': 'Layers' }, [
     el('div', { class: 'field' }, [el('h2', { text: 'Terrain relief' }), reliefControl]),
     ...layerRows,
-    layersStatus,
   ]);
   container.append(layersMenu);
+  const terrainSummary = el('aside', { class: 'terrain-summary', 'aria-label': 'Terrain relief and sources' }, [
+    layersStatus,
+    el('a', {
+      href: 'https://github.com/InterstellarNerd8760/lunar-atlas/blob/main/docs/data-sources.md',
+      target: '_blank', rel: 'noopener', text: 'Data sources',
+    }),
+  ]);
+  container.append(terrainSummary);
   const layersPopover = bindPopover(layersButton, layersMenu, {
     onOpen: () => reliefControl.querySelector('[aria-pressed="true"]').focus(),
   });
 
-  const pins = createPins(container, places, { onSelect: (place) => focusPlace(place) });
+  const featureNote = el('p', { class: 'feature-note glass text-xs', hidden: true, role: 'status' });
+  container.append(featureNote);
+  function hideFeatureNote() {
+    featureNote.hidden = true;
+    featureNote.textContent = '';
+    featureLabels?.setSelected(null);
+  }
+  function showFeatureNote(feature) {
+    const details = [feature.name, feature.type, feature.diameter_km > 0 ? `${feature.diameter_km} km` : ''].filter(Boolean).join(' · ');
+    featureNote.textContent = feature.note || details;
+    if (feature.source) {
+      featureNote.append(' · ', el('a', { href: feature.source, target: '_blank', rel: 'noopener', text: 'Gazetteer' }));
+    }
+    featureNote.hidden = false;
+  }
+
+  let featureLabels = null;
+  if (namedFeatures.length) {
+    featureLabels = createFeatureLabels(container, namedFeatures, { onSelect: (feature) => focusFeature(feature) });
+    featureLabels.init((lat, lon, target) => terrain.directionFromLatLon(lat, lon, target));
+    featureLabels.setEnabled(namesToggle.checked);
+  } else {
+    namesToggle.closest('.switch-row').hidden = true;
+  }
+
+  const pins = createPins(container, places, { onSelect: (place) => focusPlace(place), scene });
   pins.init((lat, lon, target) => terrain.directionFromLatLon(lat, lon, target));
   const siteList = createSiteList(container, listedPlaces, {
+    features: featureSearch,
+    onFeatureSelect: (feature) => {
+      focusFeature(feature);
+      if (narrowQuery.matches) setListOpen(false);
+    },
     onSelect: (place) => {
       focusPlace(place);
       if (narrowQuery.matches) setListOpen(false);
@@ -344,7 +563,90 @@ async function loadMoon(container, loadingStatus) {
   });
 
   const flightHint = el('p', { class: 'flight-hint glass', hidden: true, text: 'Free flight: mouse / drag to look · W A S D move · Q / E turn · Space / C rise / descend · Shift boost · Esc exits' });
-  container.append(flightHint);
+  const touchInput = window.matchMedia('(any-pointer: coarse), (hover: none)');
+  const heldPointers = new Map();
+  function flightPad(label, directions) {
+    return el('div', { class: 'flight-pad glass', role: 'group', 'aria-label': label }, directions.map(([key, name, symbol]) => {
+      const button = el('button', { type: 'button', class: 'btn', 'aria-label': name, 'data-flight-key': key, text: symbol });
+      button.addEventListener('pointerdown', (event) => {
+        if (!freeFlight || event.button !== 0) return;
+        event.preventDefault();
+        button.setPointerCapture(event.pointerId);
+        heldPointers.set(event.pointerId, key);
+      });
+      for (const type of ['pointerup', 'pointercancel', 'lostpointercapture']) {
+        button.addEventListener(type, (event) => heldPointers.delete(event.pointerId));
+      }
+      return button;
+    }));
+  }
+  const joystickKnob = el('span', { class: 'flight-stick__knob' });
+  const joystick = el('div', { class: 'flight-stick', role: 'group', 'aria-label': 'Movement joystick. Drag to move.' }, [joystickKnob]);
+  let stickPointer = null;
+  const stick = { x: 0, y: 0 };
+  function resetStick() {
+    stickPointer = null;
+    stick.x = stick.y = 0;
+    joystickKnob.style.transform = '';
+  }
+  function moveStick(event) {
+    const bounds = joystick.getBoundingClientRect();
+    const radius = bounds.width / 2 - 24;
+    let x = (event.clientX - bounds.left - bounds.width / 2) / radius;
+    let y = (event.clientY - bounds.top - bounds.height / 2) / radius;
+    const length = Math.hypot(x, y);
+    if (length > 1) { x /= length; y /= length; }
+    joystickKnob.style.transform = `translate(${x * radius}px, ${y * radius}px)`;
+    const strength = Math.max(0, Math.min(length, 1) - 0.12) / 0.88;
+    stick.x = length > 0 ? x / Math.min(length, 1) * strength : 0;
+    stick.y = length > 0 ? y / Math.min(length, 1) * strength : 0;
+  }
+  joystick.addEventListener('pointerdown', (event) => {
+    if (!freeFlight || stickPointer !== null || event.button !== 0) return;
+    event.preventDefault();
+    stickPointer = event.pointerId;
+    joystick.setPointerCapture(event.pointerId);
+    moveStick(event);
+  });
+  joystick.addEventListener('pointermove', (event) => {
+    if (event.pointerId === stickPointer) moveStick(event);
+  });
+  for (const type of ['pointerup', 'pointercancel', 'lostpointercapture']) {
+    joystick.addEventListener(type, (event) => {
+      if (event.pointerId === stickPointer) resetStick();
+    });
+  }
+  const altitudePad = flightPad('Altitude', [['Space', 'Rise', 'Rise'], ['KeyC', 'Descend', 'Descend']]);
+  let touchRunning = false;
+  function walkAction(label, action) {
+    return el('button', {
+      type: 'button', class: 'btn', text: label, 'aria-label': label,
+      ontouchstart(event) {
+        // Handle the second finger directly, even when the browser suppresses its click.
+        event.preventDefault();
+        action();
+      },
+      onclick(event) {
+        if (event.pointerType !== 'touch') action();
+      },
+    });
+  }
+  const runButton = walkAction('Run', () => setTouchRun(!touchRunning));
+  runButton.setAttribute('aria-pressed', 'false');
+  function setTouchRun(active) {
+    touchRunning = active;
+    runButton.textContent = active ? 'Running' : 'Run';
+    runButton.setAttribute('aria-pressed', String(active));
+  }
+  function jump() {
+    if (walking && jumpHeight === 0 && jumpVelocity === 0) jumpVelocity = 2.6;
+  }
+  const walkPad = el('div', { class: 'flight-pad glass', role: 'group', 'aria-label': 'Walk actions', hidden: true }, [
+    runButton,
+    walkAction('Jump', jump),
+  ]);
+  const touchControls = el('div', { class: 'flight-touch', hidden: true }, [joystick, altitudePad, walkPad]);
+  container.append(flightHint, touchControls);
 
   const narrowQuery = window.matchMedia('(max-width: 1023px)');
   const railQuery = window.matchMedia('(min-width: 1024px) and (max-width: 1439px)');
@@ -373,7 +675,7 @@ async function loadMoon(container, loadingStatus) {
 
   const keys = new Set();
   let freeFlight = false;
-  let dragPointerId = null;
+  let lookPointer = null;
   let previousFrame = performance.now();
   let fpsFrames = 0;
   let fpsStamp = previousFrame;
@@ -481,7 +783,7 @@ async function loadMoon(container, loadingStatus) {
     setViewPressed(view);
   }
 
-  function surfaceEye(lat, lon) {
+  function surfaceEye(lat, lon, place) {
     terrain.directionFromLatLon(lat, lon, scratch);
     const up = scratch.clone();
     const radius = terrain.surfaceRadius(up);
@@ -489,13 +791,24 @@ async function loadMoon(container, loadingStatus) {
     const sunHoriz = sunlight.position.clone().addScaledVector(up, -sunlight.position.dot(up));
     const ahead = sunHoriz.lengthSq() > 1e-8 ? sunHoriz.normalize() : north;
     const pos = up.clone().multiplyScalar(radius + EYE_METERS / MOON_RADIUS_METERS);
+    let target = pos.clone().addScaledVector(ahead, 600 / MOON_RADIUS_METERS);
+    // Stand a short way back from landed spacecraft so the exact point stays in frame,
+    // and look at the marker. Seat the camera on the terrain under that offset so a
+    // crater floor or coarse DEM wave cannot drop the point out of view.
+    if (place && (place.group === 'apollo' || place.group === 'lander')) {
+      pos.addScaledVector(ahead, -20 / MOON_RADIUS_METERS);
+      const camUp = pos.clone().normalize();
+      pos.copy(camUp).multiplyScalar(terrain.surfaceRadius(camUp) + EYE_METERS / MOON_RADIUS_METERS);
+      target = up.clone().multiplyScalar(radius + 1.6 / MOON_RADIUS_METERS);
+    }
     return {
       pos,
-      target: pos.clone().addScaledVector(ahead, 600 / MOON_RADIUS_METERS),
+      target,
       up: orbitUp(up, ahead),
       fov: 58,
       minDistance: 1.2 / MOON_RADIUS_METERS,
-      maxPolarAngle: Math.PI / 2,
+      // Allow a slight downward look so a crater-floor site stays in frame.
+      maxPolarAngle: (place && (place.group === 'apollo' || place.group === 'lander')) ? Math.PI * 0.65 : Math.PI / 2,
     };
   }
 
@@ -509,9 +822,41 @@ async function loadMoon(container, loadingStatus) {
     return { pos, target, up: orbitUp(up, north), fov: 42, minDistance: 1.2 / MOON_RADIUS_METERS, maxPolarAngle: Math.PI / 2 };
   }
 
+  function featureEye(feature) {
+    terrain.directionFromLatLon(feature.lat, feature.lon, scratch);
+    const up = scratch.clone();
+    const target = up.clone().multiplyScalar(terrain.surfaceRadius(up));
+    const north = northAt(feature.lat, feature.lon);
+    const frameKm = feature.status === 'proposed'
+      ? Math.max(feature.diameter_km || 0, 120)
+      : feature.diameter_km > 0 ? Math.max(feature.diameter_km, 0.1) : 20;
+    const verticalHalfFov = 21 * Math.PI / 180;
+    const halfFov = Math.min(verticalHalfFov, Math.atan(Math.tan(verticalHalfFov) * camera.aspect));
+    const alt = (frameKm * 500) / Math.tan(halfFov * 0.65);
+    const pos = target.clone().addScaledVector(up, alt / MOON_RADIUS_METERS).addScaledVector(north, -alt * 0.15 / MOON_RADIUS_METERS);
+    return { pos, target, up: orbitUp(up, north), fov: 42, minDistance: 1.2 / MOON_RADIUS_METERS, maxPolarAngle: Math.PI };
+  }
+
+  function findNamedFeature(key) {
+    const needle = normId(key);
+    return namedFeatures.find((feature) => normId(feature.name) === needle)
+      || namedFeatures.find((feature) => normId(feature.name).includes(needle));
+  }
+
+  function focusFeature(feature, { instant = false } = {}) {
+    if (!feature || !Number.isFinite(feature.lat) || !Number.isFinite(feature.lon)) return;
+    if (freeFlight) leaveFlight();
+    clearSelection();
+    showFeatureNote(feature);
+    featureLabels?.setSelected(feature);
+    setViewPressed(null);
+    flyTo(featureEye(feature), instant);
+  }
+
   function clearSelection() {
     currentPlace = null;
     drawer.hide();
+    hideFeatureNote();
     siteList.setSelected(null);
     pins.setSelected(null);
     railDismissed = false;
@@ -533,24 +878,27 @@ async function loadMoon(container, loadingStatus) {
     if (freeFlight) leaveFlight();
     const changed = currentPlace?.id !== place.id || currentPlace?.lat !== place.lat || currentPlace?.lon !== place.lon;
     currentPlace = place;
+    hideFeatureNote();
     siteList.setSelected(place.id);
     pins.setSelected(place.id);
     if (changed) {
       railDismissed = false;
-      drawer.show(place, place.group === 'point' ? null : findNote(place));
-      analyzePlace(place);
+      const note = place.group === 'point' ? null : attachPhoto(attachWriteup(findNote(place), place, writeupsById), place, photosById, dataDirectory);
+      drawer.show(place, note);
+      if (Number.isFinite(place.lat) && Number.isFinite(place.lon)) analyzePlace(place);
     }
     updateRail();
     setViewPressed(null);
+    if (!Number.isFinite(place.lat) || !Number.isFinite(place.lon)) return;
     if (reliefMode === 'auto' && relief !== 1) {
       relief = 1;
       terrain.setRelief(relief);
     }
-    flyTo(surface ? surfaceEye(place.lat, place.lon) : overviewEye(place.lat, place.lon), instant);
+    flyTo(surface ? surfaceEye(place.lat, place.lon, place) : overviewEye(place.lat, place.lon), instant);
     if (!place.id) return;
     terrain.preloadSite(place.id).then((loaded) => {
       if (currentPlace !== place || !loaded || !surface || freeFlight || navigationRevision !== revision) return;
-      const eye = surfaceEye(place.lat, place.lon);
+      const eye = surfaceEye(place.lat, place.lon, place);
       if (flight) Object.assign(flight, { toPos: eye.pos, toTarget: eye.target });
       else flyTo(eye, true);
     });
@@ -568,11 +916,43 @@ async function loadMoon(container, loadingStatus) {
     turnFlight(camera, -deltaX * 0.002, -deltaY * 0.002);
   }
 
+  function clearFlightInput() {
+    keys.clear();
+    heldPointers.clear();
+    resetStick();
+    setTouchRun(false);
+    lookPointer = null;
+  }
+
+  function showFlightControls() {
+    const showTouch = freeFlight && touchInput.matches;
+    touchControls.hidden = !showTouch;
+    altitudePad.hidden = walking;
+    walkPad.hidden = !walking;
+    container.classList.toggle('touch-flight-active', showTouch);
+    container.classList.toggle('touch-walk-active', showTouch && walking);
+    flightHint.hidden = !freeFlight;
+    if (showTouch) {
+      flightHint.textContent = walking ? 'Thumbstick to move · Drag to look · Run toggles speed' : 'Thumbstick to move · Drag to look · Rise / Descend';
+    } else {
+      flightHint.textContent = walking
+        ? 'Walk: W A S D / arrows move · Drag to look · Shift run · Space jump · Esc exits'
+        : 'Free flight: mouse / drag to look · W A S D move · Q / E turn · Space / C rise / descend · Shift boost · Esc exits';
+    }
+  }
+
+  touchInput.addEventListener('change', () => {
+    clearFlightInput();
+    showFlightControls();
+  });
+
   function leaveFlight(releasePointer = true) {
     if (!freeFlight) return;
     freeFlight = false;
-    keys.clear();
-    dragPointerId = null;
+    walking = false;
+    walkButton.textContent = 'Walk';
+    walkButton.setAttribute('aria-pressed', 'false');
+    clearFlightInput();
     // Preserve the view when leaving flight instead of snapping toward the ground.
     const position = camera.position.clone();
     camera.getWorldDirection(viewDirection);
@@ -584,7 +964,7 @@ async function loadMoon(container, loadingStatus) {
     controls.update();
     flightButton.textContent = 'Free flight';
     flightButton.setAttribute('aria-pressed', 'false');
-    flightHint.hidden = true;
+    showFlightControls();
     if (releasePointer && document.pointerLockElement === canvas) document.exitPointerLock();
   }
 
@@ -592,15 +972,15 @@ async function loadMoon(container, loadingStatus) {
     navigationRevision++;
     if (flight) finishFlight();
     freeFlight = true;
-    keys.clear();
+    clearFlightInput();
     controls.enabled = false;
     levelFlight(camera);
     flightButton.textContent = 'Exit flight';
     flightButton.setAttribute('aria-pressed', 'true');
-    flightHint.hidden = false;
+    showFlightControls();
     setViewPressed(null);
     canvas.focus({ preventScroll: true });
-    if (lockPointer && canvas.requestPointerLock) {
+    if (lockPointer && !touchInput.matches && canvas.requestPointerLock) {
       // Drag-to-look remains available if the browser denies pointer lock.
       try { canvas.requestPointerLock()?.catch(() => {}); } catch { /* drag fallback */ }
     }
@@ -610,8 +990,11 @@ async function loadMoon(container, loadingStatus) {
     button.addEventListener('click', () => setView(button.dataset.view));
   }
   flightButton.addEventListener('click', () => {
-    if (freeFlight) leaveFlight();
-    else enterFlight();
+    if (freeFlight && !walking) leaveFlight();
+    else {
+      if (walking) leaveFlight(false);
+      enterFlight();
+    }
   });
 
   canvas.addEventListener('dblclick', (event) => {
@@ -648,28 +1031,33 @@ async function loadMoon(container, loadingStatus) {
   });
   canvas.addEventListener('pointerdown', (event) => {
     if (flight) finishFlight();
-    if (!freeFlight || document.pointerLockElement === canvas) return;
-    dragPointerId = event.pointerId;
+    if (!freeFlight || lookPointer || event.button !== 0 || document.pointerLockElement === canvas) return;
+    if (event.pointerType === 'touch') event.preventDefault();
+    lookPointer = { id: event.pointerId, x: event.clientX, y: event.clientY };
     canvas.setPointerCapture(event.pointerId);
   });
   canvas.addEventListener('pointermove', (event) => {
-    if (!freeFlight || document.pointerLockElement === canvas || event.pointerId !== dragPointerId) return;
-    updateFlightLook(event.movementX, event.movementY);
+    if (!freeFlight || event.pointerId !== lookPointer?.id || document.pointerLockElement === canvas) return;
+    updateFlightLook(event.clientX - lookPointer.x, event.clientY - lookPointer.y);
+    lookPointer.x = event.clientX;
+    lookPointer.y = event.clientY;
   });
-  canvas.addEventListener('pointerup', (event) => {
-    if (event.pointerId === dragPointerId) dragPointerId = null;
-  });
-  canvas.addEventListener('pointercancel', () => { dragPointerId = null; });
+  for (const type of ['pointerup', 'pointercancel', 'lostpointercapture']) {
+    canvas.addEventListener(type, (event) => {
+      if (event.pointerId === lookPointer?.id) lookPointer = null;
+    });
+  }
   document.addEventListener('pointerlockchange', () => {
     if (freeFlight && document.pointerLockElement !== canvas) leaveFlight(false);
   });
 
-  const movementKeys = new Set(['KeyW', 'KeyA', 'KeyS', 'KeyD', 'KeyQ', 'KeyE', 'Space', 'KeyC', 'ShiftLeft', 'ShiftRight']);
+  const movementKeys = new Set(['KeyW', 'KeyA', 'KeyS', 'KeyD', 'KeyQ', 'KeyE', 'Space', 'KeyC', 'ShiftLeft', 'ShiftRight', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight']);
   document.addEventListener('keydown', (event) => {
     if (freeFlight) {
       if (event.code === 'Escape') leaveFlight();
       else if (!isTextField(event.target) && !event.metaKey && !event.ctrlKey && !event.altKey && movementKeys.has(event.code)) {
         event.preventDefault();
+        if (event.code === 'Space' && !event.repeat) jump();
         keys.add(event.code);
       }
       return;
@@ -701,8 +1089,8 @@ async function loadMoon(container, loadingStatus) {
     }
   });
   document.addEventListener('keyup', (event) => { keys.delete(event.code); });
-  window.addEventListener('blur', () => keys.clear());
-  document.addEventListener('visibilitychange', () => keys.clear());
+  window.addEventListener('blur', clearFlightInput);
+  document.addEventListener('visibilitychange', clearFlightInput);
   document.addEventListener('focusin', (event) => { if (isTextField(event.target)) keys.clear(); });
 
   function resize() {
@@ -738,7 +1126,9 @@ async function loadMoon(container, loadingStatus) {
       const id = aliases[key] || key;
       const place = placesById.get(id)
         || places.find((entry) => normId(entry.id) === normId(id));
+      const feature = findNamedFeature(id);
       if (place) focusPlace(place, { surface: true, instant: true });
+      else if (feature) focusFeature(feature, { instant: true });
     }
   }
 
@@ -763,26 +1153,59 @@ async function loadMoon(container, loadingStatus) {
 
     if (flight) {
       stepFlight(realDelta);
+    } else if (walking) {
+      // Reuse scratch vectors; walking never requests DEM loads.
+      radialDirection.copy(camera.position).normalize();
+      camera.getWorldDirection(viewDirection).projectOnPlane(radialDirection).normalize();
+      rightDirection.crossVectors(viewDirection, radialDirection).normalize();
+      movement.copy(viewDirection).multiplyScalar(-stick.y).addScaledVector(rightDirection, stick.x);
+      if (keys.has('KeyW') || keys.has('ArrowUp')) movement.add(viewDirection);
+      if (keys.has('KeyS') || keys.has('ArrowDown')) movement.sub(viewDirection);
+      if (keys.has('KeyD') || keys.has('ArrowRight')) movement.add(rightDirection);
+      if (keys.has('KeyA') || keys.has('ArrowLeft')) movement.sub(rightDirection);
+      let swayTarget = 0;
+      if (movement.lengthSq() > 0) {
+        if (movement.lengthSq() > 1) movement.normalize();
+        const running = touchRunning || keys.has('ShiftLeft') || keys.has('ShiftRight');
+        const speed = running ? 4 : 1.5;
+        camera.position.addScaledVector(movement, speed * deltaSeconds / MOON_RADIUS_METERS);
+        if (jumpHeight === 0 && jumpVelocity === 0 && !reducedMotion.matches) {
+          const stride = movement.length();
+          walkSwayPhase += deltaSeconds * stride * (running ? 8.5 : 5.5);
+          swayTarget = Math.sin(walkSwayPhase) * stride * (running ? 0.026 : 0.016);
+        }
+        walkUp.copy(camera.position).normalize();
+        walkRotation.setFromUnitVectors(radialDirection, walkUp);
+        camera.quaternion.premultiply(walkRotation);
+        camera.up.copy(walkUp);
+      }
+      walkSway = reducedMotion.matches ? 0 : THREE.MathUtils.damp(walkSway, swayTarget, 12, deltaSeconds);
+      if (jumpHeight > 0 || jumpVelocity > 0) {
+        jumpHeight += jumpVelocity * deltaSeconds - 0.5 * 1.62 * deltaSeconds * deltaSeconds;
+        jumpVelocity -= 1.62 * deltaSeconds;
+        if (jumpHeight <= 0) jumpHeight = jumpVelocity = 0;
+      }
     } else if (freeFlight) {
-      const yawInput = Number(keys.has('KeyQ')) - Number(keys.has('KeyE'));
+      const activeKeys = heldPointers.size ? new Set([...keys, ...heldPointers.values()]) : keys;
+      const yawInput = Number(activeKeys.has('KeyQ')) - Number(activeKeys.has('KeyE'));
       if (yawInput) turnFlight(camera, yawInput * 1.2 * deltaSeconds, 0);
       camera.updateMatrixWorld();
       camera.getWorldDirection(viewDirection);
       rightDirection.setFromMatrixColumn(camera.matrixWorld, 0).normalize();
-      movement.set(0, 0, 0);
-      if (keys.has('KeyW')) movement.add(viewDirection);
-      if (keys.has('KeyS')) movement.sub(viewDirection);
-      if (keys.has('KeyD')) movement.add(rightDirection);
-      if (keys.has('KeyA')) movement.sub(rightDirection);
+      movement.copy(viewDirection).multiplyScalar(-stick.y).addScaledVector(rightDirection, stick.x);
+      if (activeKeys.has('KeyW')) movement.add(viewDirection);
+      if (activeKeys.has('KeyS')) movement.sub(viewDirection);
+      if (activeKeys.has('KeyD')) movement.add(rightDirection);
+      if (activeKeys.has('KeyA')) movement.sub(rightDirection);
       radialDirection.copy(camera.position).normalize();
-      if (keys.has('Space')) movement.add(radialDirection);
-      if (keys.has('KeyC')) movement.sub(radialDirection);
+      if (activeKeys.has('Space')) movement.add(radialDirection);
+      if (activeKeys.has('KeyC')) movement.sub(radialDirection);
       if (movement.lengthSq() > 0) {
-        movement.normalize();
+        if (movement.lengthSq() > 1) movement.normalize();
         const groundR = terrain.surfaceRadius(camera.position);
         const altitude = camera.position.length() - groundR;
         let speed = THREE.MathUtils.clamp(altitude * 0.28, 2 / MOON_RADIUS_METERS, 0.5);
-        if (keys.has('ShiftLeft') || keys.has('ShiftRight')) speed *= 4;
+        if (activeKeys.has('ShiftLeft') || activeKeys.has('ShiftRight')) speed *= 4;
         camera.position.addScaledVector(movement, speed * deltaSeconds);
         if (camera.position.length() > 18) camera.position.setLength(18);
         transportFlight(camera, radialDirection);
@@ -796,6 +1219,7 @@ async function loadMoon(container, loadingStatus) {
     }
 
     applyRelief();
+    if (walking) camera.position.setLength(terrain.surfaceRadius(camera.position) + (1.7 + jumpHeight) / MOON_RADIUS_METERS);
     radialDirection.copy(camera.position);
     const radiusNow = radialDirection.length();
     if (radiusNow > 1e-4) {
@@ -820,10 +1244,21 @@ async function loadMoon(container, loadingStatus) {
       cam: Number(camera.position.length().toFixed(5)),
     };
     updateStatus();
+    // Apply sway only to the rendered view so movement and look input use a level camera.
+    const swayView = walking && Math.abs(walkSway) > 1e-5;
+    if (swayView) {
+      walkOrientation.copy(camera.quaternion);
+      camera.rotateZ(walkSway);
+    }
     camera.updateMatrixWorld();
     pins.update(camera, (direction) => terrain.surfaceRadius(direction), container.clientWidth, container.clientHeight, realDelta);
     landers?.update(camera);
+    featureLabels?.update(camera, (direction) => terrain.surfaceRadius(direction), container.clientWidth, container.clientHeight, realDelta);
     renderer.render(scene, camera);
     landers?.renderSplats(camera);
+    if (swayView) {
+      camera.quaternion.copy(walkOrientation);
+      camera.updateMatrixWorld();
+    }
   });
 }
