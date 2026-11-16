@@ -39,7 +39,7 @@ Open [http://localhost:8000](http://localhost:8000) in your browser. Keep the te
 
 ## Show the global LOLA terrain
 
-The checkout includes `public/data/global-height/global-height.f32` and its JSON metadata. Start the local server from the repository root. The viewer builds a reduced mesh from the elevation grid and uses Auto relief (up to ×4 at globe distance and ×1 near the surface) or fixed ×1, ×2, ×3, and ×4.
+The checkout includes `public/data/global-height/global-height.f32` and its JSON metadata. Start the local server from the repository root. The viewer renders a cube-sphere quadtree with 33×33-vertex terrain tiles and skirts to minimize LOD cracks, samples the elevation grid, and uses Auto relief (up to ×4 at globe distance and ×1 near the surface) or fixed ×1, ×2, ×3, and ×4.
 
 The viewer also loads the included 4096 × 2048 normalized LROC WAC texture from `public/data/wac-texture.jpg`. Its source and processing details are in `public/data/wac-texture.json`. Choose **WAC imagery** to inspect the map without the Sun and Earth lighting. The viewer reports when the bundled image is unavailable.
 
@@ -56,7 +56,7 @@ Open [the legacy texture view](http://localhost:8000/?moonTexture=legacy). The v
 
 **Explore a site** lists every bundled DEM in `public/data/site-dems/index.json`, grouped into Apollo landing sites and south pole terrain. The viewer downloads one site at a time and drapes that grid on the lunar sphere.
 
-Select a site in **Explore a site**. Apollo entries use the LROC NAC elevation crops. South-pole entries with local DEMs use the PGDA LOLA 5 m grids, including Shackleton rim and Connecting ridge. **Shackleton floor** is a separate selectable site at the official Shackleton crater center (89.67°S, 129.78°E), and uses global/south-polar LOLA coverage rather than a dedicated 5 m floor DEM. Its visibility estimates are approximate and should not be mistaken for rim measurements. Artemis candidate regions in the catalog are terrain proxies, not selected landing coordinates.
+Select a site in **Explore a site**. Apollo entries use the LROC NAC elevation crops. South-pole entries with local DEMs use the PGDA LOLA 5 m grids, including Shackleton rim and Connecting ridge. **Shackleton floor** is a separate selectable site at the official Shackleton crater center (89.67°S, 129.78°E), and uses global/south-polar LOLA coverage rather than a dedicated 5 m floor DEM. Its visibility estimates are approximate and should not be mistaken for rim measurements. The 2024 Artemis candidate regions in the catalog are terrain proxies, not selected landing coordinates; NASA's October 2026 update makes Artemis III a 2027 low-Earth-orbit test and Artemis IV the first planned lunar landing in 2028.
 
 The checkout includes the 2048 px Blue Marble Earth texture and 4096 px NASA SVS star map. Credits are in [public/data/sky/CREDITS.txt](public/data/sky/CREDITS.txt). The star panorama uses a fixed decorative orientation. The time slider continues to drive the Sun and Earth's positions using the included Horizons ephemeris.
 
