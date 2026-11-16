@@ -393,7 +393,7 @@ export function createPins(container, places, { onSelect, scene } = {}) {
     const status = pinStatus(place);
     if (status === 'future') classes.push('pin--proxy', 'pin--future');
     if (status === 'feature') classes.push('pin--terrain');
-    if (place.approximate) classes.push('pin--approx');
+    if (status === 'approximate' || (status === 'failed' && place.approximate)) classes.push('pin--approx');
     if (status === 'failed') classes.push('pin--failed');
     const labelText = place.name;
     const button = el('button', {
