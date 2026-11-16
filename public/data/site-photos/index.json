@@ -6,7 +6,7 @@
       "title": "First photo from the lunar surface (Luna 9)",
       "caption": "The first photograph from the lunar surface, taken by Luna 9 in Oceanus Procellarum on 3 February 1966.",
       "credit": "National Space Science Data Center / Luna 9 (USSR), published by NASA",
-      "license": "Public domain (published by NASA; original Luna 9 automatic-camera image)",
+      "license": "NASA-hosted Soviet historical image; original-image reuse rights not independently verified",
       "source_page_url": "https://science.nasa.gov/resource/first-photo-from-the-surface-of-the-moon/"
     },
     {
@@ -180,11 +180,11 @@
       "license": "Public domain (NASA/LROC); credit requested as NASA/GSFC/Arizona State University",
       "source_page_url": "https://lroc.im-ldi.com/images/637",
       "additionalImage": {
-        "image": "https://www.cas.cn/cm/201604/W020160425340370360188.jpg",
-        "title": "Chang’e 3 lander camera view of the Yutu rover",
-        "caption": "Real Chang’e 3 lunar surface image showing the rover on the regolith and spacecraft structures in the foreground.",
-        "credit": "CNSA / Chinese Academy of Sciences / Xinhua",
-        "source": "https://www.cas.cn/cm/201604/t20160425_4554055.shtml",
+        "image": "https://planetary.s3.amazonaws.com/web/assets/pictures/20160128_PCAMR-C-001_SCI_N_20140113190024_0008_A_2C_stitch.jpg",
+        "title": "Chang'e 3 lander seen from the Yutu rover",
+        "caption": "Actual Chang'e 3 lander photograph from the Yutu rover on the lunar surface; not an artist's rendering or an orbital image.",
+        "credit": "CNSA / Chinese Academy of Sciences; via The Planetary Society",
+        "source": "https://www.planetary.org/space-images/change-3-lander-in-the-distance",
         "kind": "surface photograph"
       }
     },
