@@ -438,7 +438,7 @@ async function loadMoon(container, loadingStatus) {
   const compareButton = el('button', { type: 'button', class: 'btn', 'aria-haspopup': 'dialog', title: 'Compare sites side by side', text: 'Compare', hidden: !compare, onclick: () => compare?.toggle(currentPlace) });
   const layersButton = el('button', { type: 'button', class: 'btn topbar__layers', 'aria-label': 'Layers', 'aria-haspopup': 'dialog', 'aria-keyshortcuts': 'L', title: 'Layers (L)', html: `${icons.layers}<span>Layers</span>` });
   const topbar = el('header', { class: 'topbar glass' }, [
-    el('h1', { class: 'brand', text: 'Lunar Atlas' }),
+    el('h1', { class: 'brand', html: 'Lunar Atlas <a class="brand__by" href="https://westonrosch.com" target="_blank" rel="noopener">by Weston Rosch</a>' }),
     el('nav', { class: 'topbar__nav', 'aria-label': 'Camera' }, [
       sitesButton,
       el('div', { class: 'topbar__nav topbar__views' }, viewButtons),

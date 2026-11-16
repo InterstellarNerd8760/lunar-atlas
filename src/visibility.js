@@ -14,6 +14,15 @@ export function utcLabel(ms) {
 export const formatPct = (v) => `${v.toFixed(v > 0 && v < 1 ? 1 : 0)}%`;
 export const formatHours = (h) => (h >= 48 ? `${(h / 24).toFixed(1)} d` : `${h.toFixed(0)} h`);
 
+// Plain-language read of the terrain numbers for solar power over this window.
+export function solarVerdict(t) {
+  const sun = t.sunPct, dark = t.longestDarkH;
+  if (sun < 5) return { level: 'no', label: 'won\u2019t work', detail: `The Sun clears the terrain only ${formatPct(sun)} of this window, so panels would sit in shadow.` };
+  if (sun >= 65 && dark < 120) return { level: 'good', label: 'good', detail: `Sunlit ${formatPct(sun)} of the window and the longest dark stretch is ${formatHours(dark)}, so batteries only need to bridge short gaps.` };
+  if (dark >= 240) return { level: 'day', label: 'daytime only', detail: `Plenty of Sun by day (${formatPct(sun)}), but nights last up to ${formatHours(dark)}, so you need big batteries or another power source to survive the night.` };
+  return { level: 'partial', label: 'possible, with storage', detail: `Sunlit ${formatPct(sun)} of the window, with dark stretches up to ${formatHours(dark)} to cover with batteries.` };
+}
+
 function stateLabel(sun, earth) {
   return `${sun ? 'Sun up' : 'Sun down'}, ${earth ? 'Earth in view' : 'Earth hidden'}`;
 }
@@ -45,6 +54,7 @@ export function createVisibilityPanel(section, positions, { onStatus, horizon } 
       <li><span class="dot" data-dot="earth"></span><span data-status="earth"></span></li>
     </ul>
     <dl class="vis__metrics"></dl>
+    <p class="vis__solar text-sm"></p>
     <div class="strip" role="img"></div>
     <div class="strip__axis text-xs mono"><span></span><span></span></div>
     <ul class="legend">
@@ -68,6 +78,7 @@ export function createVisibilityPanel(section, positions, { onStatus, horizon } 
     earth: section.querySelector('[data-dot="earth"]'),
   };
   const metrics = section.querySelector('.vis__metrics');
+  const solar = section.querySelector('.vis__solar');
   const strip = section.querySelector('.strip');
   const axis = section.querySelectorAll('.strip__axis span');
   const plotHolder = section.querySelector('details');
@@ -203,6 +214,12 @@ export function createVisibilityPanel(section, positions, { onStatus, horizon } 
       metric('Highest skyline', profile ? `${maxEl.toFixed(1)}°` : '—', profile ? `at ${Math.round(maxAz)}° az` : '', 'Highest terrain horizon elevation around this point and its azimuth (clockwise from north).'),
     );
     if (profile) drawSky(profile);
+    const verdict = solarVerdict(t);
+    solar.dataset.level = verdict.level;
+    solar.replaceChildren();
+    const strong = document.createElement('strong');
+    strong.textContent = `Solar here: ${verdict.label}. `;
+    solar.append(strong, verdict.detail);
 
     const step = (track[1].utc - track[0].utc) / 3600000;
     note.textContent = `${new Date(t0).toISOString().slice(0, 10)} to ${new Date(t1).toISOString().slice(0, 10)} UTC, ${step} h samples; transitions inside a sample are unresolved. Terrain horizon: 360 azimuths, ${source}, with lunar curvature, 2 m above the ground. Uses Sun and Earth centers (disk edges not modeled); terrain smaller than the grid spacing is smoothed. Polar results are seasonal.`;

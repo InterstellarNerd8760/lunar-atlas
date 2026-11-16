@@ -154,6 +154,12 @@ a { color: var(--primary); }
   padding: 0 4px 0 16px;
 }
 
+.brand__by { margin-left: 6px; font-size: 12px; font-weight: 400; opacity: 0.6; color: inherit; text-decoration: none; }
+.brand__by:hover { opacity: 1; text-decoration: underline; }
+.vis__solar { margin: 8px 0; padding: 6px 8px; border-left: 3px solid #8a8f98; border-radius: 4px; background: rgba(255,255,255,0.04); }
+.vis__solar[data-level="good"] { border-color: #4caf7a; }
+.vis__solar[data-level="partial"], .vis__solar[data-level="day"] { border-color: #d9a441; }
+.vis__solar[data-level="no"] { border-color: #d0605e; }
 .brand {
   margin: 0 auto 0 0;
   font-size: 16px;
@@ -562,6 +568,7 @@ a { color: var(--primary); }
 .compare__axis { margin-left: 128px; }
 
 @media (max-width: 767px) {
+  .brand__by { display: none; }
   .compare__pickers { grid-template-columns: 1fr; }
   .compare__table tbody th, .compare__row { width: auto; }
   .compare__row { grid-template-columns: 84px 1fr; }
