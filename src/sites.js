@@ -415,6 +415,9 @@ export function createPins(container, places, { onSelect, scene } = {}) {
   }
 
   return {
+    setMarkersVisible(visible) {
+      if (markers) markers.visible = visible;
+    },
     init(directionFromLatLon) {
       for (const pin of pins) {
         if (!Number.isFinite(pin.place.lat) || !Number.isFinite(pin.place.lon)) continue;
