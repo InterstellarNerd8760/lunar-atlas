@@ -1007,3 +1007,8 @@ a { color: var(--primary); }
 .pin-key__symbol--approx { background: transparent; border: 2px dashed #e2b657; }
 .pin-key__symbol--future { background: transparent; border: 2px solid #f5f6fa; }
 .pin-key__symbol--terrain { width: 9px; height: 9px; border: 1px solid #c1e4fb; background: #77b9e0; border-radius: 2px; transform: rotate(45deg); }
+
+/* Supplementary mission / HLS art, source-labeled and separate from LROC ground imagery. */
+.image-slot--related { padding-top: 8px; border-top: 1px solid var(--border); }
+.image-slot--related figcaption { color: var(--muted-foreground); font-size: 10px; line-height: 1.45; }
+.image-slot--related figcaption a { color: var(--foreground); }

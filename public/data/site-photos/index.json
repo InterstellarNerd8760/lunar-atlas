@@ -223,7 +223,15 @@
       "caption": "LROC NAC view of Intuitive Machines' IM-1 Nova-C lander Odysseus on the surface near Malapert A.",
       "credit": "NASA/GSFC/Arizona State University",
       "license": "Public domain (NASA/LROC); credit requested as NASA/GSFC/Arizona State University",
-      "source_page_url": "https://lroc.im-ldi.com/images/1360"
+      "source_page_url": "https://lroc.im-ldi.com/images/1360",
+      "additionalImage": {
+        "image": "https://images.tagesschau.de/image/c9491552-d14a-4d92-853e-1dda33843c76/AAABleDbEZA/AAABnSSvgNE/16x9-1920/mondsonde-100.jpg",
+        "title": "Odysseus lunar lander",
+        "caption": "Intuitive Machines Odysseus spacecraft image; mission imagery, not an orbital photograph of the final touchdown point.",
+        "credit": "Intuitive Machines, via Tagesschau",
+        "source": "https://www.intuitivemachines.com/im-1",
+        "kind": "spacecraft photograph"
+      }
     },
     {
       "id": "change-6",
@@ -232,7 +240,15 @@
       "caption": "LROC NAC view of Chang'e 6 in the Apollo basin on the lunar far side, seen as a small cluster of bright pixels at the center.",
       "credit": "NASA/GSFC/Arizona State University",
       "license": "Public domain (NASA/LROC); credit requested as NASA/GSFC/Arizona State University",
-      "source_page_url": "https://lroc.im-ldi.com/images/1374"
+      "source_page_url": "https://lroc.im-ldi.com/images/1374",
+      "additionalImage": {
+        "image": "https://scx2.b-cdn.net/gfx/news/hires/2024/craft-unfurls-chinas-f-3.jpg",
+        "title": "Chang’e 6 view from the lunar far side",
+        "caption": "Panoramic camera image from Chang’e 6 with the lander hardware in the foreground and actual lunar surface. Not an artist’s render.",
+        "credit": "China National Space Administration (CNSA), distributed by Phys.org",
+        "source": "https://www.cnsa.gov.cn/n6758823/n6758838/c10543340/content.html",
+        "kind": "surface photograph"
+      }
     },
     {
       "id": "blue-ghost-1",
@@ -241,7 +257,15 @@
       "caption": "LROC NAC view of Firefly's Blue Ghost lander in Mare Crisium, with a volcanic depression and Mons Latreille nearby.",
       "credit": "NASA/GSFC/Arizona State University",
       "license": "Public domain (NASA/LROC); credit requested as NASA/GSFC/Arizona State University",
-      "source_page_url": "https://lroc.im-ldi.com/images/1407"
+      "source_page_url": "https://lroc.im-ldi.com/images/1407",
+      "additionalImage": {
+        "image": "https://static.independent.co.uk/2025/03/02/10/54/The-moon-passes-by-Firefly-Aerospaces-Blue-Ghost-spaceship-ahead-of-its-landing-614aduu1.jpeg?crop=2018%2C2018%2Cx786%2Cy0&height=1200&width=1200",
+        "title": "Blue Ghost spacecraft above the lunar terrain",
+        "caption": "Real Blue Ghost descent-view image showing the spacecraft underside and Moon. Mission imagery, not a landing-site terrain survey.",
+        "credit": "Firefly Aerospace, via The Independent",
+        "source": "https://fireflyspace.com/news/blue-ghost-mission-1-live-updates/",
+        "kind": "mission photograph"
+      }
     },
     {
       "id": "im-2",
@@ -250,7 +274,15 @@
       "caption": "Oblique LROC NAC view of the IM-2 Athena lander on Mons Mouton, acquired on 10 March 2025 (M1496181900LR).",
       "credit": "NASA/GSFC/Arizona State University",
       "license": "Public domain (NASA/LROC); credit requested as NASA/GSFC/Arizona State University",
-      "source_page_url": "https://lroc.im-ldi.com/images/1409"
+      "source_page_url": "https://lroc.im-ldi.com/images/1409",
+      "additionalImage": {
+        "image": "https://ml.globenewswire.com/Resource/Download/828e4f54-cedb-44df-bede-d914f08af23c",
+        "title": "IM-2 Athena lander prior to flight",
+        "caption": "Photograph of the Athena spacecraft on Earth before launch. NOT a photograph of its condition after lunar touchdown.",
+        "credit": "Intuitive Machines / GlobeNewswire",
+        "source": "https://investors.intuitivemachines.com/news-releases/news-release-details/intuitive-machines-delivers-second-lunar-mission-lander-cape",
+        "kind": "spacecraft photograph"
+      }
     },
     {
       "id": "artemis3-peak-near-cabeus-b",
@@ -259,7 +291,15 @@
       "caption": "LROC NAC low-Sun mosaic of the Peak near Cabeus B Artemis candidate landing region.",
       "credit": "NASA/GSFC/Arizona State University",
       "license": "Public domain (NASA/LROC); credit requested as NASA/GSFC/Arizona State University",
-      "source_page_url": "https://data.lroc.im-ldi.com/lroc/view_rdr/NAC_ROI_CABEUSPKLO2"
+      "source_page_url": "https://data.lroc.im-ldi.com/lroc/view_rdr/NAC_ROI_CABEUSPKLO2",
+      "additionalImage": {
+        "image": "https://d1o72l87sylvqg.cloudfront.net/blue-origin/BlueMoon_pagehero.png",
+        "title": "Blue Origin Blue Moon HLS — concept illustration",
+        "caption": "Illustrative future human landing-system concept. NOT a selected spacecraft for this particular candidate region, a proposed Moon base, or a picture taken at this site.",
+        "credit": "Blue Origin (artist’s concept)",
+        "source": "https://www.blueorigin.com/blue-moon",
+        "kind": "artist’s concept"
+      }
     },
     {
       "id": "artemis3-haworth",
@@ -268,7 +308,15 @@
       "caption": "LROC NAC low-Sun mosaic of the Haworth Artemis candidate landing region near the lunar south pole.",
       "credit": "NASA/GSFC/Arizona State University",
       "license": "Public domain (NASA/LROC); credit requested as NASA/GSFC/Arizona State University",
-      "source_page_url": "https://data.lroc.im-ldi.com/lroc/view_rdr/NAC_ROI_HAWORTH_LO1"
+      "source_page_url": "https://data.lroc.im-ldi.com/lroc/view_rdr/NAC_ROI_HAWORTH_LO1",
+      "additionalImage": {
+        "image": "https://d1o72l87sylvqg.cloudfront.net/blue-origin/BlueMoon_pagehero.png",
+        "title": "Blue Origin Blue Moon HLS — concept illustration",
+        "caption": "Illustrative future human landing-system concept. NOT a selected spacecraft for this particular candidate region, a proposed Moon base, or a picture taken at this site.",
+        "credit": "Blue Origin (artist’s concept)",
+        "source": "https://www.blueorigin.com/blue-moon",
+        "kind": "artist’s concept"
+      }
     },
     {
       "id": "artemis3-malapert-massif",
@@ -277,7 +325,15 @@
       "caption": "Oblique LROC NAC view of Malapert massif, an Artemis candidate landing region near the south pole (M1432398306LR).",
       "credit": "NASA/GSFC/Arizona State University",
       "license": "Public domain (NASA/LROC); credit requested as NASA/GSFC/Arizona State University",
-      "source_page_url": "https://lroc.im-ldi.com/images/1294"
+      "source_page_url": "https://lroc.im-ldi.com/images/1294",
+      "additionalImage": {
+        "image": "https://d1o72l87sylvqg.cloudfront.net/blue-origin/BlueMoon_pagehero.png",
+        "title": "Blue Origin Blue Moon HLS — concept illustration",
+        "caption": "Illustrative future human landing-system concept. NOT a selected spacecraft for this particular candidate region, a proposed Moon base, or a picture taken at this site.",
+        "credit": "Blue Origin (artist’s concept)",
+        "source": "https://www.blueorigin.com/blue-moon",
+        "kind": "artist’s concept"
+      }
     },
     {
       "id": "artemis3-mons-mouton-plateau",
@@ -286,7 +342,15 @@
       "caption": "LROC NAC low-Sun mosaic of the Mons Mouton Plateau Artemis candidate landing region.",
       "credit": "NASA/GSFC/Arizona State University",
       "license": "Public domain (NASA/LROC); credit requested as NASA/GSFC/Arizona State University",
-      "source_page_url": "https://data.lroc.im-ldi.com/lroc/view_rdr/NAC_ROI_MOUTNPLTLO1"
+      "source_page_url": "https://data.lroc.im-ldi.com/lroc/view_rdr/NAC_ROI_MOUTNPLTLO1",
+      "additionalImage": {
+        "image": "https://d1o72l87sylvqg.cloudfront.net/blue-origin/BlueMoon_pagehero.png",
+        "title": "Blue Origin Blue Moon HLS — concept illustration",
+        "caption": "Illustrative future human landing-system concept. NOT a selected spacecraft for this particular candidate region, a proposed Moon base, or a picture taken at this site.",
+        "credit": "Blue Origin (artist’s concept)",
+        "source": "https://www.blueorigin.com/blue-moon",
+        "kind": "artist’s concept"
+      }
     },
     {
       "id": "artemis3-mons-mouton",
@@ -295,7 +359,15 @@
       "caption": "LROC NAC mosaic of Mons Mouton, an Artemis candidate landing region and the IM-2 landing area.",
       "credit": "NASA/GSFC/Arizona State University",
       "license": "Public domain (NASA/LROC); credit requested as NASA/GSFC/Arizona State University",
-      "source_page_url": "https://lroc.im-ldi.com/images/1401"
+      "source_page_url": "https://lroc.im-ldi.com/images/1401",
+      "additionalImage": {
+        "image": "https://d1o72l87sylvqg.cloudfront.net/blue-origin/BlueMoon_pagehero.png",
+        "title": "Blue Origin Blue Moon HLS — concept illustration",
+        "caption": "Illustrative future human landing-system concept. NOT a selected spacecraft for this particular candidate region, a proposed Moon base, or a picture taken at this site.",
+        "credit": "Blue Origin (artist’s concept)",
+        "source": "https://www.blueorigin.com/blue-moon",
+        "kind": "artist’s concept"
+      }
     },
     {
       "id": "artemis3-nobile-rim-1",
@@ -304,7 +376,15 @@
       "caption": "LROC NAC low-Sun mosaic covering the adjacent Nobile Rim 1 and Mons Mouton Artemis candidate landing regions.",
       "credit": "NASA/GSFC/Arizona State University",
       "license": "Public domain (NASA/LROC); credit requested as NASA/GSFC/Arizona State University",
-      "source_page_url": "https://data.lroc.im-ldi.com/lroc/view_rdr/NAC_ROI_MTMOUTONLO1"
+      "source_page_url": "https://data.lroc.im-ldi.com/lroc/view_rdr/NAC_ROI_MTMOUTONLO1",
+      "additionalImage": {
+        "image": "https://d1o72l87sylvqg.cloudfront.net/blue-origin/BlueMoon_pagehero.png",
+        "title": "Blue Origin Blue Moon HLS — concept illustration",
+        "caption": "Illustrative future human landing-system concept. NOT a selected spacecraft for this particular candidate region, a proposed Moon base, or a picture taken at this site.",
+        "credit": "Blue Origin (artist’s concept)",
+        "source": "https://www.blueorigin.com/blue-moon",
+        "kind": "artist’s concept"
+      }
     },
     {
       "id": "artemis3-nobile-rim-2",
@@ -313,7 +393,15 @@
       "caption": "LROC NAC low-Sun mosaic of the Nobile Rim 2 Artemis candidate landing region.",
       "credit": "NASA/GSFC/Arizona State University",
       "license": "Public domain (NASA/LROC); credit requested as NASA/GSFC/Arizona State University",
-      "source_page_url": "https://data.lroc.im-ldi.com/lroc/view_rdr/NAC_ROI_NOBILE02LO1"
+      "source_page_url": "https://data.lroc.im-ldi.com/lroc/view_rdr/NAC_ROI_NOBILE02LO1",
+      "additionalImage": {
+        "image": "https://d1o72l87sylvqg.cloudfront.net/blue-origin/BlueMoon_pagehero.png",
+        "title": "Blue Origin Blue Moon HLS — concept illustration",
+        "caption": "Illustrative future human landing-system concept. NOT a selected spacecraft for this particular candidate region, a proposed Moon base, or a picture taken at this site.",
+        "credit": "Blue Origin (artist’s concept)",
+        "source": "https://www.blueorigin.com/blue-moon",
+        "kind": "artist’s concept"
+      }
     },
     {
       "id": "artemis3-de-gerlache-rim-2",
@@ -322,7 +410,15 @@
       "caption": "LROC NAC low-Sun mosaic of the de Gerlache Rim area, the official LROC product for this Artemis candidate landing region (published as de Gerlache Rim).",
       "credit": "NASA/GSFC/Arizona State University",
       "license": "Public domain (NASA/LROC); credit requested as NASA/GSFC/Arizona State University",
-      "source_page_url": "https://data.lroc.im-ldi.com/lroc/view_rdr/NAC_ROI_DEGERRIMLO1"
+      "source_page_url": "https://data.lroc.im-ldi.com/lroc/view_rdr/NAC_ROI_DEGERRIMLO1",
+      "additionalImage": {
+        "image": "https://d1o72l87sylvqg.cloudfront.net/blue-origin/BlueMoon_pagehero.png",
+        "title": "Blue Origin Blue Moon HLS — concept illustration",
+        "caption": "Illustrative future human landing-system concept. NOT a selected spacecraft for this particular candidate region, a proposed Moon base, or a picture taken at this site.",
+        "credit": "Blue Origin (artist’s concept)",
+        "source": "https://www.blueorigin.com/blue-moon",
+        "kind": "artist’s concept"
+      }
     },
     {
       "id": "artemis3-slater-plain",
@@ -331,7 +427,15 @@
       "caption": "NASA's official map of the nine Artemis III candidate landing regions, including Slater Plain, on an LRO WAC mosaic of the south polar terrain.",
       "credit": "NASA (background: LRO WAC mosaic, NASA/GSFC/Arizona State University)",
       "license": "Public domain (NASA media)",
-      "source_page_url": "https://www.nasa.gov/news-release/nasa-provides-update-on-artemis-iii-moon-landing-regions/"
+      "source_page_url": "https://www.nasa.gov/news-release/nasa-provides-update-on-artemis-iii-moon-landing-regions/",
+      "additionalImage": {
+        "image": "https://d1o72l87sylvqg.cloudfront.net/blue-origin/BlueMoon_pagehero.png",
+        "title": "Blue Origin Blue Moon HLS — concept illustration",
+        "caption": "Illustrative future human landing-system concept. NOT a selected spacecraft for this particular candidate region, a proposed Moon base, or a picture taken at this site.",
+        "credit": "Blue Origin (artist’s concept)",
+        "source": "https://www.blueorigin.com/blue-moon",
+        "kind": "artist’s concept"
+      }
     }
   ],
   "note": "Site drawer photographs. Paths are relative to this directory. Credits are also listed in docs/CREDITS.md."

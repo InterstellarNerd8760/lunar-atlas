@@ -5,7 +5,7 @@ import { OrbitControls } from 'https://cdn.jsdelivr.net/npm/three@0.180.0/exampl
 import { addSky } from './sky.js';
 import { aimAt, levelFlight, transportFlight, turnFlight } from './flight.js';
 import { createFeatureLabels } from './features.js';
-import { createDrawer, createPins, createSiteList } from './sites.js?v=final-layout-v3';
+import { createDrawer, createPins, createSiteList } from './sites.js?v=mission-photo-v4';
 import { bindPopover, closeOpenPopover, makePanelDraggable, el, icons, isTextField, reducedMotion } from './ui.js';
 import { createTerrain } from './terrain.js';
 import { createHorizonSource } from './horizon.js';
@@ -213,6 +213,8 @@ function attachPhoto(note, place, photosById, dataDirectory) {
     imageAlt: photo.title || place.name,
     imageCaption: photo.caption,
     imageCredit: photo.credit,
+    additionalImage: photo.additionalImage || null,
+    imageSource: photo.source_page_url || null,
   };
 }
 
@@ -239,7 +241,7 @@ async function loadMoon(container, loadingStatus) {
     fetch(new URL('site-dems/index.json', dataDirectory)),
     fetch(new URL('site-previews/index.json?v=clps-final-2026', dataDirectory)),
     fetch(new URL('site-notes.json', dataDirectory)),
-    fetch(new URL('site-photos/index.json', dataDirectory)),
+    fetch(new URL('site-photos/index.json?v=mission-photo-v4', dataDirectory)),
     fetch(new URL('landing-sites.csv?v=pin-status-v2', dataDirectory)),
     fetch(new URL('site-writeups.json?v=clps-final-2026', dataDirectory)),
     fetch(new URL('features.json', dataDirectory)),

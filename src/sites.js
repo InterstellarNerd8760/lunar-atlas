@@ -211,6 +211,9 @@ export function createDrawer(container, { onClose, onFlyTo, onStand, onEarth, on
   const imageFrame = el('div', { class: 'image-slot__frame' });
   const imageCaption = el('figcaption', { class: 'text-xs' });
   const imageSlot = el('figure', { class: 'image-slot' }, [imageFrame, imageCaption]);
+  const relatedFrame = el('div', { class: 'image-slot__frame' });
+  const relatedCaption = el('figcaption', { class: 'text-xs' });
+  const relatedSlot = el('figure', { class: 'image-slot image-slot--related', hidden: true }, [relatedFrame, relatedCaption]);
 
   const aboutText = el('p');
   const factsList = el('ul', { class: 'facts' });
@@ -242,7 +245,7 @@ export function createDrawer(container, { onClose, onFlyTo, onStand, onEarth, on
         el('div', { class: 'drawer__meta' }, [statusChip, el('span', { class: 'coords' }, [coordsText, copyButton])]),
         peek,
       ]),
-      imageSlot, about, dataNotes, visSection, take, actions,
+      imageSlot, relatedSlot, about, dataNotes, visSection, take, actions,
     ]),
   ]);
   container.append(drawer);
@@ -300,6 +303,26 @@ export function createDrawer(container, { onClose, onFlyTo, onStand, onEarth, on
         imageCaption.textContent = '';
       }
       imageCaption.hidden = !imageCaption.textContent;
+      relatedFrame.replaceChildren();
+      relatedSlot.hidden = isPoint || !note?.additionalImage?.image;
+      if (!relatedSlot.hidden) {
+        const extra = note.additionalImage;
+        const extraImg = el('img', {
+          src: extra.image,
+          alt: extra.title || place.name,
+          loading: 'lazy',
+          decoding: 'async',
+          referrerpolicy: 'no-referrer',
+        });
+        extraImg.addEventListener('error', () => {
+          relatedFrame.replaceChildren(el('span', { text: 'External image unavailable — use the source link below.' }));
+        }, { once: true });
+        relatedFrame.append(extraImg);
+        relatedCaption.replaceChildren(
+          document.createTextNode([extra.kind, extra.caption, extra.credit && `Credit: ${extra.credit}`].filter(Boolean).join(' · ') + ' · '),
+          el('a', { href: extra.source, target: '_blank', rel: 'noopener noreferrer', text: 'Original source' }),
+        );
+      }
       about.hidden = isPoint;
       const hasWriteup = Boolean(note?.about);
       aboutText.textContent = note?.about || note?.notes || `${place.name}. Coordinates come from the bundled landing catalog. Consult the dataset sources for mission context.`;
